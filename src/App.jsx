@@ -61,7 +61,8 @@ import {
   HardDrive,
   Cpu,
   Smartphone,
-  Send
+  Send,
+  Briefcase
 } from 'lucide-react';
 import OwnerPortal from './OwnerPortal.jsx';
 import ClaimTrialModal from './ClaimTrialModal.jsx';
@@ -74,6 +75,7 @@ import MarketplaceSyncMonitor, { HeaderSyncAlertButton } from './MarketplaceSync
 import CommunityUpdatesModal, { HeaderCommunityButton } from './CommunityUpdatesModal.jsx';
 import AdBanner from './AdBanner.jsx';
 import SeoContentDirectory from './SeoContentDirectory.jsx';
+import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
   getOrAssignCustomerId, 
@@ -873,6 +875,31 @@ export default function App() {
             </div>
 
             <button
+              onClick={() => {
+                const el = document.getElementById('seller-growth-hub');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              style={{
+                background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.2) 0%, rgba(0, 210, 255, 0.2) 100%)',
+                border: '1.5px solid #25d366',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                color: '#25d366',
+                fontSize: '11px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                boxShadow: '0 0 15px rgba(37, 211, 102, 0.25)',
+                transition: 'all 0.2s'
+              }}
+              title="Hire Sidra Motion for Listing & Photography or Claim Logistics Deals"
+            >
+              <Briefcase size={13} color="#25d366" /> 💼 Agency Services & Deals
+            </button>
+
+            <button
               onClick={() => setShowAccountModal(true)}
               style={{
                 background: 'rgba(255, 255, 255, 0.08)',
@@ -1020,6 +1047,11 @@ export default function App() {
 
             {/* In-Feed Mid-Workspace Engagement Ad Unit */}
             <AdBanner position="in-feed" />
+
+            {/* Official Seller Agency Services, Verified Deals & Chai Fund */}
+            <div id="seller-growth-hub">
+              <SellerServicesAndDealsHub />
+            </div>
 
             {/* Comprehensive Industry-Level Seller SEO & Knowledge Index Hub */}
             <SeoContentDirectory onSwitchTab={setActiveTab} />
