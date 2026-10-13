@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   X, 
   MessageSquare, 
@@ -9,16 +9,9 @@ import {
   MapPin,
   ShoppingBag, 
   CheckCircle2, 
-  Copy, 
-  Check, 
-  Sparkles, 
-  Zap, 
   ShieldCheck,
-  Clock,
-  Key,
   BadgeAlert
 } from 'lucide-react';
-import { MarketplaceLogo } from './MarketplaceLogos.jsx';
 import { 
   getOrAssignCustomerId, 
   allocateCustomerIdForApplicant,
@@ -37,7 +30,6 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
   const [city, setCity] = useState(() => localStorage.getItem('sidra_user_city') || '');
   const [brandName, setBrandName] = useState(() => localStorage.getItem('sidra_brand_name') || localStorage.getItem('sidra_store_name') || '');
   const [marketplace, setMarketplace] = useState(() => localStorage.getItem('sidra_platform') || 'Amazon & Flipkart');
-  const [trialDuration, setTrialDuration] = useState('14-Day Free Access');
 
   // Allocate unique sequential Customer ID (110892, 110893, 110894...)
   const [customerId, setCustomerId] = useState(() => {
@@ -46,7 +38,6 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
   });
 
   const [formError, setFormError] = useState('');
-  const [isCopied, setIsCopied] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
   // Dynamically allocate ID when phone number is entered or changed
@@ -59,40 +50,6 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
     }
   };
 
-  // Generate the formatted WhatsApp pitch message dynamically
-  const generatedMessage = formatWhatsAppPitchMessage({
-    customerId,
-    name: sellerName,
-    phone: whatsapp,
-    email,
-    city,
-    brand: brandName || 'My Store',
-    platform: marketplace
-  });
-
-  const handleCopyMessage = () => {
-    // Validate required fields before allowing copy
-    const cleanDigits = whatsapp.trim().replace(/[^0-9]/g, '');
-    const phone10 = cleanDigits.length === 12 && cleanDigits.startsWith('91') ? cleanDigits.slice(2) : cleanDigits;
-    if (!sellerName.trim() || phone10.length !== 10 || !email.trim() || !email.includes('@') || !city.trim()) {
-      setFormError('⚠️ Pehle apni profile complete karein (Name, 10-digit Mobile, Email, City) tabhi WhatsApp (+91 6306348371) pe License Key ke liye message generate hoga!');
-      return;
-    }
-    setFormError('');
-    const freshMessage = formatWhatsAppPitchMessage({
-      customerId,
-      name: sellerName,
-      phone: phone10,
-      email,
-      city,
-      brand: brandName || 'My Store',
-      platform: marketplace
-    });
-    navigator.clipboard.writeText(freshMessage);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2500);
-  };
-
   const handleSubmitAndLaunchWhatsApp = (e) => {
     e?.preventDefault();
     setFormError('');
@@ -100,18 +57,18 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
     // Strict validation: Name, Phone (10 digits), Email, and City are all mandatory
     const cleanName = sellerName.trim();
     if (!cleanName || cleanName.length < 2) {
-      setFormError('⚠️ Pehle apna Pura Naam (Full Name) bharein tabhi WhatsApp par key request jayegi.');
+      setFormError('⚠️ Pehle apna Pura Naam bharein.');
       return;
     }
     const rawDigits = whatsapp.trim().replace(/[^0-9]/g, '');
     const cleanPhone = rawDigits.length === 12 && rawDigits.startsWith('91') ? rawDigits.slice(2) : rawDigits;
     if (!cleanPhone || cleanPhone.length !== 10) {
-      setFormError('⚠️ Kripya 10-digit ka valid WhatsApp Mobile Number bharein (e.g. 9876543210).');
+      setFormError('⚠️ Kripya 10-digit ka valid WhatsApp Mobile Number bharein.');
       return;
     }
     const cleanEmail = email.trim();
     if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
-      setFormError('⚠️ Kripya valid Email Address dalein (e.g. rahul@example.com).');
+      setFormError('⚠️ Kripya valid Email Address dalein.');
       return;
     }
     const cleanCity = city.trim();
@@ -131,9 +88,9 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
       phone: cleanPhone,
       email: cleanEmail,
       city: cleanCity,
-      brand: brandName.trim() || 'My Store',
+      brand: brandName.trim(),
       platform: marketplace.trim(),
-      duration: trialDuration
+      duration: 'Commercial License'
     });
 
     if (onProfileUpdated) {
@@ -148,14 +105,14 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
       });
     }
 
-    // Generate accurate message with allocated sequential customer ID
+    // Generate accurate message with real details only (Zero dummy/demo fallbacks)
     const pitchMessage = formatWhatsAppPitchMessage({
       customerId: finalCustomerId,
       name: cleanName,
       phone: cleanPhone,
       email: cleanEmail,
       city: cleanCity,
-      brand: brandName.trim() || 'My Store',
+      brand: brandName.trim(),
       platform: marketplace.trim()
     });
 
@@ -183,7 +140,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
       padding: '16px'
     }}>
       <div className="glass-panel" style={{
-        maxWidth: '600px',
+        maxWidth: '560px',
         width: '100%',
         maxHeight: '94vh',
         overflowY: 'auto',
@@ -196,8 +153,8 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '46px',
-              height: '46px',
+              width: '44px',
+              height: '44px',
               borderRadius: '50%',
               background: 'rgba(37, 211, 102, 0.15)',
               border: '2px solid #25d366',
@@ -206,12 +163,12 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
               justifyContent: 'center',
               color: '#25d366'
             }}>
-              <MessageSquare size={22} />
+              <MessageSquare size={20} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', fontFamily: "'Space Grotesk', sans-serif" }}>
-                  Seller Profile & WhatsApp Key Claim
+                  Seller Profile & Key Request
                 </h3>
                 <span style={{
                   background: 'rgba(37, 211, 102, 0.2)',
@@ -222,11 +179,11 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                   borderRadius: '12px',
                   border: '1px solid rgba(37, 211, 102, 0.4)'
                 }}>
-                  OFFICIAL AGENT DESK
+                  AGENT: +91 6306348371
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                Pehle apni profile (Name, 10-digit WhatsApp Mobile, Email, City) complete karein, tabhi WhatsApp agent (+91 6306348371) pe key ka message jayega.
+                Pehle apni profile complete karein, fir WhatsApp agent (+91 6306348371) pe key lene ka message jayega.
               </p>
             </div>
           </div>
@@ -265,7 +222,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
         }}>
           <div>
             <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
-              Auto-Assigned Customer ID
+              Your Customer ID
             </div>
             <div style={{ fontSize: '18px', fontWeight: '800', color: '#00d2ff', fontFamily: 'monospace', letterSpacing: '1px', marginTop: '2px' }}>
               {customerId}
@@ -280,7 +237,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
             padding: '4px 10px',
             fontWeight: '700'
           }}>
-            ✓ 1-Key per 1-ID Binding Active
+            ✓ Direct WhatsApp Dispatch Active
           </div>
         </div>
 
@@ -314,10 +271,10 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
             lineHeight: '1.5'
           }}>
             <div style={{ fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CheckCircle2 size={16} /> Profile Saved & Routed to Agent Desk!
+              <CheckCircle2 size={16} /> Profile Saved & WhatsApp Opened!
             </div>
             <div style={{ marginTop: '4px', color: '#e2e8f0' }}>
-              Your pitch message with Customer ID <strong>{customerId}</strong> has been routed directly to Key Dispatch Agent <strong>{OFFICIAL_AGENT_DISPLAY_PHONE}</strong>. They will verify and issue your commercial key immediately!
+              Customer ID <strong>{customerId}</strong> ke sath official Agent <strong>{OFFICIAL_AGENT_DISPLAY_PHONE}</strong> ko message open ho gaya hai. Agent aapko commercial key bhejenge.
             </div>
           </div>
         )}
@@ -328,13 +285,13 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '11px', fontWeight: '700', color: '#cbd5e1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <User size={12} color="#00d2ff" /> 1. Full Name (Naam) *
+                <User size={12} color="#00d2ff" /> 1. Full Name (Pura Naam) *
               </label>
               <input
                 type="text"
                 value={sellerName}
                 onChange={(e) => setSellerName(e.target.value)}
-                placeholder="e.g. Rahul Sharma"
+                placeholder="Apna Pura Naam daalein"
                 style={{ width: '100%', fontSize: '12px' }}
                 required
               />
@@ -347,7 +304,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 type="tel"
                 value={whatsapp}
                 onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="e.g. 9876543210"
+                placeholder="10-digit WhatsApp Mobile Number"
                 style={{ width: '100%', fontSize: '12px' }}
                 required
               />
@@ -364,7 +321,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. rahul@example.com"
+                placeholder="Apna Email ID daalein"
                 style={{ width: '100%', fontSize: '12px' }}
                 required
               />
@@ -377,14 +334,14 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g. Delhi, Mumbai, Jaipur, Surat"
+                placeholder="Apna Shahar (City) daalein"
                 style={{ width: '100%', fontSize: '12px' }}
                 required
               />
             </div>
           </div>
 
-          {/* Row 3: Store / Brand and Marketplace (Optional / Contextual) */}
+          {/* Row 3: Store / Brand and Marketplace */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '11px', fontWeight: '700', color: '#cbd5e1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -394,7 +351,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 type="text"
                 value={brandName}
                 onChange={(e) => setBrandName(e.target.value)}
-                placeholder="e.g. AuraSound / Apex Mart"
+                placeholder="Store / Brand ka naam (Optional)"
                 style={{ width: '100%', fontSize: '12px' }}
               />
             </div>
@@ -416,54 +373,8 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
             </div>
           </div>
 
-          {/* Real-time WhatsApp Pitch Preview with Customer ID */}
-          <div style={{
-            background: 'rgba(0, 0, 0, 0.45)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '12px',
-            marginTop: '2px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '700', color: '#25d366', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <MessageSquare size={12} /> WhatsApp Pitch Message Preview (Auto-Generated)
-              </span>
-              <button
-                type="button"
-                onClick={handleCopyMessage}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: isCopied ? '#25d366' : '#00d2ff',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                {isCopied ? <Check size={12} /> : <Copy size={12} />}
-                {isCopied ? 'Copied' : 'Copy Text'}
-              </button>
-            </div>
-            <pre style={{
-              margin: 0,
-              fontSize: '11px',
-              fontFamily: 'monospace',
-              color: '#cbd5e1',
-              whiteSpace: 'pre-wrap',
-              lineHeight: '1.4',
-              background: 'rgba(0,0,0,0.3)',
-              padding: '10px',
-              borderRadius: '8px'
-            }}>
-              {generatedMessage}
-            </pre>
-          </div>
-
           {/* Action Button */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
             <button
               type="submit"
               style={{
@@ -484,7 +395,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 transition: 'all 0.2s'
               }}
             >
-              <MessageSquare size={16} /> 📲 Profile Complete Karein & WhatsApp Agent (+91 6306348371) Pe Message Bhejein 🚀
+              <MessageSquare size={16} /> 📲 Profile Save Karein & WhatsApp Agent (+91 6306348371) Pe Message Bhejein 🚀
             </button>
           </div>
 

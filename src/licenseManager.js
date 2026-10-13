@@ -148,7 +148,7 @@ export function saveUserProfile(data) {
   const phone = (data.phone || '').trim();
   const email = (data.email || '').trim();
   const city = (data.city || '').trim();
-  const brand = (data.brand || data.store || 'My Store').trim();
+  const brand = (data.brand || data.store || '').trim();
   const platform = (data.platform || 'Amazon & Flipkart').trim();
   const duration = data.duration || '14-Day Free Access';
 
@@ -251,27 +251,31 @@ export function requestProfileChange(reason) {
  */
 export function formatWhatsAppPitchMessage(data) {
   const customerId = data.customerId || getOrAssignCustomerId();
-  const name = (data.name || '').trim() || '[Your Name]';
-  const phone = (data.phone || '').trim() || '[Your Phone]';
-  const email = (data.email || '').trim() || '[Your Email]';
-  const city = (data.city || '').trim() || '[Your City]';
-  const brand = (data.brand || data.brandName || '').trim() || 'My Store';
+  const name = (data.name || '').trim();
+  const phone = (data.phone || '').trim();
+  const email = (data.email || '').trim();
+  const city = (data.city || '').trim();
+  const brand = (data.brand || data.brandName || '').trim();
   const platform = (data.platform || data.marketplace || '').trim() || 'Amazon & Flipkart';
 
-  return `Namaste Sidra Motion Team,
+  const parts = [
+    'Namaste Sidra Motion Team,',
+    '',
+    'Maine Seller Suite Pro (https://sellersuitepro.online) par apni profile details enter ki hain. Kripya meri Commercial License Key issue karein:',
+    '',
+    `• Customer ID: ${customerId}`,
+    name ? `• Full Name: ${name}` : null,
+    phone ? `• WhatsApp Number: ${phone}` : null,
+    email ? `• Email: ${email}` : null,
+    city ? `• City: ${city}` : null,
+    brand ? `• Store / Brand: ${brand}` : null,
+    platform ? `• Marketplace: ${platform}` : null,
+    '• Request: 1-Device Pro Commercial License Key',
+    '',
+    `Kripya meri Customer ID ${customerId} ke liye Commercial Key issue karein. Dhanyawad!`
+  ].filter(Boolean);
 
-Maine Seller Suite Pro (https://sellersuitepro.online) par apni profile complete kar li hai. Kripya meri Commercial License Key issue karein:
-
-• Customer ID: ${customerId}
-• Full Name: ${name}
-• WhatsApp Number: ${phone}
-• Email: ${email}
-• City: ${city}
-• Store / Brand: ${brand}
-• Marketplace: ${platform}
-• Request: 1-Device Pro Commercial License Key
-
-Kripya meri Customer ID ${customerId} ke liye Commercial Key issue karein. Dhanyawad!`;
+  return parts.join('\n');
 }
 
 /**

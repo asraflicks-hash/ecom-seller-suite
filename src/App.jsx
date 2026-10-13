@@ -1460,7 +1460,7 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
       phone: sellerPhone.trim(),
       email: sellerEmail.trim(),
       city: sellerCity.trim(),
-      brand: brandName.trim() || storeName.trim() || 'My Store',
+      brand: brandName.trim() || storeName.trim(),
       platform,
       duration: isLicensed ? 'Commercial Licensed' : 'Trial Freemium'
     });
