@@ -18,7 +18,10 @@ import {
   DollarSign, 
   Check, 
   Heart,
-  Headphones
+  Headphones,
+  QrCode,
+  X,
+  Download
 } from 'lucide-react';
 import { OFFICIAL_AGENT_WHATSAPP, OFFICIAL_AGENT_DISPLAY_PHONE } from './licenseManager.js';
 import { AmazonLogo, FlipkartLogo, MeeshoLogo } from './MarketplaceLogos.jsx';
@@ -26,8 +29,10 @@ import { AmazonLogo, FlipkartLogo, MeeshoLogo } from './MarketplaceLogos.jsx';
 export default function SellerServicesAndDealsHub() {
   const [activeTab, setActiveTab] = useState('services'); // 'services' | 'deals' | 'support'
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [selectedServiceForQr, setSelectedServiceForQr] = useState(null);
 
-  const UPI_ID = 'sidramotions@okaxis';
+  const PAYEE_NAME = 'ANWAR HAIDER';
 
   const sendWhatsAppBooking = (serviceName, price) => {
     const text = `Hello Sidra Motion Team! 💼
@@ -40,6 +45,11 @@ I want to hire your team for:
 Please share the onboarding details, required product info, and payment process!`;
     const url = `https://wa.me/${OFFICIAL_AGENT_WHATSAPP}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const openQrForService = (service) => {
+    setSelectedServiceForQr(service);
+    setShowQrModal(true);
   };
 
   const copyUpiId = () => {
@@ -478,30 +488,57 @@ Please share the onboarding details, required product info, and payment process!
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => sendWhatsAppBooking(service.title, service.price)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 15px rgba(37, 211, 102, 0.25)',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <MessageSquare size={16} />
-                  <span>Book on WhatsApp ({service.price})</span>
-                </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => sendWhatsAppBooking(service.title, service.price)}
+                    style={{
+                      padding: '11px 12px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      boxShadow: '0 4px 15px rgba(37, 211, 102, 0.25)',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <MessageSquare size={14} />
+                    <span>WhatsApp Order</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => openQrForService(service)}
+                    style={{
+                      padding: '11px 10px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #5f259f 0%, #7c3aed 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                      boxShadow: '0 4px 15px rgba(95, 37, 159, 0.3)',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <QrCode size={13} />
+                    <span>Pay via QR</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -673,53 +710,205 @@ Please share the onboarding details, required product info, and payment process!
             ))}
           </div>
 
-          {/* Official UPI Box */}
+          {/* Real PhonePe QR Code Display */}
           <div style={{
-            background: 'rgba(0, 0, 0, 0.4)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '12px',
-            padding: '14px 18px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '12px',
-            marginBottom: '18px'
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '20px',
+            maxWidth: '300px',
+            margin: '0 auto 20px auto',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(95, 37, 159, 0.35)',
+            textAlign: 'center'
           }}>
-            <div style={{ textAlign: 'left' }}>
-              <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Official Sidra Motion UPI ID (GPay / PhonePe / Paytm)
-              </span>
-              <div style={{ fontSize: '15px', fontWeight: '800', color: '#25d366', fontFamily: 'monospace' }}>
-                {UPI_ID}
-              </div>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#5f259f',
+              color: '#ffffff',
+              padding: '4px 14px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: '800',
+              marginBottom: '10px'
+            }}>
+              <span>पे PhonePe ACCEPTED HERE</span>
             </div>
 
-            <button
-              type="button"
-              onClick={copyUpiId}
+            <img
+              src="/phonepe-qr.jpg"
+              alt="PhonePe QR Code - Anwar Haider"
               style={{
-                background: copiedUpi ? '#25d366' : 'rgba(255, 255, 255, 0.1)',
-                color: copiedUpi ? '#070d19' : '#ffffff',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                fontSize: '11px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px'
+                width: '100%',
+                height: 'auto',
+                borderRadius: '12px',
+                display: 'block'
               }}
-            >
-              {copiedUpi ? <Check size={13} /> : <Zap size={13} />}
-              <span>{copiedUpi ? 'Copied!' : 'Copy UPI ID'}</span>
-            </button>
+            />
+
+            <div style={{ marginTop: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a' }}>
+                {PAYEE_NAME}
+              </div>
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                Scan & Pay with Any UPI App (PhonePe / GPay / Paytm)
+              </div>
+            </div>
           </div>
 
           <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>
             Every contribution directly funds our AI server GPUs and keeps all 8 tools 100% free for everyone! ❤️
           </p>
+        </div>
+      )}
+
+      {/* 4. MODAL: FULL-SCREEN SCAN & PAY VIA PHONEPE QR */}
+      {showQrModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.88)',
+          backdropFilter: 'blur(16px)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: '440px',
+            width: '100%',
+            background: 'linear-gradient(180deg, #161129 0%, #0d0a1a 100%)',
+            border: '1.5px solid #5f259f',
+            borderRadius: '24px',
+            padding: '28px',
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.9), 0 0 35px rgba(95, 37, 159, 0.35)',
+            textAlign: 'center',
+            position: 'relative'
+          }}>
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowQrModal(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: 'none',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            {/* Header */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#5f259f',
+              color: '#ffffff',
+              padding: '4px 14px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: '800',
+              marginBottom: '12px'
+            }}>
+              <span>पे PhonePe • SCAN & PAY</span>
+            </div>
+
+            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', margin: '0 0 4px 0' }}>
+              {selectedServiceForQr ? selectedServiceForQr.title : 'Pay via PhonePe / Any UPI'}
+            </h3>
+
+            {selectedServiceForQr && (
+              <div style={{ fontSize: '15px', fontWeight: '800', color: '#25d366', marginBottom: '14px' }}>
+                Amount: {selectedServiceForQr.price}
+              </div>
+            )}
+
+            {/* PhonePe White QR Card */}
+            <div style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              padding: '16px',
+              maxWidth: '260px',
+              margin: '0 auto 16px auto',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)'
+            }}>
+              <img
+                src="/phonepe-qr.jpg"
+                alt="PhonePe QR Code - Anwar Haider"
+                style={{ width: '100%', height: 'auto', borderRadius: '10px', display: 'block' }}
+              />
+              <div style={{ marginTop: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a' }}>
+                  {PAYEE_NAME}
+                </div>
+                <div style={{ fontSize: '10px', color: '#64748b' }}>
+                  Verified Merchant / Payee
+                </div>
+              </div>
+            </div>
+
+            {/* Next Step Instructions */}
+            <div style={{
+              background: 'rgba(37, 211, 102, 0.1)',
+              border: '1px solid rgba(37, 211, 102, 0.3)',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              fontSize: '12px',
+              color: '#cbd5e1',
+              lineHeight: '1.5',
+              marginBottom: '16px',
+              textAlign: 'left'
+            }}>
+              <strong style={{ color: '#25d366' }}>📌 Payment ke baad:</strong>
+              <div>
+                Payment screenshot lijiye aur hamare official WhatsApp <strong>{OFFICIAL_AGENT_DISPLAY_PHONE}</strong> par bhej dijiye. Team 5 minute me kaam start kar degi!
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const sName = selectedServiceForQr ? selectedServiceForQr.title : 'Service';
+                const sPrice = selectedServiceForQr ? selectedServiceForQr.price : 'Custom';
+                const msg = `Hello Sidra Motion! 📸\n\nMaine PhonePe QR se payment kar diya hai for:\n📌 Service: ${sName} (${sPrice})\n\nPlease check my payment screenshot attached!`;
+                window.open(`https://wa.me/${OFFICIAL_AGENT_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '13px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)'
+              }}
+            >
+              <MessageSquare size={16} />
+              <span>Send Screenshot on WhatsApp</span>
+            </button>
+          </div>
         </div>
       )}
     </section>
