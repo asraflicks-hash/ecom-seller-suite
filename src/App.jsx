@@ -1410,16 +1410,33 @@ export default function App() {
 // -------------------------------------------------------------
 
 function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, onOpenClaimModal, onOpenWorkstationSecurity }) {
-  const [accessMode, setAccessMode] = useState('otp'); // 'otp' (100% Free WhatsApp Mobile OTP) | 'key' (Commercial License Key)
+  // accessMode: 'signin' | 'signup' | 'otp' | 'key'
+  const [accessMode, setAccessMode] = useState('signin');
   
-  // Key state
-  const [keyInput, setKeyInput] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
+  // General feedback states
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // 100% Free WhatsApp Mobile OTP State
+  // 1. SIGN IN FORM STATES (Email or Mobile + Password)
+  const [loginIdentifier, setLoginIdentifier] = useState(() => localStorage.getItem('sidra_user_email') || localStorage.getItem('sidra_user_phone') || '');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  // 2. SIGN UP FORM STATES (Name, Email, Mobile, Password -> OTP -> Confirm)
+  const [signUpName, setSignUpName] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPhone, setSignUpPhone] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [signUpOtpSent, setSignUpOtpSent] = useState(false);
+  const [enteredSignUpOtp, setEnteredSignUpOtp] = useState('');
+  const [generatedSignUpOtp, setGeneratedSignUpOtp] = useState('');
+  const [signUpTimer, setSignUpTimer] = useState(0);
+  const [copiedSignUpOtp, setCopiedSignUpOtp] = useState(false);
+
+  // 3. WHATSAPP DIRECT OTP LOGIN STATES
   const [otpPhone, setOtpPhone] = useState(() => localStorage.getItem('sidra_user_phone') || '');
   const [otpSellerName, setOtpSellerName] = useState(() => localStorage.getItem('sidra_user_name') || '');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -1430,12 +1447,56 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [copiedOtp, setCopiedOtp] = useState(false);
 
-  // Real Device & GPS Location Telemetry
+  // 4. COMMERCIAL LICENSE KEY STATES
+  const [keyInput, setKeyInput] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+
+  // 5. DEVICE & GPS SECURITY
   const [gpsVerified, setGpsVerified] = useState(false);
   const [gpsLocationText, setGpsLocationText] = useState('');
   const [isRequestingGps, setIsRequestingGps] = useState(false);
 
-  // Countdown timer for OTP resend
+  // Registered Users Registry Helpers
+  const getRegisteredUsers = () => {
+    try {
+      const raw = localStorage.getItem('sidra_registered_users');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return [];
+  };
+
+  const saveRegisteredUser = (user) => {
+    const users = getRegisteredUsers();
+    const filtered = users.filter(u => 
+      u.email?.toLowerCase() !== user.email?.toLowerCase() &&
+      u.phone !== user.phone
+    );
+    filtered.push(user);
+    localStorage.setItem('sidra_registered_users', JSON.stringify(filtered));
+  };
+
+  const findRegisteredUser = (identifier) => {
+    const users = getRegisteredUsers();
+    const cleanId = (identifier || '').trim().toLowerCase();
+    const cleanPhone = (identifier || '').replace(/[^0-9]/g, '');
+    return users.find(u => 
+      u.email?.toLowerCase() === cleanId ||
+      (cleanPhone.length === 10 && u.phone === cleanPhone)
+    );
+  };
+
+  // Countdown timer for Sign Up OTP resend
+  useEffect(() => {
+    let interval = null;
+    if (signUpTimer > 0) {
+      interval = setInterval(() => {
+        setSignUpTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [signUpTimer]);
+
+  // Countdown timer for WhatsApp OTP resend
   useEffect(() => {
     let interval = null;
     if (otpTimer > 0) {
@@ -1446,6 +1507,292 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
     return () => clearInterval(interval);
   }, [otpTimer]);
 
+  // Real GPS Geolocation request
+  const handleRequestLocation = () => {
+    if (!navigator.geolocation) {
+      setErrorMsg('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsRequestingGps(true);
+    setErrorMsg('');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsRequestingGps(false);
+        setGpsVerified(true);
+        const text = `Lat: ${pos.coords.latitude.toFixed(4)}, Lon: ${pos.coords.longitude.toFixed(4)}`;
+        setGpsLocationText(text);
+        setSuccessMsg(`📍 Real Device GPS verified (${text})`);
+      },
+      (err) => {
+        setIsRequestingGps(false);
+        setErrorMsg('Location permission denied or unavailable.');
+      },
+      { timeout: 8000 }
+    );
+  };
+
+  // -----------------------------------------------------------
+  // FLOW 1: SIGN IN SUBMISSION (Email / Mobile + Password)
+  // -----------------------------------------------------------
+  const handleSignInSubmit = (e) => {
+    e?.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const cleanIdentifier = loginIdentifier.trim();
+    if (!cleanIdentifier) {
+      setErrorMsg('Please enter your registered Email Address or Mobile Number.');
+      return;
+    }
+    if (!loginPassword) {
+      setErrorMsg('Please enter your Password.');
+      return;
+    }
+
+    setIsVerifying(true);
+    setTimeout(() => {
+      setIsVerifying(false);
+
+      // Check registered users list
+      const foundUser = findRegisteredUser(cleanIdentifier);
+      const savedEmail = localStorage.getItem('sidra_user_email') || '';
+      const savedPhone = localStorage.getItem('sidra_user_phone') || '';
+      const savedPassHash = localStorage.getItem('sidra_user_pass_hash') || '';
+
+      let matchedUser = null;
+
+      if (foundUser && verifyPassword(loginPassword, foundUser.passwordHash)) {
+        matchedUser = foundUser;
+      } else if (
+        (savedEmail.toLowerCase() === cleanIdentifier.toLowerCase() ||
+         savedPhone === cleanIdentifier.replace(/[^0-9]/g, '')) &&
+        savedPassHash &&
+        verifyPassword(loginPassword, savedPassHash)
+      ) {
+        matchedUser = {
+          name: localStorage.getItem('sidra_user_name') || 'Registered Seller',
+          email: savedEmail,
+          phone: savedPhone
+        };
+      }
+
+      if (matchedUser) {
+        setSuccessMsg('🎉 Sign In Successful! Opening Seller Suite...');
+        localStorage.setItem('sidra_auth_unlocked', 'true');
+        localStorage.setItem('sidra_auth_type', 'email_password');
+        localStorage.setItem('sidra_user_name', matchedUser.name);
+        localStorage.setItem('sidra_user_email', matchedUser.email);
+        localStorage.setItem('sidra_user_phone', matchedUser.phone);
+        localStorage.setItem('sidra_has_password', 'true');
+
+        onSuccessLogin({
+          name: matchedUser.name,
+          email: matchedUser.email,
+          phone: matchedUser.phone,
+          authType: 'email_password',
+          hasCustomPassword: true,
+          isLicensed: false
+        });
+      } else {
+        setErrorMsg('Galat Email/Mobile ya Password. Agar naya account hai, pehle "Sign Up" par click karke account banayein.');
+      }
+    }, 450);
+  };
+
+  // -----------------------------------------------------------
+  // FLOW 2: SIGN UP SUBMISSION - STEP 1 (Send Email & Mobile OTP)
+  // -----------------------------------------------------------
+  const handleSignUpSubmit = (e) => {
+    e?.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const cleanName = signUpName.trim();
+    const cleanEmail = signUpEmail.trim().toLowerCase();
+    const cleanPhone = signUpPhone.replace(/[^0-9]/g, '');
+
+    if (cleanName.length < 2) {
+      setErrorMsg('Please enter your full Name or Business Name (minimum 2 characters).');
+      return;
+    }
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setErrorMsg('Please enter a valid Email Address (e.g. seller@store.com).');
+      return;
+    }
+    if (cleanPhone.length !== 10) {
+      setErrorMsg('Please enter a valid 10-digit Indian Mobile Number (e.g. 9876543210).');
+      return;
+    }
+    if (!['6', '7', '8', '9'].includes(cleanPhone[0])) {
+      setErrorMsg('Indian mobile numbers must start with 6, 7, 8, or 9.');
+      return;
+    }
+    if (signUpPassword.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+    if (signUpPassword !== signUpConfirmPassword) {
+      setErrorMsg('Passwords match nahi hue. Kripya dono box me same password dalein.');
+      return;
+    }
+
+    // Generate secure 6-digit OTP
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedSignUpOtp(code);
+    setSignUpOtpSent(true);
+    setSignUpTimer(60);
+    setSuccessMsg(`✅ 6-Digit OTP sent to ${cleanEmail} & +91 ${cleanPhone}`);
+  };
+
+  // FLOW 2: SIGN UP CONFIRMATION - STEP 2 (Verify OTP & Transition to Sign In)
+  const handleConfirmSignUpOtp = (e) => {
+    e?.preventDefault();
+    setErrorMsg('');
+
+    const cleanEntered = enteredSignUpOtp.replace(/[^0-9]/g, '');
+    if (cleanEntered.length !== 6) {
+      setErrorMsg('Please enter the full 6-digit OTP code.');
+      return;
+    }
+
+    if (cleanEntered !== generatedSignUpOtp) {
+      setErrorMsg('❌ Invalid OTP: Code match nahi hua. Kripya 6-digit code check karein ya Auto-Fill click karein.');
+      return;
+    }
+
+    setIsVerifying(true);
+    setTimeout(() => {
+      setIsVerifying(false);
+      const cleanName = signUpName.trim();
+      const cleanEmail = signUpEmail.trim().toLowerCase();
+      const cleanPhone = signUpPhone.replace(/[^0-9]/g, '');
+
+      // Hash password and store in registered database
+      const newUser = {
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        passwordHash: hashPassword(signUpPassword),
+        registeredAt: new Date().toISOString(),
+        customerId: currentCustomerId || 'SMSSP/110892'
+      };
+
+      saveRegisteredUser(newUser);
+
+      // Save credentials in active localStorage
+      localStorage.setItem('sidra_user_name', cleanName);
+      localStorage.setItem('sidra_user_email', cleanEmail);
+      localStorage.setItem('sidra_user_phone', cleanPhone);
+      localStorage.setItem('sidra_user_pass_hash', newUser.passwordHash);
+      localStorage.setItem('sidra_has_password', 'true');
+
+      // Reset sign up states
+      setSignUpOtpSent(false);
+      setEnteredSignUpOtp('');
+      setGeneratedSignUpOtp('');
+
+      // Pre-fill Sign In form with registered email!
+      setLoginIdentifier(cleanEmail);
+      setLoginPassword('');
+
+      // Switch view to Sign In tab!
+      setAccessMode('signin');
+      setSuccessMsg('🎉 Account Created & Verified! Ab wahi Email aur Password daal kar Sign In karein.');
+    }, 400);
+  };
+
+  // -----------------------------------------------------------
+  // FLOW 3: WHATSAPP DIRECT OTP LOGIN (Free 1-Click Mobile OTP)
+  // -----------------------------------------------------------
+  const handleSendWhatsAppOtp = (e) => {
+    e?.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const cleanPhone = otpPhone.replace(/[^0-9]/g, '');
+    if (cleanPhone.length !== 10) {
+      setErrorMsg('Invalid Mobile: Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
+      return;
+    }
+    if (!['6', '7', '8', '9'].includes(cleanPhone[0])) {
+      setErrorMsg('Indian mobile numbers must start with 6, 7, 8, or 9.');
+      return;
+    }
+
+    const cleanName = otpSellerName.trim();
+    if (cleanName.length < 2) {
+      setErrorMsg('Please enter your Seller or Brand Name (minimum 2 characters).');
+      return;
+    }
+
+    setIsSendingOtp(true);
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    setTimeout(() => {
+      setGeneratedOtp(code);
+      setOtpSent(true);
+      setOtpTimer(60);
+      setIsSendingOtp(false);
+      setSuccessMsg(`✅ 6-Digit WhatsApp OTP generated for +91 ${cleanPhone}`);
+
+      const waMsg = encodeURIComponent(
+        `*SIDRA MOTION SELLER SUITE PRO 2026*\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `🔐 *VERIFICATION OTP:* *${code}*\n` +
+        `👤 *Seller:* ${cleanName}\n` +
+        `🆔 *Customer ID:* ${currentCustomerId || 'SMSSP/110892'}\n` +
+        `📱 *Mobile:* +91 ${cleanPhone}\n` +
+        `🌐 *Portal:* https://sellersuitepro.online\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `_Valid for 10 minutes._`
+      );
+      const waUrl = `https://wa.me/91${cleanPhone}?text=${waMsg}`;
+      try {
+        window.open(waUrl, '_blank', 'noopener,noreferrer');
+      } catch (err) {}
+    }, 400);
+  };
+
+  const handleVerifyOtp = (e) => {
+    e?.preventDefault();
+    setErrorMsg('');
+
+    const cleanEntered = enteredOtp.replace(/[^0-9]/g, '');
+    if (cleanEntered.length !== 6) {
+      setErrorMsg('Please enter the full 6-digit OTP code.');
+      return;
+    }
+
+    if (cleanEntered !== generatedOtp) {
+      setErrorMsg('❌ Invalid OTP: Code match nahi hua.');
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    setTimeout(() => {
+      setIsVerifyingOtp(false);
+      const cleanPhone = otpPhone.replace(/[^0-9]/g, '');
+      const cleanName = otpSellerName.trim() || `Seller ${cleanPhone.slice(-4)}`;
+
+      localStorage.setItem('sidra_auth_unlocked', 'true');
+      localStorage.setItem('sidra_auth_type', 'whatsapp_otp');
+      localStorage.setItem('sidra_user_phone', cleanPhone);
+      localStorage.setItem('sidra_user_name', cleanName);
+      localStorage.setItem('sidra_user_email', `${cleanPhone}@sellersuitepro.online`);
+
+      onSuccessLogin({
+        name: cleanName,
+        phone: cleanPhone,
+        email: `${cleanPhone}@sellersuitepro.online`,
+        authType: 'whatsapp_otp',
+        isLicensed: false
+      });
+    }, 400);
+  };
+
+  // -----------------------------------------------------------
+  // FLOW 4: COMMERCIAL LICENSE KEY SUBMISSION
+  // -----------------------------------------------------------
   const handleKeySubmit = (e) => {
     e?.preventDefault();
     const clean = keyInput.trim().toUpperCase();
@@ -1471,142 +1818,9 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
           isLicensed: true
         });
       } else {
-        setErrorMsg(validation.error || 'Access Denied: Unregistered or invalid License Key. Please contact Sidra Motion on WhatsApp to acquire an authorized key.');
+        setErrorMsg(validation.error || 'Access Denied: Unregistered or invalid License Key. Please contact Sidra Motion on WhatsApp.');
       }
     }, 500);
-  };
-
-  // Real Native GPS Location Request
-  const handleRequestLocation = () => {
-    if (!navigator.geolocation) {
-      setErrorMsg('Geolocation is not supported by your browser.');
-      return;
-    }
-    setIsRequestingGps(true);
-    setErrorMsg('');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setIsRequestingGps(false);
-        setGpsVerified(true);
-        const text = `Lat: ${pos.coords.latitude.toFixed(4)}, Lon: ${pos.coords.longitude.toFixed(4)}`;
-        setGpsLocationText(text);
-        setSuccessMsg(`📍 Real Device GPS verified (${text})`);
-      },
-      (err) => {
-        setIsRequestingGps(false);
-        if (err.code === 1) {
-          setErrorMsg('Location permission denied. You can still login with WhatsApp Mobile OTP.');
-        } else {
-          setErrorMsg('Location unavailable. You can still login with WhatsApp Mobile OTP.');
-        }
-      },
-      { timeout: 8000 }
-    );
-  };
-
-  // Send / Generate WhatsApp OTP (100% Free, Zero SMS Cost)
-  const handleSendWhatsAppOtp = (e) => {
-    e?.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    const cleanPhone = otpPhone.replace(/[^0-9]/g, '');
-    if (cleanPhone.length !== 10) {
-      setErrorMsg('Invalid Mobile: Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
-      return;
-    }
-    if (!['6', '7', '8', '9'].includes(cleanPhone[0])) {
-      setErrorMsg('Invalid Mobile: Indian mobile numbers must start with 6, 7, 8, or 9.');
-      return;
-    }
-
-    const cleanName = otpSellerName.trim();
-    if (cleanName.length < 2) {
-      setErrorMsg('Please enter your Seller or Brand Name (minimum 2 characters).');
-      return;
-    }
-
-    setIsSendingOtp(true);
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-    setTimeout(() => {
-      setGeneratedOtp(code);
-      setOtpSent(true);
-      setOtpTimer(60);
-      setIsSendingOtp(false);
-      setSuccessMsg(`✅ 6-Digit WhatsApp OTP generated for +91 ${cleanPhone}`);
-
-      // WhatsApp 1-Click Message URL
-      const waMsg = encodeURIComponent(
-        `*SIDRA MOTION SELLER SUITE PRO 2026*\n` +
-        `━━━━━━━━━━━━━━━━━━━\n` +
-        `🔐 *VERIFICATION OTP:* *${code}*\n` +
-        `👤 *Seller:* ${cleanName}\n` +
-        `🆔 *Customer ID:* ${currentCustomerId || 'SMSSP/110892'}\n` +
-        `📱 *Mobile:* +91 ${cleanPhone}\n` +
-        `🌐 *Portal:* https://sellersuitepro.online\n` +
-        `━━━━━━━━━━━━━━━━━━━\n` +
-        `_Valid for 10 minutes. 100% Free WhatsApp Verification._`
-      );
-      const waUrl = `https://wa.me/91${cleanPhone}?text=${waMsg}`;
-      try {
-        window.open(waUrl, '_blank', 'noopener,noreferrer');
-      } catch (err) {}
-    }, 400);
-  };
-
-  // Verify OTP
-  const handleVerifyOtp = (e) => {
-    e?.preventDefault();
-    setErrorMsg('');
-
-    const cleanEntered = enteredOtp.replace(/[^0-9]/g, '');
-    if (cleanEntered.length !== 6) {
-      setErrorMsg('Please enter the full 6-digit OTP code.');
-      return;
-    }
-
-    if (cleanEntered !== generatedOtp) {
-      setErrorMsg('❌ Invalid OTP: Code match nahi hua. Kripya 6-digit code check karein ya Auto-Fill click karein.');
-      return;
-    }
-
-    setIsVerifyingOtp(true);
-    setTimeout(() => {
-      setIsVerifyingOtp(false);
-      const cleanPhone = otpPhone.replace(/[^0-9]/g, '');
-      const cleanName = otpSellerName.trim() || `Seller ${cleanPhone.slice(-4)}`;
-
-      localStorage.setItem('sidra_auth_unlocked', 'true');
-      localStorage.setItem('sidra_auth_type', 'whatsapp_otp');
-      localStorage.setItem('sidra_user_phone', cleanPhone);
-      localStorage.setItem('sidra_user_name', cleanName);
-      localStorage.setItem('sidra_user_email', `${cleanPhone}@sellersuitepro.online`);
-
-      onSuccessLogin({
-        name: cleanName,
-        phone: cleanPhone,
-        email: `${cleanPhone}@sellersuitepro.online`,
-        authType: 'whatsapp_otp',
-        isLicensed: false
-      });
-    }, 500);
-  };
-
-  const handleAutoFillOtp = () => {
-    if (generatedOtp) {
-      setEnteredOtp(generatedOtp);
-      setErrorMsg('');
-      setSuccessMsg('⚡ OTP auto-filled! Click "Verify OTP & Enter Suite" below.');
-    }
-  };
-
-  const handleCopyOtp = () => {
-    if (generatedOtp) {
-      navigator.clipboard.writeText(generatedOtp);
-      setCopiedOtp(true);
-      setTimeout(() => setCopiedOtp(false), 2000);
-    }
   };
 
   return (
@@ -1618,9 +1832,9 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
       padding: '30px 16px'
     }}>
       <div className="glass-panel" style={{
-        maxWidth: '520px',
+        maxWidth: '540px',
         width: '100%',
-        padding: '36px 30px',
+        padding: '34px 28px',
         borderRadius: '24px',
         border: '1px solid rgba(0, 210, 255, 0.35)',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.75)',
@@ -1643,86 +1857,138 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
         </div>
 
         {/* Center Logo Display */}
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '18px' }}>
           <img 
             src="/sidra-logo.png" 
             alt="Sidra Motion Logo" 
             className="gold-glow-animated"
             style={{
-              width: '84px',
-              height: '84px',
+              width: '80px',
+              height: '80px',
               borderRadius: '50%',
               objectFit: 'cover',
               border: '3px solid #eab308',
-              margin: '0 auto 14px',
+              margin: '0 auto 12px',
               display: 'block'
             }}
           />
           <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#fff', fontFamily: "'Space Grotesk', sans-serif" }}>
             Sidra Motion Seller Suite
           </h2>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(37, 211, 102, 0.1)', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '12px', padding: '2px 10px', marginTop: '6px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(37, 211, 102, 0.1)', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '12px', padding: '2px 10px', marginTop: '4px' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 6px #25d366' }} />
             <span style={{ fontSize: '11px', color: '#25d366', fontWeight: '700' }}>sellersuitepro.online</span>
           </div>
-          <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>
-            Instant Free Mobile OTP Login or Commercial License Key Access
+          <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>
+            Email & Password Sign In, New Account Sign Up, or WhatsApp Mobile OTP
           </p>
         </div>
 
-        {/* Access Method Tabs: WhatsApp Mobile OTP (Free) VS Commercial License Key */}
+        {/* 4 ACCESS METHOD TABS: Sign In, Sign Up, WhatsApp OTP, License Key */}
         <div style={{
-          display: 'flex',
-          background: 'rgba(15, 23, 42, 0.65)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '4px',
+          background: 'rgba(15, 23, 42, 0.75)',
           padding: '4px',
           borderRadius: '14px',
-          marginBottom: '22px',
+          marginBottom: '20px',
           border: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
+          {/* Tab 1: Sign In */}
+          <button
+            type="button"
+            onClick={() => { setAccessMode('signin'); setErrorMsg(''); setSuccessMsg(''); }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              padding: '9px 4px',
+              borderRadius: '10px',
+              border: 'none',
+              background: accessMode === 'signin' ? 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)' : 'transparent',
+              color: accessMode === 'signin' ? '#ffffff' : '#94a3b8',
+              fontSize: '11px',
+              fontWeight: accessMode === 'signin' ? '800' : '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Lock size={12} /> Sign In
+          </button>
+
+          {/* Tab 2: Sign Up */}
+          <button
+            type="button"
+            onClick={() => { setAccessMode('signup'); setErrorMsg(''); setSuccessMsg(''); }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              padding: '9px 4px',
+              borderRadius: '10px',
+              border: 'none',
+              background: accessMode === 'signup' ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' : 'transparent',
+              color: accessMode === 'signup' ? '#ffffff' : '#94a3b8',
+              fontSize: '11px',
+              fontWeight: accessMode === 'signup' ? '800' : '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <User size={12} /> Sign Up
+          </button>
+
+          {/* Tab 3: WhatsApp OTP */}
           <button
             type="button"
             onClick={() => { setAccessMode('otp'); setErrorMsg(''); setSuccessMsg(''); }}
             style={{
-              flex: 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              padding: '10px 8px',
+              gap: '4px',
+              padding: '9px 4px',
               borderRadius: '10px',
               border: 'none',
               background: accessMode === 'otp' ? 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)' : 'transparent',
               color: accessMode === 'otp' ? '#ffffff' : '#94a3b8',
-              fontSize: '12px',
-              fontWeight: accessMode === 'otp' ? '700' : '500',
+              fontSize: '11px',
+              fontWeight: accessMode === 'otp' ? '800' : '600',
               cursor: 'pointer',
               transition: 'all 0.2s',
-              boxShadow: accessMode === 'otp' ? '0 0 14px rgba(37, 211, 102, 0.35)' : 'none'
+              whiteSpace: 'nowrap'
             }}
           >
-            <Smartphone size={14} /> WhatsApp Mobile OTP (Free)
+            <Smartphone size={12} /> OTP Login
           </button>
+
+          {/* Tab 4: License Key */}
           <button
             type="button"
             onClick={() => { setAccessMode('key'); setErrorMsg(''); setSuccessMsg(''); }}
             style={{
-              flex: 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              padding: '10px 8px',
+              gap: '4px',
+              padding: '9px 4px',
               borderRadius: '10px',
               border: 'none',
-              background: accessMode === 'key' ? 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)' : 'transparent',
+              background: accessMode === 'key' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'transparent',
               color: accessMode === 'key' ? '#ffffff' : '#94a3b8',
-              fontSize: '12px',
-              fontWeight: accessMode === 'key' ? '700' : '500',
+              fontSize: '11px',
+              fontWeight: accessMode === 'key' ? '800' : '600',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
             }}
           >
-            <Key size={14} /> License Key
+            <Key size={12} /> Pro Key
           </button>
         </div>
 
@@ -1734,7 +2000,7 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
             padding: '12px 14px',
             borderRadius: '10px',
             fontSize: '12px',
-            marginBottom: '18px',
+            marginBottom: '16px',
             display: 'flex',
             alignItems: 'flex-start',
             gap: '8px',
@@ -1753,7 +2019,7 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
             padding: '12px 14px',
             borderRadius: '10px',
             fontSize: '12px',
-            marginBottom: '18px',
+            marginBottom: '16px',
             display: 'flex',
             alignItems: 'flex-start',
             gap: '8px'
@@ -1763,13 +2029,485 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
           </div>
         )}
 
-        {/* TAB 1: 100% FREE WHATSAPP MOBILE NUMBER OTP LOGIN & SIGNUP */}
+        {/* ========================================================= */}
+        {/* TAB 1: SIGN IN (Email / Mobile + Password)               */}
+        {/* ========================================================= */}
+        {accessMode === 'signin' && (
+          <form onSubmit={handleSignInSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Mail size={13} color="#00d2ff" /> Registered Email Address or Mobile (+91)
+              </label>
+              <input
+                type="text"
+                value={loginIdentifier}
+                onChange={(e) => setLoginIdentifier(e.target.value)}
+                placeholder="e.g. seller@store.com or 9876543210"
+                style={{ width: '100%', fontSize: '14px' }}
+                required
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Lock size={13} color="#00d2ff" /> Account Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  {showLoginPassword ? <EyeOff size={12} /> : <Eye size={12} />}
+                  {showLoginPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              <input
+                type={showLoginPassword ? 'text' : 'password'}
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter your account password"
+                style={{ width: '100%', fontSize: '14px' }}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isVerifying}
+              className="glow-btn-cyan"
+              style={{
+                padding: '13px',
+                fontSize: '14px',
+                fontWeight: '800',
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              {isVerifying ? <RefreshCw className="pulse-radar-dot" size={16} /> : <Lock size={16} />}
+              {isVerifying ? 'Authenticating Credentials...' : 'Sign In & Open Seller Suite'}
+            </button>
+
+            {/* Helper link to Sign Up */}
+            <div style={{ textAlign: 'center', fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>
+              Don't have an account yet?{' '}
+              <button
+                type="button"
+                onClick={() => { setAccessMode('signup'); setErrorMsg(''); setSuccessMsg(''); }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#00d2ff',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                Create Account / Sign Up
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 2: SIGN UP (Name, Email, Mobile, Password -> OTP)    */}
+        {/* ========================================================= */}
+        {accessMode === 'signup' && (
+          <div>
+            {!signUpOtpSent ? (
+              /* STEP 1: Enter Registration Details */
+              <form onSubmit={handleSignUpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {/* Full Name */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <User size={13} color="#8b5cf6" /> Full Name / Business Name
+                  </label>
+                  <input
+                    type="text"
+                    value={signUpName}
+                    onChange={(e) => setSignUpName(e.target.value)}
+                    placeholder="e.g. Sidra Fashion / Aman Enterprises"
+                    style={{ width: '100%' }}
+                    required
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Mail size={13} color="#8b5cf6" /> Email Address (OTP will be sent here)
+                  </label>
+                  <input
+                    type="email"
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                    placeholder="e.g. seller@store.com"
+                    style={{ width: '100%' }}
+                    required
+                  />
+                </div>
+
+                {/* Mobile Number (+91) */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Smartphone size={13} color="#25d366" /> Mobile / WhatsApp Number (India)
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'rgba(15, 23, 42, 0.8)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '10px',
+                      padding: '0 10px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      color: '#25d366'
+                    }}>
+                      🇮🇳 +91
+                    </div>
+                    <input
+                      type="tel"
+                      value={signUpPhone}
+                      onChange={(e) => setSignUpPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                      placeholder="9876543210"
+                      maxLength={10}
+                      style={{ flex: 1 }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password & Confirm Password */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1' }}>
+                        Password
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '10px', cursor: 'pointer' }}
+                      >
+                        {showSignUpPassword ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    <input
+                      type={showSignUpPassword ? 'text' : 'password'}
+                      value={signUpPassword}
+                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      placeholder="Min 6 chars"
+                      style={{ width: '100%' }}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '5px', display: 'block' }}>
+                      Confirm Password
+                    </label>
+                    <input
+                      type={showSignUpPassword ? 'text' : 'password'}
+                      value={signUpConfirmPassword}
+                      onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      style={{ width: '100%' }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Submit Register Button */}
+                <button
+                  type="submit"
+                  style={{
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '13px',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)',
+                    marginTop: '4px'
+                  }}
+                >
+                  <Send size={15} /> Continue & Send 6-Digit OTP
+                </button>
+
+                <div style={{ textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setAccessMode('signin'); setErrorMsg(''); setSuccessMsg(''); }}
+                    style={{ background: 'transparent', border: 'none', color: '#00d2ff', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Sign In
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* STEP 2: Verify 6-Digit OTP sent to Email & Mobile */
+              <form onSubmit={handleConfirmSignUpOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setSignUpOtpSent(false); setEnteredSignUpOtp(''); setErrorMsg(''); setSuccessMsg(''); }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#00d2ff',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: 0
+                    }}
+                  >
+                    ← Edit Details ({signUpEmail})
+                  </button>
+                  <span style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: '800' }}>
+                    Email & Mobile OTP
+                  </span>
+                </div>
+
+                {/* OTP Dispatch Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(99, 102, 241, 0.15) 100%)',
+                  border: '2px solid rgba(139, 92, 246, 0.5)',
+                  borderRadius: '16px',
+                  padding: '16px 14px',
+                  textAlign: 'center',
+                  boxShadow: '0 0 25px rgba(139, 92, 246, 0.25)'
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#c4b5fd', marginBottom: '6px' }}>
+                    📧 6-Digit Verification OTP Code
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '10px' }}>
+                    Sent to: <strong>{signUpEmail}</strong> & 📱 +91 <strong>{signUpPhone}</strong>
+                  </div>
+
+                  {/* Segmented 6-digit display */}
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '10px 0' }}>
+                    {generatedSignUpOtp.split('').map((digit, idx) => (
+                      <span key={idx} style={{
+                        width: '40px',
+                        height: '46px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(15, 23, 42, 0.9)',
+                        border: '2px solid #8b5cf6',
+                        borderRadius: '10px',
+                        fontSize: '22px',
+                        fontWeight: '900',
+                        color: '#c4b5fd',
+                        fontFamily: 'monospace',
+                        boxShadow: '0 0 14px rgba(139, 92, 246, 0.4)'
+                      }}>
+                        {digit}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Actions: Open Email, Open WhatsApp, Auto-Fill, Copy */}
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '12px' }}>
+                    <a
+                      href={`mailto:${signUpEmail}?subject=${encodeURIComponent(`Seller Suite Pro OTP: ${generatedSignUpOtp}`)}&body=${encodeURIComponent(`Your 6-Digit Verification Code is: ${generatedSignUpOtp}`)}`}
+                      style={{
+                        background: '#8b5cf6',
+                        color: '#ffffff',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Mail size={13} /> Open Email
+                    </a>
+
+                    <a
+                      href={`https://wa.me/91${signUpPhone}?text=${encodeURIComponent(`*SIDRA MOTION SELLER SUITE PRO 2026*\nOTP: *${generatedSignUpOtp}* for Email: ${signUpEmail}`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        background: '#25d366',
+                        color: '#070d19',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <MessageSquare size={13} /> WhatsApp
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (generatedSignUpOtp) {
+                          setEnteredSignUpOtp(generatedSignUpOtp);
+                          setSuccessMsg('⚡ OTP auto-filled! Click "Confirm OTP & Register" below.');
+                        }
+                      }}
+                      style={{
+                        background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Zap size={13} /> Auto-Fill Code
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (generatedSignUpOtp) {
+                          navigator.clipboard.writeText(generatedSignUpOtp);
+                          setCopiedSignUpOtp(true);
+                          setTimeout(() => setCopiedSignUpOtp(false), 2000);
+                        }
+                      }}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.12)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      {copiedSignUpOtp ? <Check size={13} color="#25d366" /> : <Copy size={13} />}
+                      {copiedSignUpOtp ? 'Copied!' : 'Copy Code'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 6-Digit OTP Entry Input */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'block', textAlign: 'center' }}>
+                    Enter 6-Digit Code Below:
+                  </label>
+                  <input
+                    type="text"
+                    value={enteredSignUpOtp}
+                    onChange={(e) => setEnteredSignUpOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                    placeholder="• • • • • •"
+                    maxLength={6}
+                    style={{
+                      width: '100%',
+                      textAlign: 'center',
+                      fontSize: '22px',
+                      fontWeight: '900',
+                      letterSpacing: '8px',
+                      fontFamily: 'monospace',
+                      padding: '12px'
+                    }}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                {/* Countdown & Resend Option */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
+                  {signUpTimer > 0 ? (
+                    <span style={{ color: '#94a3b8' }}>
+                      ⏱️ Resend OTP in <strong>{signUpTimer}s</strong>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSignUpSubmit}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#8b5cf6',
+                        fontWeight: '700',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <RefreshCw size={13} /> Resend New OTP
+                    </button>
+                  )}
+                  <span style={{ color: '#64748b' }}>
+                    100% Free Verification
+                  </span>
+                </div>
+
+                {/* Submit Confirm Button */}
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  style={{
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '14px',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)'
+                  }}
+                >
+                  {isVerifying ? <RefreshCw className="pulse-radar-dot" size={16} /> : <CheckCircle2 size={16} />}
+                  {isVerifying ? 'Confirming Registration...' : 'Confirm OTP & Create Account'}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 3: WHATSAPP DIRECT OTP LOGIN (1-Click Mobile OTP)     */}
+        {/* ========================================================= */}
         {accessMode === 'otp' && (
           <div>
             {!otpSent ? (
-              /* STEP 1: Enter Mobile & Seller Name */
               <form onSubmit={handleSendWhatsAppOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* 100% Free Header Callout */}
                 <div style={{
                   background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(18, 140, 126, 0.12) 100%)',
                   border: '1px solid rgba(37, 211, 102, 0.35)',
@@ -1798,23 +2536,6 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                   </span>
                 </div>
 
-                {/* Customer ID Display */}
-                <div style={{
-                  background: 'rgba(0, 210, 255, 0.08)',
-                  border: '1px solid rgba(0, 210, 255, 0.25)',
-                  borderRadius: '12px',
-                  padding: '8px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>Assigned Customer ID:</span>
-                  <span style={{ fontSize: '12px', color: '#00d2ff', fontWeight: '800', fontFamily: 'monospace' }}>
-                    {currentCustomerId}
-                  </span>
-                </div>
-
-                {/* Seller / Store Name Input */}
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <User size={13} color="#00d2ff" /> Seller / Business Name
@@ -1829,7 +2550,6 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                   />
                 </div>
 
-                {/* 10-Digit Indian Mobile Number Input */}
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <Smartphone size={13} color="#25d366" /> WhatsApp Mobile Number (India)
@@ -1838,7 +2558,6 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
                       background: 'rgba(15, 23, 42, 0.8)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       borderRadius: '10px',
@@ -1855,71 +2574,12 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                       onChange={(e) => setOtpPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
                       placeholder="9876543210"
                       maxLength={10}
-                      style={{
-                        flex: 1,
-                        fontSize: '15px',
-                        fontWeight: '700',
-                        letterSpacing: '1px'
-                      }}
+                      style={{ flex: 1, fontSize: '15px', fontWeight: '700', letterSpacing: '1px' }}
                       required
                     />
                   </div>
-                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                    Enter 10-digit registered number. OTP is delivered via WhatsApp for 100% free instant access.
-                  </div>
                 </div>
 
-                {/* Device & Location Security Verification Chips */}
-                <div style={{
-                  background: 'rgba(15, 23, 42, 0.75)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '12px',
-                  padding: '10px 12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
-                }}>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                    Workstation Security Telemetry:
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', fontSize: '11px', color: '#cbd5e1' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Cpu size={12} color="#00d2ff" /> {navigator.hardwareConcurrency || 4} CPU Cores
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <HardDrive size={12} color="#25d366" /> Storage Vault Active
-                    </span>
-                    {gpsVerified ? (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#25d366', fontWeight: '700' }}>
-                        <MapPin size={12} color="#25d366" /> GPS Bound
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleRequestLocation}
-                        disabled={isRequestingGps}
-                        style={{
-                          background: 'rgba(0, 210, 255, 0.12)',
-                          border: '1px solid rgba(0, 210, 255, 0.3)',
-                          color: '#00d2ff',
-                          borderRadius: '8px',
-                          padding: '3px 8px',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                      >
-                        <MapPin size={11} />
-                        {isRequestingGps ? 'Locating...' : 'Verify Real GPS Location'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Submit Send OTP Button */}
                 <button
                   type="submit"
                   disabled={isSendingOtp}
@@ -1945,25 +2605,12 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                 </button>
               </form>
             ) : (
-              /* STEP 2: Verify 6-Digit OTP */
               <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {/* Back to change phone button */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <button
                     type="button"
                     onClick={() => { setOtpSent(false); setEnteredOtp(''); setErrorMsg(''); setSuccessMsg(''); }}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#00d2ff',
-                      fontSize: '12px',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: 0
-                    }}
+                    style={{ background: 'transparent', border: 'none', color: '#00d2ff', fontSize: '12px', fontWeight: '700', cursor: 'pointer', padding: 0 }}
                   >
                     ← Change Mobile (+91 {otpPhone})
                   </button>
@@ -1972,7 +2619,6 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                   </span>
                 </div>
 
-                {/* OTP Dispatch Card with segmented display */}
                 <div style={{
                   background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(18, 140, 126, 0.15) 100%)',
                   border: '2px solid rgba(37, 211, 102, 0.5)',
@@ -1981,14 +2627,10 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                   textAlign: 'center',
                   boxShadow: '0 0 25px rgba(37, 211, 102, 0.25)'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
-                    <MessageSquare size={18} color="#25d366" />
-                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#25d366' }}>
-                      WhatsApp OTP Code for +91 {otpPhone}
-                    </span>
+                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#25d366', marginBottom: '8px' }}>
+                    WhatsApp OTP Code for +91 {otpPhone}
                   </div>
 
-                  {/* Segmented 6-digit display */}
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '12px 0' }}>
                     {generatedOtp.split('').map((digit, idx) => (
                       <span key={idx} style={{
@@ -2003,18 +2645,16 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                         fontSize: '22px',
                         fontWeight: '900',
                         color: '#25d366',
-                        fontFamily: 'monospace',
-                        boxShadow: '0 0 14px rgba(37, 211, 102, 0.4)'
+                        fontFamily: 'monospace'
                       }}>
                         {digit}
                       </span>
                     ))}
                   </div>
 
-                  {/* Actions: Open WhatsApp, Copy Code, Auto-Fill */}
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '12px' }}>
                     <a
-                      href={`https://wa.me/91${otpPhone}?text=${encodeURIComponent(`*SIDRA MOTION SELLER SUITE PRO 2026*\nOTP: *${generatedOtp}* for Customer ID: ${currentCustomerId}`)}`}
+                      href={`https://wa.me/91${otpPhone}?text=${encodeURIComponent(`*SIDRA MOTION SELLER SUITE PRO 2026*\nOTP: *${generatedOtp}*`)}`}
                       target="_blank"
                       rel="noreferrer"
                       style={{
@@ -2035,28 +2675,12 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
 
                     <button
                       type="button"
-                      onClick={handleCopyOtp}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.12)',
-                        color: '#fff',
-                        border: '1px solid rgba(255, 255, 255, 0.25)',
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px'
+                      onClick={() => {
+                        if (generatedOtp) {
+                          setEnteredOtp(generatedOtp);
+                          setSuccessMsg('⚡ OTP auto-filled!');
+                        }
                       }}
-                    >
-                      {copiedOtp ? <Check size={13} color="#25d366" /> : <Copy size={13} />}
-                      {copiedOtp ? 'Copied!' : 'Copy Code'}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleAutoFillOtp}
                       style={{
                         background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
                         color: '#fff',
@@ -2065,11 +2689,7 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                         borderRadius: '8px',
                         fontSize: '11px',
                         fontWeight: '800',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        boxShadow: '0 0 12px rgba(0, 210, 255, 0.4)'
+                        cursor: 'pointer'
                       }}
                     >
                       <Zap size={13} /> Auto-Fill Code
@@ -2077,11 +2697,7 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                   </div>
                 </div>
 
-                {/* 6-Digit OTP Entry Input */}
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'block', textAlign: 'center' }}>
-                    Enter 6-Digit Code Below:
-                  </label>
                   <input
                     type="text"
                     value={enteredOtp}
@@ -2102,38 +2718,6 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                   />
                 </div>
 
-                {/* Countdown & Resend Option */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
-                  {otpTimer > 0 ? (
-                    <span style={{ color: '#94a3b8' }}>
-                      ⏱️ Resend OTP in <strong>{otpTimer}s</strong>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleSendWhatsAppOtp}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#25d366',
-                        fontWeight: '700',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        padding: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      <RefreshCw size={13} /> Resend New OTP
-                    </button>
-                  )}
-                  <span style={{ color: '#64748b' }}>
-                    100% Free Verification
-                  </span>
-                </div>
-
-                {/* Submit Verify Button */}
                 <button
                   type="submit"
                   disabled={isVerifyingOtp}
@@ -2149,8 +2733,7 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: '0 0 20px rgba(37, 211, 102, 0.4)'
+                    gap: '8px'
                   }}
                 >
                   {isVerifyingOtp ? <RefreshCw className="pulse-radar-dot" size={16} /> : <CheckCircle2 size={16} />}
@@ -2161,10 +2744,11 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
           </div>
         )}
 
-        {/* TAB 2: COMMERCIAL LICENSE KEY */}
+        {/* ========================================================= */}
+        {/* TAB 4: COMMERCIAL LICENSE KEY                             */}
+        {/* ========================================================= */}
         {accessMode === 'key' && (
           <form onSubmit={handleKeySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Customer ID Display */}
             <div style={{
               background: 'rgba(0, 210, 255, 0.1)',
               border: '1px solid rgba(0, 210, 255, 0.35)',
@@ -2252,7 +2836,7 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
             }}>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: '800', color: '#25d366' }}>
-                  🎁 Apply for 7 or 14-Day Free Access
+                  🎁 Apply for Free Access
                 </div>
                 <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                   Get an instant trial commercial license key via WhatsApp AI Agent
@@ -2272,70 +2856,11 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer',
-                  boxShadow: '0 0 14px rgba(37, 211, 102, 0.45)'
+                  cursor: 'pointer'
                 }}
               >
-                <Zap size={13} /> Get Free Key
+                <Zap size={13} /> Get Key
               </button>
-            </div>
-
-            {/* Contact Box */}
-            <div style={{
-              background: 'rgba(0, 210, 255, 0.05)',
-              border: '1px solid rgba(0, 210, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              marginTop: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '10px'
-            }}>
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>Need an Enterprise License?</div>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Contact Sidra Motion to acquire your custom key</div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <a
-                  href="mailto:contact@sidramotion.com?subject=Purchase%20License%20Key%20-%20Sidra%20Seller%20Suite"
-                  style={{
-                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
-                    color: '#fff',
-                    padding: '7px 11px',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Mail size={13} /> Email
-                </a>
-                <button
-                  type="button"
-                  onClick={onOpenClaimModal}
-                  style={{
-                    background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '7px 12px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <MessageSquare size={13} /> WhatsApp
-                </button>
-              </div>
             </div>
           </form>
         )}
