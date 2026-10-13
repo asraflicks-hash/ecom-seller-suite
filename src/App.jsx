@@ -56,14 +56,17 @@ import {
   FolderOpen,
   ChevronDown,
   Headphones,
-  Globe
+  Globe,
+  MapPin,
+  HardDrive,
+  Cpu
 } from 'lucide-react';
 import OwnerPortal from './OwnerPortal.jsx';
 import ClaimTrialModal from './ClaimTrialModal.jsx';
 import MarketplaceSyncAndLqsAudit from './MarketplaceSyncAndLqsAudit.jsx';
 import AiListingRepairStudio from './AiListingRepairStudio.jsx';
 import ModuleLicenseLockScreen, { ModulePreviewLockBanner } from './ModuleLicenseLockScreen.jsx';
-import GoogleConsentModal from './GoogleConsentModal.jsx';
+import WorkstationSecurityModal from './WorkstationSecurityModal.jsx';
 import OmnichannelSeoSuite from './OmnichannelSeoSuite.jsx';
 import MarketplaceSyncMonitor, { HeaderSyncAlertButton } from './MarketplaceSyncMonitor.jsx';
 import CommunityUpdatesModal, { HeaderCommunityButton } from './CommunityUpdatesModal.jsx';
@@ -147,7 +150,7 @@ export default function App() {
   const [showUserManualModal, setShowUserManualModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
-  const [showGoogleConsentModal, setShowGoogleConsentModal] = useState(false);
+  const [showWorkstationSecurityModal, setShowWorkstationSecurityModal] = useState(false);
   const [showDocsFolder, setShowDocsFolder] = useState(false);
   const [showContactSupportModal, setShowContactSupportModal] = useState(false);
   const [showLockModal, setShowLockModal] = useState(false);
@@ -968,7 +971,7 @@ export default function App() {
         <StrictSecureGate 
           authorizedKeys={authorizedKeys}
           currentCustomerId={currentCustomerId}
-          onOpenGoogleConsent={() => setShowGoogleConsentModal(true)}
+          onOpenWorkstationSecurity={() => setShowWorkstationSecurityModal(true)}
           onSuccessLogin={(data) => {
             localStorage.setItem('sidra_auth_unlocked', 'true');
             localStorage.setItem('sidra_user_name', data.name || (data.email ? data.email.split('@')[0] : 'Seller'));
@@ -1281,28 +1284,34 @@ export default function App() {
         />
       )}
 
-      {/* Google Permission & Account Chooser Consent Modal */}
-      {showGoogleConsentModal && (
-        <GoogleConsentModal 
-          onClose={() => setShowGoogleConsentModal(false)}
-          onAuthorize={(googleData) => {
+      {/* Genuine Workstation Security & Hardware/Location Permission Modal */}
+      {showWorkstationSecurityModal && (
+        <WorkstationSecurityModal 
+          currentCustomerId={currentCustomerId}
+          onClose={() => setShowWorkstationSecurityModal(false)}
+          onAuthorize={(telemetry) => {
             localStorage.setItem('sidra_auth_unlocked', 'true');
-            localStorage.setItem('sidra_auth_type', 'google');
-            localStorage.setItem('sidra_user_name', googleData.name || 'Google Seller');
-            localStorage.setItem('sidra_user_email', googleData.email || '');
+            localStorage.setItem('sidra_auth_type', 'device_verified');
+            localStorage.setItem('sidra_user_name', telemetry.name || 'Verified Seller');
+            localStorage.setItem('sidra_user_phone', telemetry.phone || '');
+            localStorage.setItem('sidra_user_email', `${telemetry.phone}@verified.sellerstation`);
+            localStorage.setItem('sidra_device_id', telemetry.deviceId || '');
 
-            // Freemium Google account: only Module 7 is unlocked unless previously keyed
-            const isLic = verifyLicenseIntegrity(getOrAssignCustomerId(), localStorage.getItem('sidra_user_phone') || '');
+            // Freemium device binding: only Module 7 is unlocked unless previously keyed
+            const isLic = verifyLicenseIntegrity(currentCustomerId, telemetry.phone || '');
             setHasFullLicense(isLic);
             setIsAuthenticated(true);
             setUserProfile(prev => ({
               ...prev,
-              name: googleData.name || 'Google Seller',
-              email: googleData.email || '',
-              authType: 'google'
+              name: telemetry.name || 'Verified Seller',
+              phone: telemetry.phone || '',
+              email: `${telemetry.phone}@verified.sellerstation`,
+              authType: 'device_verified',
+              deviceId: telemetry.deviceId,
+              location: telemetry.location
             }));
-            setShowGoogleConsentModal(false);
-            setActiveTab('listing-audit'); // Open free Module 7 immediately!
+            setShowWorkstationSecurityModal(false);
+            setActiveTab('listing-audit'); // Open Module 7 verified!
           }}
         />
       )}
@@ -1395,30 +1404,11 @@ export default function App() {
 }
 
 // -------------------------------------------------------------
-// STRICT SECURE GATE (Dual Option: License Key or Real Google / Account Login)
+// STRICT SECURE WORKSTATION GATE (License Key or Real Hardware/Location Auth)
 // -------------------------------------------------------------
-const GOOGLE_CLIENT_ID = '817876685561-ciu1p05qt3q91enpqd3naaj9g1bl4b5i.apps.googleusercontent.com';
 
-function decodeJwtPayload(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error('Failed to decode JWT', e);
-    return null;
-  }
-}
-
-function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, onOpenClaimModal, onOpenGoogleConsent }) {
+function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, onOpenClaimModal, onOpenWorkstationSecurity }) {
   const [accessMode, setAccessMode] = useState('key'); // 'key' | 'account'
-  const [accountSubTab, setAccountSubTab] = useState('login'); // 'login' | 'signup' | 'forgot'
   
   // Key state
   const [keyInput, setKeyInput] = useState('');
@@ -1426,96 +1416,6 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-
-  // Email/Pass State
-  const [emailInput, setEmailInput] = useState('');
-  const [passwordInput, setPasswordInput] = useState('');
-  const [confirmPassInput, setConfirmPassInput] = useState('');
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [resetCode, setResetCode] = useState('');
-  const [newResetPassword, setNewResetPassword] = useState('');
-  const [forgotStep, setForgotStep] = useState(1);
-
-  const googleBtnRef = useRef(null);
-
-  // Initialize Official Google Identity Services SDK (Guarded to avoid origin_mismatch on live domain)
-  useEffect(() => {
-    const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    if (!isLocalhost) return; // On live domain, use GoogleConsentModal directly until origin is whitelisted in Google Cloud
-
-    let checkInterval = null;
-
-    const setupGoogle = () => {
-      if (window.google?.accounts?.id) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: (response) => {
-              if (response.credential) {
-                const decoded = decodeJwtPayload(response.credential);
-                if (decoded && decoded.email) {
-                  setErrorMsg('');
-                  setSuccessMsg(`Welcome, ${decoded.name || decoded.email}! Free trial connected.`);
-                  setTimeout(() => {
-                    onSuccessLogin({
-                      name: decoded.name || decoded.email.split('@')[0],
-                      email: decoded.email,
-                      picture: decoded.picture || '',
-                      authType: 'google',
-                      hasCustomPassword: false,
-                      isLicensed: false // Google Trial User: Module 7 only
-                    });
-                  }, 600);
-                }
-              }
-            },
-            auto_select: false,
-            cancel_on_tap_outside: true
-          });
-
-          if (googleBtnRef.current) {
-            googleBtnRef.current.innerHTML = '';
-            window.google.accounts.id.renderButton(googleBtnRef.current, {
-              theme: 'outline',
-              size: 'large',
-              shape: 'rectangular',
-              width: 320,
-              text: 'continue_with',
-              logo_alignment: 'left'
-            });
-          }
-          return true;
-        } catch (e) {
-          console.error('Google init error', e);
-        }
-      }
-      return false;
-    };
-
-    if (!setupGoogle()) {
-      checkInterval = setInterval(() => {
-        if (setupGoogle()) {
-          clearInterval(checkInterval);
-        }
-      }, 500);
-    }
-
-    return () => {
-      if (checkInterval) clearInterval(checkInterval);
-    };
-  }, [accessMode]);
-
-  const triggerGooglePrompt = () => {
-    if (onOpenGoogleConsent) {
-      onOpenGoogleConsent();
-      return;
-    }
-    if (window.google?.accounts?.id) {
-      window.google.accounts.id.prompt();
-    } else {
-      setErrorMsg('Google Sign-In is opening. Please wait a moment.');
-    }
-  };
 
   const handleKeySubmit = (e) => {
     e?.preventDefault();
@@ -1545,111 +1445,6 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
         setErrorMsg(validation.error || 'Access Denied: Unregistered or invalid License Key. Please contact Sidra Motion on WhatsApp to acquire an authorized key.');
       }
     }, 500);
-  };
-
-  // Email & Password Login with Hashed Verification
-  const handleEmailLogin = (e) => {
-    e?.preventDefault();
-    setErrorMsg('');
-    const users = JSON.parse(localStorage.getItem('sidra_registered_users') || '[]');
-    const found = users.find(u => u.email.toLowerCase() === emailInput.trim().toLowerCase());
-
-    if (!found) {
-      setErrorMsg('No account found with this email. Please switch to Create Account.');
-      return;
-    }
-    if (!verifyPassword(passwordInput, found.password)) {
-      setErrorMsg('Incorrect password. Please try again or click Forgot Password.');
-      return;
-    }
-
-    const cid = getOrAssignCustomerId();
-    const isLic = verifyLicenseIntegrity(cid, found.phone || '');
-
-    onSuccessLogin({
-      name: found.name || found.email.split('@')[0],
-      email: found.email,
-      authType: 'email',
-      hasCustomPassword: true,
-      isLicensed: isLic
-    });
-  };
-
-  // Sign Up with Password (Hashed Storage)
-  const handleEmailSignUp = (e) => {
-    e?.preventDefault();
-    setErrorMsg('');
-    if (passwordInput.length < 6) {
-      setErrorMsg('Password must be at least 6 characters.');
-      return;
-    }
-    if (passwordInput !== confirmPassInput) {
-      setErrorMsg('Passwords do not match.');
-      return;
-    }
-
-    const users = JSON.parse(localStorage.getItem('sidra_registered_users') || '[]');
-    if (users.some(u => u.email.toLowerCase() === emailInput.trim().toLowerCase())) {
-      setErrorMsg('An account with this email already exists. Please sign in.');
-      return;
-    }
-
-    const newUser = {
-      email: emailInput.trim(),
-      password: hashPassword(passwordInput),
-      name: emailInput.split('@')[0]
-    };
-    users.push(newUser);
-    localStorage.setItem('sidra_registered_users', JSON.stringify(users));
-
-    setSuccessMsg('Account created successfully! Logging you in...');
-    setTimeout(() => {
-      onSuccessLogin({
-        name: newUser.name,
-        email: newUser.email,
-        authType: 'email',
-        hasCustomPassword: true,
-        isLicensed: false
-      });
-    }, 800);
-  };
-
-  // Forgot password flow with Hashed Storage
-  const handleForgotStep1 = (e) => {
-    e?.preventDefault();
-    setErrorMsg('');
-    const users = JSON.parse(localStorage.getItem('sidra_registered_users') || '[]');
-    const found = users.find(u => u.email.toLowerCase() === forgotEmail.trim().toLowerCase());
-    if (!found) {
-      setErrorMsg('Email address not found in registered accounts.');
-      return;
-    }
-    setForgotStep(2);
-    setSuccessMsg('Reset authorization code generated: 489201');
-  };
-
-  const handleForgotStep2 = (e) => {
-    e?.preventDefault();
-    setErrorMsg('');
-    if (resetCode.trim() !== '489201') {
-      setErrorMsg('Invalid reset code.');
-      return;
-    }
-    if (newResetPassword.length < 6) {
-      setErrorMsg('New password must be at least 6 characters.');
-      return;
-    }
-    const users = JSON.parse(localStorage.getItem('sidra_registered_users') || '[]');
-    const updated = users.map(u => {
-      if (u.email.toLowerCase() === forgotEmail.trim().toLowerCase()) {
-        return { ...u, password: hashPassword(newResetPassword) };
-      }
-      return u;
-    });
-    localStorage.setItem('sidra_registered_users', JSON.stringify(updated));
-    setSuccessMsg('Password updated! Please log in with your new password.');
-    setAccountSubTab('login');
-    setForgotStep(1);
   };
 
   return (
@@ -1764,7 +1559,7 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
               transition: 'all 0.2s'
             }}
           >
-            <UserCheck size={14} /> Google & Account
+            <ShieldCheck size={14} /> Device & Location Auth
           </button>
         </div>
 
@@ -1984,266 +1779,127 @@ function StrictSecureGate({ authorizedKeys, currentCustomerId, onSuccessLogin, o
           </form>
         )}
 
-        {/* MODE 2: REAL GOOGLE & SELLER ACCOUNT */}
+        {/* MODE 2: REAL WORKSTATION SECURITY & HARDWARE/LOCATION PERMISSIONS */}
         {accessMode === 'account' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Real Google OAuth Section */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '14px',
-              padding: '16px',
+              background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.08) 0%, rgba(0, 114, 255, 0.08) 100%)',
+              border: '1px solid rgba(0, 210, 255, 0.35)',
+              borderRadius: '16px',
+              padding: '22px 18px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff', marginBottom: '4px' }}>
-                Sign In with Official Google Account
+              <div style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '16px',
+                background: 'rgba(0, 210, 255, 0.15)',
+                border: '1px solid rgba(0, 210, 255, 0.45)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+                boxShadow: '0 0 18px rgba(0, 210, 255, 0.3)'
+              }}>
+                <ShieldCheck size={28} color="#00d2ff" />
               </div>
-              <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '14px' }}>
-                Verified via Sidra Motion Google OAuth Client ID
+
+              <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', marginBottom: '6px', fontFamily: "'Space Grotesk', sans-serif" }}>
+                Workstation Hardware & Location Binding
+              </div>
+              <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5', marginBottom: '16px' }}>
+                Anti-fraud security protocol requires genuine device hardware verification, persistent storage authorization, and authentic GPS geolocation permission before granting workstation access.
               </p>
 
-              {/* One-Click Verified Google Sign-In Button (Opens smooth consent modal, avoids Error 400 origin_mismatch) */}
+              {/* Real Permission Requirements */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                background: 'rgba(15, 23, 42, 0.8)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                padding: '14px',
+                marginBottom: '18px',
+                textAlign: 'left',
+                fontSize: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#cbd5e1' }}>
+                  <MapPin size={16} color="#00d2ff" style={{ flexShrink: 0 }} />
+                  <span><strong>1. Geolocation:</strong> Native browser GPS prompt (Click Allow)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#cbd5e1' }}>
+                  <HardDrive size={16} color="#25d366" style={{ flexShrink: 0 }} />
+                  <span><strong>2. Storage:</strong> Encrypted offline catalog vault persistence</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#cbd5e1' }}>
+                  <Cpu size={16} color="#eab308" style={{ flexShrink: 0 }} />
+                  <span><strong>3. Device Signature:</strong> GPU accelerator & CPU core binding</span>
+                </div>
+              </div>
+
+              {/* Launch Handshake Button */}
               <button
                 type="button"
-                onClick={triggerGooglePrompt}
+                onClick={onOpenWorkstationSecurity}
+                className="glow-btn-cyan"
                 style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '800',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '12px',
-                  background: '#ffffff',
-                  color: '#1f2937',
-                  fontWeight: '700',
-                  fontSize: '14px',
-                  padding: '13px 20px',
-                  borderRadius: '12px',
-                  border: '1px solid #e5e7eb',
-                  cursor: 'pointer',
-                  width: '100%',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                Continue with Google (Free Trial Access)
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '4px 0' }}>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>OR EMAIL & PASSWORD</span>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-            </div>
-
-            {/* Sub-tabs: Sign In | Create Account | Forgot */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '12px' }}>
-              <button
-                type="button"
-                onClick={() => { setAccountSubTab('login'); setErrorMsg(''); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: accountSubTab === 'login' ? '#00d2ff' : '#94a3b8',
-                  fontWeight: accountSubTab === 'login' ? '700' : '500',
-                  borderBottom: accountSubTab === 'login' ? '2px solid #00d2ff' : 'none',
-                  paddingBottom: '4px',
+                  gap: '8px',
                   cursor: 'pointer'
                 }}
               >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAccountSubTab('signup'); setErrorMsg(''); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: accountSubTab === 'signup' ? '#00d2ff' : '#94a3b8',
-                  fontWeight: accountSubTab === 'signup' ? '700' : '500',
-                  borderBottom: accountSubTab === 'signup' ? '2px solid #00d2ff' : 'none',
-                  paddingBottom: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Create Account
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAccountSubTab('forgot'); setErrorMsg(''); setForgotStep(1); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: accountSubTab === 'forgot' ? '#00d2ff' : '#94a3b8',
-                  fontWeight: accountSubTab === 'forgot' ? '700' : '500',
-                  borderBottom: accountSubTab === 'forgot' ? '2px solid #00d2ff' : 'none',
-                  paddingBottom: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Forgot Password?
+                <ShieldCheck size={18} />
+                Launch Workstation Permission Handshake
               </button>
             </div>
 
-            {/* Email Login Form */}
-            {accountSubTab === 'login' && (
-              <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '4px', display: 'block' }}>
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="seller@gmail.com"
-                    style={{ width: '100%' }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '4px', display: 'block' }}>
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="••••••••"
-                    style={{ width: '100%' }}
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="glow-btn-cyan"
-                  style={{ padding: '12px', fontSize: '13px', fontWeight: '700', marginTop: '4px' }}
-                >
-                  Sign In to Suite
-                </button>
-              </form>
-            )}
-
-            {/* Email SignUp Form */}
-            {accountSubTab === 'signup' && (
-              <form onSubmit={handleEmailSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '4px', display: 'block' }}>
-                    Your Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="yourstore@gmail.com"
-                    style={{ width: '100%' }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '4px', display: 'block' }}>
-                    Create Password (6+ characters)
-                  </label>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="Enter new password"
-                    style={{ width: '100%' }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '4px', display: 'block' }}>
-                    Confirm Password
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassInput}
-                    onChange={(e) => setConfirmPassInput(e.target.value)}
-                    placeholder="Repeat password"
-                    style={{ width: '100%' }}
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="glow-btn-cyan"
-                  style={{ padding: '12px', fontSize: '13px', fontWeight: '700', marginTop: '4px' }}
-                >
-                  Register Account & Enter
-                </button>
-              </form>
-            )}
-
-            {/* Forgot Password Flow */}
-            {accountSubTab === 'forgot' && (
+            {/* Direct WhatsApp Trial Apply Option */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(18, 140, 126, 0.12) 100%)',
+              border: '1px solid rgba(37, 211, 102, 0.3)',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px'
+            }}>
               <div>
-                {forgotStep === 1 ? (
-                  <form onSubmit={handleForgotStep1} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <p style={{ fontSize: '12px', color: '#94a3b8' }}>
-                      Enter your registered email address to receive password reset instructions.
-                    </p>
-                    <input
-                      type="email"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="registered@gmail.com"
-                      style={{ width: '100%' }}
-                      required
-                    />
-                    <button
-                      type="submit"
-                      className="glow-btn-cyan"
-                      style={{ padding: '12px', fontSize: '13px', fontWeight: '700' }}
-                    >
-                      Send Verification Code
-                    </button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleForgotStep2} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div>
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '4px', display: 'block' }}>
-                        Verification Code (Enter 489201)
-                      </label>
-                      <input
-                        type="text"
-                        value={resetCode}
-                        onChange={(e) => setResetCode(e.target.value)}
-                        placeholder="6-digit code"
-                        style={{ width: '100%', textAlign: 'center', letterSpacing: '2px' }}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '4px', display: 'block' }}>
-                        New Password (6+ characters)
-                      </label>
-                      <input
-                        type="password"
-                        value={newResetPassword}
-                        onChange={(e) => setNewResetPassword(e.target.value)}
-                        placeholder="Enter new password"
-                        style={{ width: '100%' }}
-                        required
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="glow-btn-cyan"
-                      style={{ padding: '12px', fontSize: '13px', fontWeight: '700' }}
-                    >
-                      Set New Password & Log In
-                    </button>
-                  </form>
-                )}
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#25d366' }}>
+                  Prefer Commercial License Key?
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                  Apply on WhatsApp for your custom workstation key
+                </div>
               </div>
-            )}
+              <button
+                type="button"
+                onClick={onOpenClaimModal}
+                style={{
+                  background: '#25d366',
+                  color: '#070d19',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <MessageSquare size={13} /> WhatsApp
+              </button>
+            </div>
           </div>
         )}
       </div>
