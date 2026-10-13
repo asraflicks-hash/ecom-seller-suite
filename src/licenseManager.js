@@ -106,10 +106,12 @@ export function getOrAssignCustomerId() {
  */
 export function isProfileComplete(profile) {
   const p = profile || getUserProfile();
+  const rawDigits = (p.phone || '').trim().replace(/[^0-9]/g, '');
+  const phone10 = rawDigits.length === 12 && rawDigits.startsWith('91') ? rawDigits.slice(2) : rawDigits;
   return Boolean(
     p.name && p.name.trim().length >= 2 &&
-    p.phone && p.phone.trim().replace(/[^0-9]/g, '').length >= 7 &&
-    p.email && p.email.trim().includes('@') &&
+    phone10 && phone10.length === 10 &&
+    p.email && p.email.trim().includes('@') && p.email.trim().includes('.') &&
     p.city && p.city.trim().length >= 2
   );
 }
@@ -256,20 +258,20 @@ export function formatWhatsAppPitchMessage(data) {
   const brand = (data.brand || data.brandName || '').trim() || 'My Store';
   const platform = (data.platform || data.marketplace || '').trim() || 'Amazon & Flipkart';
 
-  return `Hello Sidra Motion Team,
+  return `Namaste Sidra Motion Team,
 
-I have registered on Sidra Motion Seller Suite Pro (https://sellersuitepro.online) and completed my seller profile:
+Maine Seller Suite Pro (https://sellersuitepro.online) par apni profile complete kar li hai. Kripya meri Commercial License Key issue karein:
 
 • Customer ID: ${customerId}
 • Full Name: ${name}
 • WhatsApp Number: ${phone}
-• Registered Email: ${email}
+• Email: ${email}
 • City: ${city}
 • Store / Brand: ${brand}
-• Selling Marketplace: ${platform}
+• Marketplace: ${platform}
 • Request: 1-Device Pro Commercial License Key
 
-Please issue my authorized commercial license key bound to Customer ID ${customerId}. Thank you!`;
+Kripya meri Customer ID ${customerId} ke liye Commercial Key issue karein. Dhanyawad!`;
 }
 
 /**

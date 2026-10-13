@@ -72,15 +72,17 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
 
   const handleCopyMessage = () => {
     // Validate required fields before allowing copy
-    if (!sellerName.trim() || !whatsapp.trim() || !email.trim() || !city.trim()) {
-      setFormError('Please fill in all 4 mandatory fields (Name, WhatsApp Number, Email, and City) to generate your message.');
+    const cleanDigits = whatsapp.trim().replace(/[^0-9]/g, '');
+    const phone10 = cleanDigits.length === 12 && cleanDigits.startsWith('91') ? cleanDigits.slice(2) : cleanDigits;
+    if (!sellerName.trim() || phone10.length !== 10 || !email.trim() || !email.includes('@') || !city.trim()) {
+      setFormError('⚠️ Pehle apni profile complete karein (Name, 10-digit Mobile, Email, City) tabhi WhatsApp (+91 6306348371) pe License Key ke liye message generate hoga!');
       return;
     }
     setFormError('');
     const freshMessage = formatWhatsAppPitchMessage({
       customerId,
       name: sellerName,
-      phone: whatsapp,
+      phone: phone10,
       email,
       city,
       brand: brandName || 'My Store',
@@ -95,22 +97,26 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
     e?.preventDefault();
     setFormError('');
 
-    // Strict validation: Name, Phone, Email, and City are all mandatory
-    if (!sellerName.trim()) {
-      setFormError('Please enter your Full Name.');
+    // Strict validation: Name, Phone (10 digits), Email, and City are all mandatory
+    const cleanName = sellerName.trim();
+    if (!cleanName || cleanName.length < 2) {
+      setFormError('⚠️ Pehle apna Pura Naam (Full Name) bharein tabhi WhatsApp par key request jayegi.');
       return;
     }
-    const cleanPhone = whatsapp.trim().replace(/[^0-9]/g, '');
-    if (!cleanPhone || cleanPhone.length < 8) {
-      setFormError('Please enter a valid WhatsApp Phone Number.');
+    const rawDigits = whatsapp.trim().replace(/[^0-9]/g, '');
+    const cleanPhone = rawDigits.length === 12 && rawDigits.startsWith('91') ? rawDigits.slice(2) : rawDigits;
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setFormError('⚠️ Kripya 10-digit ka valid WhatsApp Mobile Number bharein (e.g. 9876543210).');
       return;
     }
-    if (!email.trim() || !email.includes('@')) {
-      setFormError('Please enter a valid Email Address.');
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setFormError('⚠️ Kripya valid Email Address dalein (e.g. rahul@example.com).');
       return;
     }
-    if (!city.trim()) {
-      setFormError('Please enter your City.');
+    const cleanCity = city.trim();
+    if (!cleanCity || cleanCity.length < 2) {
+      setFormError('⚠️ Kripya apna Shahar (City) bharein.');
       return;
     }
 
@@ -121,10 +127,10 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
     // Persist profile and register in claimant log for owner
     const saved = saveUserProfile({
       customerId: finalCustomerId,
-      name: sellerName.trim(),
-      phone: whatsapp.trim(),
-      email: email.trim(),
-      city: city.trim(),
+      name: cleanName,
+      phone: cleanPhone,
+      email: cleanEmail,
+      city: cleanCity,
       brand: brandName.trim() || 'My Store',
       platform: marketplace.trim(),
       duration: trialDuration
@@ -142,18 +148,18 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
       });
     }
 
-    // Generate accurate message with new allocated sequential customer ID
+    // Generate accurate message with allocated sequential customer ID
     const pitchMessage = formatWhatsAppPitchMessage({
       customerId: finalCustomerId,
-      name: sellerName.trim(),
-      phone: whatsapp.trim(),
-      email: email.trim(),
-      city: city.trim(),
+      name: cleanName,
+      phone: cleanPhone,
+      email: cleanEmail,
+      city: cleanCity,
       brand: brandName.trim() || 'My Store',
       platform: marketplace.trim()
     });
 
-    // Build WhatsApp URL directly to Authorized Agent (6306348371)
+    // Build WhatsApp URL directly to Authorized Agent (916306348371)
     const encoded = encodeURIComponent(pitchMessage);
     const waUrl = `https://wa.me/${OFFICIAL_AGENT_WHATSAPP}?text=${encoded}`;
 
@@ -205,7 +211,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', fontFamily: "'Space Grotesk', sans-serif" }}>
-                  Complete Profile to Claim Key
+                  Seller Profile & WhatsApp Key Claim
                 </h3>
                 <span style={{
                   background: 'rgba(37, 211, 102, 0.2)',
@@ -216,11 +222,11 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                   borderRadius: '12px',
                   border: '1px solid rgba(37, 211, 102, 0.4)'
                 }}>
-                  1-DEVICE PRO KEY
+                  OFFICIAL AGENT DESK
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                All 4 fields (Name, Phone, Email, City) are required to generate your bound license key.
+                Pehle apni profile (Name, 10-digit WhatsApp Mobile, Email, City) complete karein, tabhi WhatsApp agent (+91 6306348371) pe key ka message jayega.
               </p>
             </div>
           </div>
@@ -478,7 +484,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 transition: 'all 0.2s'
               }}
             >
-              <MessageSquare size={16} /> Send WhatsApp Request with Customer ID {customerId} 🚀
+              <MessageSquare size={16} /> 📲 Profile Complete Karein & WhatsApp Agent (+91 6306348371) Pe Message Bhejein 🚀
             </button>
           </div>
 
@@ -492,7 +498,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
             gap: '6px'
           }}>
             <ShieldCheck size={13} color="#25d366" />
-            1 Key strictly bound to 1 Phone & Customer ID • Instant Delivery via Sidra Motion WhatsApp
+            Profile complete hone par official Agent (+91 6306348371) ke WhatsApp par Customer ID {customerId} ke sath message jayega.
           </div>
         </form>
       </div>
