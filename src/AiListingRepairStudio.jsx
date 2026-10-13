@@ -328,10 +328,6 @@ export default function AiListingRepairStudio({
 
   // Run repair engine
   const handleExecuteRepair = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
     if (!auditData) return;
     setIsRepairing(true);
 
@@ -349,10 +345,6 @@ export default function AiListingRepairStudio({
 
   // Manual generation handler
   const handleManualGenerate = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
     if (!productName.trim() && !bulletInputs.trim() && !brand.trim()) {
       alert('Please enter your Product Name, Brand, or USPs/Features on the left.');
       return;
@@ -404,10 +396,6 @@ export default function AiListingRepairStudio({
 
   // Export full listing pack
   const downloadListingAsText = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
     if (!output) return;
     const content = `===================================================================
 SIDRA MOTION SELLER SUITE PRO 2026 — OFFICIAL REPAIRED LISTING
@@ -876,7 +864,7 @@ ${output.description}`;
               }}
             >
               {isRepairing ? <RefreshCw className="pulse-radar-dot" size={15} /> : <Sparkles size={15} />}
-              {isRepairing ? 'Generating...' : isPreviewMode ? '🔒 Pro Key Required to Generate' : 'Generate 100% SEO Listing'}
+              {isRepairing ? 'Generating...' : 'Generate 100% SEO Listing'}
             </button>
           </div>
         )}
@@ -952,7 +940,7 @@ ${output.description}`;
                   gap: '4px'
                 }}
               >
-                <Download size={13} /> {isPreviewMode ? '🔒 Pro Export .TXT' : 'Export .TXT'}
+                <Download size={13} /> Export .TXT
               </button>
             </div>
           )}
@@ -1088,7 +1076,7 @@ ${output.description}`;
                 }}
               >
                 {isRepairing ? <RefreshCw className="pulse-radar-dot" size={16} /> : <Wrench size={16} />}
-                {isRepairing ? 'Repairing Listing...' : isPreviewMode ? '🔒 Pro Key Required to Auto-Repair' : '🛠️ Auto-Repair & Fix Listing Now'}
+                {isRepairing ? 'Repairing Listing...' : '🛠️ Auto-Repair & Fix Listing Now'}
               </button>
             </div>
 

@@ -108,11 +108,7 @@ export default function App() {
     return localStorage.getItem('sidra_auth_unlocked') === 'true';
   });
 
-  const [hasFullLicense, setHasFullLicense] = useState(() => {
-    const custId = getOrAssignCustomerId();
-    const phone = localStorage.getItem('sidra_user_phone') || '';
-    return verifyLicenseIntegrity(custId, phone);
-  });
+  const [hasFullLicense, setHasFullLicense] = useState(true);
 
   const [currentCustomerId, setCurrentCustomerId] = useState(() => getOrAssignCustomerId());
 
@@ -122,7 +118,7 @@ export default function App() {
       email: localStorage.getItem('sidra_user_email') || '',
       phone: localStorage.getItem('sidra_user_phone') || '',
       city: localStorage.getItem('sidra_user_city') || '',
-      authType: localStorage.getItem('sidra_auth_type') || 'key',
+      authType: localStorage.getItem('sidra_auth_type') || 'unlocked',
       hasCustomPassword: localStorage.getItem('sidra_has_password') === 'true'
     };
   });
@@ -168,16 +164,14 @@ export default function App() {
       case 'buybox-repricer': return '4. BuyBox & Auto Repricer';
       case 'review-analyzer': return '5. Review & Gap Mining';
       case 'rto-calculator': return '6. RTO & Net Profit Calculator';
+      case 'listing-audit': return '7. Sync & RGB Listing Score';
       case 'omnichannel-seo': return '8. 360° Omnichannel SEO & Marketing Suite';
-      default: return 'Pro Module';
+      default: return 'Suite Module';
     }
   };
 
-  // Active module tab: Default to free Module 7 (listing-audit) for trial/freemium users
-  const [activeTab, setActiveTab] = useState(() => {
-    const isLic = verifyLicenseIntegrity(getOrAssignCustomerId(), localStorage.getItem('sidra_user_phone') || '');
-    return isLic ? 'listing-ai' : 'listing-audit';
-  });
+  // Active module tab: Default to Module 1 (AI Listing Repair) - 100% Free for everyone
+  const [activeTab, setActiveTab] = useState('listing-ai');
   const [copiedKey, setCopiedKey] = useState('');
 
   // Persist authorized keys securely in localStorage
@@ -858,109 +852,42 @@ export default function App() {
             )}
           </div>
 
-          {/* Header Action Buttons: Pro Licensed Status, Enter Key & WhatsApp Key Claim */}
+          {/* Header Action Badges: 100% Free All Modules Unlocked */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            {hasFullLicense ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'rgba(37, 211, 102, 0.15)',
-                  border: '1px solid rgba(37, 211, 102, 0.4)',
-                  padding: '5px 12px',
-                  borderRadius: '20px',
-                  color: '#25d366',
-                  fontSize: '11px',
-                  fontWeight: '800'
-                }}>
-                  <ShieldCheck size={13} /> 💎 PRO LICENSED
-                </div>
-                <button
-                  onClick={() => setShowClaimModal(true)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '5px 12px',
-                    borderRadius: '20px',
-                    color: '#cbd5e1',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontWeight: '700'
-                  }}
-                >
-                  <User size={12} color="#00d2ff" /> Profile
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                {/* Enter License Key Button */}
-                <button
-                  onClick={() => setShowLockModal(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    color: '#00d2ff',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    background: 'rgba(0, 210, 255, 0.12)',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(0, 210, 255, 0.4)',
-                    cursor: 'pointer'
-                  }}
-                  title="Already have a commercial license key? Enter here"
-                >
-                  <Key size={12} /> Enter Key
-                </button>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(37, 211, 102, 0.15)',
+              border: '1px solid rgba(37, 211, 102, 0.4)',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              color: '#25d366',
+              fontSize: '11px',
+              fontWeight: '800',
+              boxShadow: '0 0 14px rgba(37, 211, 102, 0.2)'
+            }}>
+              <CheckCircle size={13} /> 🟢 100% FREE • ALL 8 MODULES UNLOCKED
+            </div>
 
-                {/* Claim Free Trial Key on WhatsApp - Enforces Profile Completion */}
-                <button
-                  onClick={() => setShowClaimModal(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    color: '#25d366',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    background: 'rgba(37, 211, 102, 0.15)',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(37, 211, 102, 0.45)',
-                    cursor: 'pointer',
-                    boxShadow: '0 0 12px rgba(37, 211, 102, 0.25)'
-                  }}
-                  title="Pehle profile complete karein phir WhatsApp par key request jayegi"
-                >
-                  <Zap size={12} /> Get Key on WhatsApp
-                </button>
-
-                {/* Seller Profile Button */}
-                <button
-                  onClick={() => setShowClaimModal(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    color: '#cbd5e1',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(255, 255, 255, 0.18)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <User size={12} color="#00d2ff" /> Seller Profile
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => setShowAccountModal(true)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                color: '#cbd5e1',
+                fontSize: '11px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontWeight: '700'
+              }}
+            >
+              <User size={12} color="#00d2ff" /> Seller Profile
+            </button>
           </div>
 
         </div>
@@ -976,40 +903,35 @@ export default function App() {
             gap: '10px'
           }}>
             {[
-              { id: 'listing-ai', label: '1. AI Listing & SEO', icon: Sparkles, tag: !hasFullLicense ? '🔒 PRO KEY' : 'URL Score & Repair', glowColor: '#00d2ff' },
-              { id: 'image-studio', label: '2. Image & #FFFFFF White BG', icon: ImageIcon, tag: !hasFullLicense ? '🔒 PRO KEY' : 'Amazon Pure White', glowColor: '#38bdf8' },
-              { id: 'catalog-convert', label: '3. Bulk Catalog Converter', icon: ArrowRightLeft, tag: !hasFullLicense ? '🔒 PRO KEY' : 'Az ⇄ Fk ⇄ Ms', glowColor: '#f97316' },
-              { id: 'buybox-repricer', label: '4. BuyBox & Auto Repricer', icon: Zap, tag: !hasFullLicense ? '🔒 PRO KEY' : 'Profit Guard', glowColor: '#f59e0b' },
-              { id: 'review-analyzer', label: '5. Review & Gap Mining', icon: TrendingUp, tag: !hasFullLicense ? '🔒 PRO KEY' : 'Outperform Rivals', glowColor: '#f43f5e' },
-              { id: 'rto-calculator', label: '6. RTO & Net Profit Calculator', icon: DollarSign, tag: !hasFullLicense ? '🔒 PRO KEY' : 'Stop Loss', glowColor: '#10b981' },
-              { id: 'listing-audit', label: '7. Sync & RGB Listing Score', icon: Gauge, tag: '🟢 FREE ACCESS', glowColor: '#25d366' },
-              { id: 'omnichannel-seo', label: '8. 360° Omnichannel SEO & Marketing', icon: Globe, tag: !hasFullLicense ? '🔒 PRO KEY' : '8 Kits & 76 Types', glowColor: '#a855f7' },
+              { id: 'listing-ai', label: '1. AI Listing & SEO', icon: Sparkles, tag: 'Smart Repair', glowColor: '#00d2ff' },
+              { id: 'image-studio', label: '2. Image & #FFFFFF White BG', icon: ImageIcon, tag: 'Amazon Pure White', glowColor: '#38bdf8' },
+              { id: 'catalog-convert', label: '3. Bulk Catalog Converter', icon: ArrowRightLeft, tag: 'Az ⇄ Fk ⇄ Ms', glowColor: '#f97316' },
+              { id: 'buybox-repricer', label: '4. BuyBox & Auto Repricer', icon: Zap, tag: 'Profit Guard', glowColor: '#f59e0b' },
+              { id: 'review-analyzer', label: '5. Review & Gap Mining', icon: TrendingUp, tag: 'Outperform Rivals', glowColor: '#f43f5e' },
+              { id: 'rto-calculator', label: '6. RTO & Net Profit Calculator', icon: DollarSign, tag: 'Stop Loss', glowColor: '#10b981' },
+              { id: 'listing-audit', label: '7. Sync & RGB Listing Score', icon: Gauge, tag: 'RGB Live Audit', glowColor: '#25d366' },
+              { id: 'omnichannel-seo', label: '8. 360° Omnichannel SEO & Marketing', icon: Globe, tag: '8 Kits & 76 Types', glowColor: '#a855f7' },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
-              const isLocked = !hasFullLicense && item.id !== 'listing-audit';
-              const isFree = item.id === 'listing-audit';
-              const effectiveColor = isActive ? item.glowColor : (isLocked ? '#f59e0b' : (isFree ? '#25d366' : item.glowColor));
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   data-active={isActive ? "true" : "false"}
-                  data-locked={isLocked ? "true" : "false"}
-                  data-free={isFree ? "true" : "false"}
                   className="kinara-glow-dynamic"
                   style={{
-                    '--glow-color': effectiveColor,
+                    '--glow-color': item.glowColor,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     padding: '9px 18px',
                     borderRadius: '12px',
-                    border: `1.5px solid ${isActive ? item.glowColor : (isLocked ? 'rgba(245, 158, 11, 0.45)' : (isFree ? 'rgba(37, 211, 102, 0.45)' : item.glowColor + '40'))}`,
+                    border: `1.5px solid ${isActive ? item.glowColor : item.glowColor + '40'}`,
                     background: isActive 
                       ? `linear-gradient(135deg, ${item.glowColor}38 0%, ${item.glowColor}18 100%)` 
-                      : (isLocked ? 'rgba(24, 18, 10, 0.55)' : (isFree ? 'rgba(10, 30, 20, 0.55)' : 'rgba(15, 31, 56, 0.55)')),
-                    color: isActive ? item.glowColor : (isLocked ? '#fbbf24' : (isFree ? '#4ade80' : '#e2e8f0')),
+                      : 'rgba(15, 31, 56, 0.55)',
+                    color: isActive ? item.glowColor : '#e2e8f0',
                     fontWeight: isActive ? '700' : '500',
                     fontSize: '13px',
                     cursor: 'pointer',
@@ -1017,17 +939,15 @@ export default function App() {
                     transition: 'all 0.25s'
                   }}
                 >
-                  <Icon size={16} color={isActive ? item.glowColor : (isLocked ? '#fbbf24' : (isFree ? '#25d366' : item.glowColor))} />
+                  <Icon size={16} color={item.glowColor} />
                   {item.label}
                   <span style={{
                     fontSize: '10px',
                     padding: '2px 7px',
                     borderRadius: '10px',
-                    border: isLocked ? '1px solid rgba(245, 158, 11, 0.4)' : (isFree ? '1px solid rgba(37, 211, 102, 0.4)' : (isActive ? `1px solid ${item.glowColor}80` : '1px solid rgba(255, 255, 255, 0.1)')),
-                    background: isLocked 
-                      ? 'rgba(245, 158, 11, 0.22)' 
-                      : (isFree ? 'rgba(37, 211, 102, 0.22)' : (isActive ? `${item.glowColor}30` : 'rgba(255, 255, 255, 0.08)')),
-                    color: isLocked ? '#fbbf24' : (isFree ? '#25d366' : (isActive ? '#ffffff' : '#94a3b8')),
+                    border: `1px solid ${item.glowColor}80`,
+                    background: isActive ? `${item.glowColor}30` : 'rgba(255, 255, 255, 0.08)',
+                    color: isActive ? '#ffffff' : '#cbd5e1',
                     fontWeight: '800'
                   }}>
                     {item.tag}
@@ -1037,7 +957,7 @@ export default function App() {
             })}
           </nav>
 
-          {/* Main Content Area - GATED: Module 7 is FREE, Modules 1 to 6 REQUIRE LICENSE KEY */}
+          {/* Main Content Area - 100% FREE AND UNLOCKED SUITE */}
           <main style={{ flex: 1, padding: '28px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
             {activeTab === 'listing-audit' && (
               <MarketplaceSyncAndLqsAudit 
@@ -1050,163 +970,51 @@ export default function App() {
 
             {activeTab !== 'listing-audit' && (
               <>
-                {/* PRO PREVIEW LOCK BANNER (TOP OF OPEN MODULE) */}
-                {!hasFullLicense && (
-                  <ModulePreviewLockBanner 
-                    moduleName={getModuleName(activeTab)}
-                    moduleId={activeTab}
-                    customerId={currentCustomerId}
-                    onUnlockSuccess={(key) => {
-                      setHasFullLicense(true);
-                      localStorage.setItem('sidra_license_key_valid', 'true');
-                      setShowLockModal(false);
-                    }}
-                    onGoToFreeModule={() => setActiveTab('listing-audit')}
-                    onOpenProfileModal={() => setShowClaimModal(true)}
-                    onOpenModal={() => setShowLockModal(true)}
-                  />
-                )}
-
-                {/* THE OPEN MODULE WORKSPACE IS 100% VISIBLE TO VIEWER */}
+                {/* ALL 8 MODULE WORKSPACES ARE 100% UNLOCKED AND ACTIVE */}
                 {activeTab === 'listing-ai' && (
                   <AiListingRepairStudio 
                     copyToClipboard={copyToClipboard} 
                     copiedKey={copiedKey} 
-                    isPreviewMode={!hasFullLicense}
-                    onRequireKey={() => setShowLockModal(true)}
+                    isPreviewMode={false}
                   />
                 )}
                 {activeTab === 'image-studio' && (
                   <ImageComplianceStudio 
-                    isPreviewMode={!hasFullLicense}
-                    onRequireKey={() => setShowLockModal(true)}
+                    isPreviewMode={false}
                   />
                 )}
                 {activeTab === 'catalog-convert' && (
                   <CatalogConverter 
-                    isPreviewMode={!hasFullLicense}
-                    onRequireKey={() => setShowLockModal(true)}
+                    isPreviewMode={false}
                   />
                 )}
                 {activeTab === 'buybox-repricer' && (
                   <BuyBoxRepricer 
-                    isPreviewMode={!hasFullLicense}
-                    onRequireKey={() => setShowLockModal(true)}
+                    isPreviewMode={false}
                   />
                 )}
                 {activeTab === 'review-analyzer' && (
                   <ReviewAnalyzer 
-                    isPreviewMode={!hasFullLicense}
-                    onRequireKey={() => setShowLockModal(true)}
+                    isPreviewMode={false}
                   />
                 )}
                 {activeTab === 'rto-calculator' && (
                   <RtoProfitCalculator 
-                    isPreviewMode={!hasFullLicense}
-                    onRequireKey={() => setShowLockModal(true)}
+                    isPreviewMode={false}
                   />
                 )}
                 {activeTab === 'omnichannel-seo' && (
                   <OmnichannelSeoSuite 
-                    copyToClipboard={copyToClipboard}
-                    copiedKey={copiedKey}
-                    isPreviewMode={!hasFullLicense}
-                    onRequireKey={() => setShowLockModal(true)}
+                    copyToClipboard={copyToClipboard} 
+                    copiedKey={copiedKey} 
+                    isPreviewMode={false}
                   />
-                )}
-
-                {/* FLOATING STICKY PREVIEW LOCK HUD */}
-                {!hasFullLicense && (
-                  <div style={{
-                    position: 'fixed',
-                    bottom: '24px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'rgba(15, 23, 42, 0.94)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1.5px solid rgba(245, 158, 11, 0.6)',
-                    boxShadow: '0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(245, 158, 11, 0.25)',
-                    borderRadius: '40px',
-                    padding: '9px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '14px',
-                    zIndex: 999,
-                    maxWidth: '92vw'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        background: 'rgba(245, 158, 11, 0.25)',
-                        color: '#fbbf24'
-                      }}>
-                        <Lock size={13} />
-                      </span>
-                      <span style={{ fontSize: '12px', fontWeight: '800', color: '#f8fafc' }}>
-                        Visual Preview: <span style={{ color: '#fbbf24' }}>{getModuleName(activeTab)}</span>
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <button
-                        onClick={() => setShowLockModal(true)}
-                        style={{
-                          background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '7px 15px',
-                          borderRadius: '20px',
-                          fontSize: '11px',
-                          fontWeight: '800',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          boxShadow: '0 2px 10px rgba(0, 210, 255, 0.35)'
-                        }}
-                      >
-                        <Key size={12} /> Enter License Key
-                      </button>
-
-                      <button
-                        onClick={() => setShowClaimModal(true)}
-                        style={{
-                          background: 'rgba(37, 211, 102, 0.15)',
-                          border: '1px solid rgba(37, 211, 102, 0.45)',
-                          color: '#25d366',
-                          padding: '7px 13px',
-                          borderRadius: '20px',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                      >
-                        <Zap size={12} /> Free Key
-                      </button>
-                    </div>
-                  </div>
                 )}
               </>
             )}
           </main>
 
-      {/* 14-Day Free Trial Key Profile Claim Modal */}
-      {showClaimModal && (
-        <ClaimTrialModal 
-          onClose={() => setShowClaimModal(false)}
-          onProfileUpdated={(updated) => {
-            setUserProfile(prev => ({ ...prev, ...updated }));
-          }}
-        />
-      )}
+
 
       {/* Account Settings & Password Creation Modal */}
       {showAccountModal && (
@@ -1285,28 +1093,7 @@ export default function App() {
         />
       )}
 
-      {/* License Key Verification Modal Dialog */}
-      {showLockModal && (
-        <ModuleLicenseLockScreen 
-          isModal={true}
-          onClose={() => setShowLockModal(false)}
-          moduleName={getModuleName(activeTab)}
-          moduleId={activeTab}
-          onUnlockSuccess={(key) => {
-            setHasFullLicense(true);
-            localStorage.setItem('sidra_license_key_valid', 'true');
-            setShowLockModal(false);
-          }}
-          onGoToFreeModule={() => {
-            setShowLockModal(false);
-            setActiveTab('listing-audit');
-          }}
-          onOpenProfileModal={() => {
-            setShowLockModal(false);
-            setShowClaimModal(true);
-          }}
-        />
-      )}
+
 
       {/* Amazon, Flipkart & Meesho Live Sync & Flaw Monitor Modal */}
       <MarketplaceSyncMonitor 
@@ -5930,10 +5717,6 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
   const fileInputRef = useRef(null);
 
   const handleFileUpload = (e) => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -5960,10 +5743,6 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
   };
 
   const handleConvert = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
     setIsConverting(true);
     setTimeout(() => {
       setIsConverting(false);
@@ -5975,10 +5754,6 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
   };
 
   const handleDownloadCsv = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
     let headers = '';
     let rows = '';
 
@@ -6115,7 +5890,7 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
             style={{ padding: '14px 28px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             {isConverting ? <RefreshCw className="pulse-radar-dot" size={18} /> : <MarketplaceLogo platform={target} size={18} />}
-            {isConverting ? 'Mapping Columns...' : isPreviewMode ? `🔒 Pro Key: Convert to ${target}` : `Auto-Map & Convert to ${target}`}
+            {isConverting ? 'Mapping Columns...' : `Auto-Map & Convert to ${target}`}
           </button>
         </div>
       </div>
@@ -6162,7 +5937,7 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
               className="glow-btn-green" 
               style={{ padding: '10px 20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              <Download size={14} /> {isPreviewMode ? '🔒 Pro Key: Download CSV' : `Download Ready ${target} .CSV`}
+              <Download size={14} /> {`Download Ready ${target} .CSV`}
             </button>
           </div>
 
@@ -6384,7 +6159,7 @@ function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
           }}
         >
           {updateSuccess ? <Check size={16} /> : <Zap size={16} />}
-          {updateSuccess ? 'Price Updated to ₹' + calculatedSafePrice : isPreviewMode ? '🔒 Pro Key: Push Optimal Price Live' : (hasData ? `Push Optimal Price (₹${calculatedSafePrice})` : 'Enter Prices to Calculate')}
+          {updateSuccess ? 'Price Updated to ₹' + calculatedSafePrice : (hasData ? `Push Optimal Price (₹${calculatedSafePrice})` : 'Enter Prices to Calculate')}
         </button>
       </div>
 
@@ -7192,7 +6967,7 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
             style={{ padding: '13px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '800' }}
           >
             {analyzing ? <RefreshCw className="pulse-radar-dot" size={16} /> : <Sparkles size={16} />}
-            {analyzing ? 'Mining Customer Reviews...' : isPreviewMode ? '🔒 Pro Key: Mine Reviews & Gaps' : `⚡ Mine ${reviewsCountInput || 12} Reviews & Extract Gaps`}
+            {analyzing ? 'Mining Customer Reviews...' : `⚡ Mine ${reviewsCountInput || 12} Reviews & Extract Gaps`}
           </button>
 
           {/* SENTIMENT BREAKDOWN CARD */}
@@ -7564,7 +7339,7 @@ SUPPORT CONTACT: contact@sidramotion.com
                   gap: '4px'
                 }}
               >
-                <Download size={13} /> {isPreviewMode ? '🔒 Pro Key: Export P&L' : 'Export P&L'}
+                <Download size={13} /> Export P&L
               </button>
             </div>
           )}

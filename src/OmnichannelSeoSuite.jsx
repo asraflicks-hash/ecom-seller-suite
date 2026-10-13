@@ -1258,11 +1258,6 @@ export default function OmnichannelSeoSuite({
 
   // Run 1-Click Auto-Fix Engine
   const handleAutoFix = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
-
     setIsFixing(true);
     setTimeout(() => {
       setIsFixing(false);
@@ -1279,10 +1274,6 @@ export default function OmnichannelSeoSuite({
 
   // Download file helper
   const handleDownloadFile = (content, filename, type = 'text/plain') => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
-      return;
-    }
     const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -1741,7 +1732,7 @@ export default function OmnichannelSeoSuite({
                           }}
                         >
                           {isFixing ? <RefreshCw className="pulse-radar-dot" size={16} /> : <Sparkles size={16} />}
-                          {isFixing ? 'Generating Verified Fixes...' : isPreviewMode ? `🔒 Pro Key: Auto-Fix ${activeEngine.name}` : `⚡ 1-Click Auto-Fix & Generate Verified Code`}
+                          {isFixing ? 'Generating Verified Fixes...' : `⚡ 1-Click Auto-Fix & Generate Verified Code`}
                         </button>
                       </div>
 
