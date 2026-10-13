@@ -1,0 +1,553 @@
+:root {
+  --primary-bg: #0b1528;
+  --secondary-bg: #0f1f38;
+  --accent-cyan: #00d2ff;
+  --accent-blue: #0072ff;
+  --accent-green: #10b981;
+  --accent-neon-green: #25d366;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --glass-bg: rgba(15, 31, 56, 0.65);
+  --glass-border: rgba(0, 210, 255, 0.22);
+  --glass-card: rgba(18, 36, 64, 0.55);
+  --glow-cyan: 0 0 25px rgba(0, 210, 255, 0.35);
+  --glow-green: 0 0 25px rgba(37, 211, 102, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: radial-gradient(circle at 50% 0%, #173359 0%, #0c182e 45%, #070d19 100%);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism Classes with Animated Glowing Edges (Kinara Glow) */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border-radius: 16px;
+  animation: kinaraGlowCyan 3.5s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+  box-shadow: 0 0 28px rgba(0, 210, 255, 0.55), 0 0 50px rgba(0, 114, 255, 0.3), inset 0 0 12px rgba(0, 210, 255, 0.2);
+}
+
+.glass-card {
+  background: var(--glass-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: 14px;
+  animation: kinaraGlowCyan 4s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: #00d2ff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0, 210, 255, 0.65), 0 0 45px rgba(0, 114, 255, 0.35), inset 0 0 10px rgba(0, 210, 255, 0.25) !important;
+}
+
+.glow-btn-cyan {
+  background: linear-gradient(135deg, #00d2ff 0%, #0072ff 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.glow-btn-cyan:hover {
+  box-shadow: 0 0 30px rgba(0, 210, 255, 0.7);
+  transform: scale(1.02);
+}
+
+.glow-btn-green {
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(37, 211, 102, 0.4);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.glow-btn-green:hover {
+  box-shadow: 0 0 30px rgba(37, 211, 102, 0.7);
+  transform: scale(1.02);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #091220;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e3a63;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00d2ff;
+}
+
+/* Keyframes */
+@keyframes pulseRadar {
+  0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.6); }
+  70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 15px rgba(0, 210, 255, 0); }
+  100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
+}
+
+/* Sidra Motion Official Gold Glowing Animated Aura */
+@keyframes goldGlowPulse {
+  0% {
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.55), 0 0 30px rgba(234, 179, 8, 0.35), inset 0 0 8px rgba(234, 179, 8, 0.3);
+    border-color: #eab308;
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(250, 204, 21, 0.95), 0 0 60px rgba(234, 179, 8, 0.65), inset 0 0 16px rgba(250, 204, 21, 0.55);
+    border-color: #fde047;
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.55), 0 0 30px rgba(234, 179, 8, 0.35), inset 0 0 8px rgba(234, 179, 8, 0.3);
+    border-color: #eab308;
+  }
+}
+
+.gold-glow-animated {
+  animation: goldGlowPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes floatGentle {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+.pulse-radar-dot {
+  animation: pulseRadar 2.5s infinite;
+}
+
+.floating-badge {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+/* Input Styles */
+input, textarea, select {
+  background: rgba(11, 23, 44, 0.7) !important;
+  border: 1px solid rgba(0, 210, 255, 0.25) !important;
+  color: #fff !important;
+  border-radius: 10px;
+  padding: 10px 14px;
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #00d2ff !important;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.35);
+}
+input::placeholder, textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Animated Glowing Light Edge for Coming Soon Badge */
+@keyframes edgeGlowLightAnimation {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.45), 0 0 20px rgba(0, 210, 255, 0.35), inset 0 0 6px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+  33% {
+    box-shadow: 0 0 18px rgba(0, 210, 255, 0.7), 0 0 35px rgba(168, 85, 247, 0.5), inset 0 0 8px rgba(0, 210, 255, 0.35);
+    border-color: #00d2ff;
+  }
+  66% {
+    box-shadow: 0 0 22px rgba(255, 255, 255, 0.8), 0 0 45px rgba(255, 255, 255, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.4);
+    border-color: #ffffff;
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.45), 0 0 20px rgba(0, 210, 255, 0.35), inset 0 0 6px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+.coming-soon-glow-edge {
+  animation: edgeGlowLightAnimation 2.8s ease-in-out infinite;
+}
+
+/* =========================================================================
+   COLOR-MATCHED KINARA GLOW ANIMATIONS (ADAPTIVE LOGO/ICON/TEXT MATCHING)
+   User: "jo colour hai wahi glow ho kinare"
+   ========================================================================= */
+
+/* 1. Cyber Neon Cyan Glowing Edge (Primary Default / Website SEO) */
+@keyframes kinaraGlowCyan {
+  0% {
+    border-color: rgba(0, 210, 255, 0.35);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.28), 0 0 20px rgba(0, 114, 255, 0.14), inset 0 0 6px rgba(0, 210, 255, 0.1);
+  }
+  50% {
+    border-color: rgba(0, 210, 255, 0.85);
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.58), 0 0 38px rgba(0, 114, 255, 0.32), inset 0 0 12px rgba(0, 210, 255, 0.22);
+  }
+  100% {
+    border-color: rgba(0, 210, 255, 0.35);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.28), 0 0 20px rgba(0, 114, 255, 0.14), inset 0 0 6px rgba(0, 210, 255, 0.1);
+  }
+}
+
+/* 2. Amber / Gold Glowing Edge (For BuyBox / Alerts) */
+@keyframes kinaraGlowAmber {
+  0% {
+    border-color: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.28), 0 0 20px rgba(217, 119, 6, 0.14), inset 0 0 6px rgba(245, 158, 11, 0.1);
+  }
+  50% {
+    border-color: rgba(251, 191, 36, 0.95);
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.65), 0 0 40px rgba(251, 191, 36, 0.38), inset 0 0 12px rgba(245, 158, 11, 0.25);
+  }
+  100% {
+    border-color: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.28), 0 0 20px rgba(217, 119, 6, 0.14), inset 0 0 6px rgba(245, 158, 11, 0.1);
+  }
+}
+
+/* 3. Emerald / Neon Green Glowing Edge (WhatsApp / Free Access / GMB / Passed) */
+@keyframes kinaraGlowGreen {
+  0% {
+    border-color: rgba(37, 211, 102, 0.35);
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.28), 0 0 20px rgba(16, 185, 129, 0.14), inset 0 0 6px rgba(37, 211, 102, 0.1);
+  }
+  50% {
+    border-color: rgba(37, 211, 102, 0.95);
+    box-shadow: 0 0 22px rgba(37, 211, 102, 0.65), 0 0 40px rgba(16, 185, 129, 0.38), inset 0 0 12px rgba(37, 211, 102, 0.25);
+  }
+  100% {
+    border-color: rgba(37, 211, 102, 0.35);
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.28), 0 0 20px rgba(16, 185, 129, 0.14), inset 0 0 6px rgba(37, 211, 102, 0.1);
+  }
+}
+
+/* 4. Vivid Red Glowing Edge (YouTube Red / Critical Errors / Sentiment) */
+@keyframes kinaraGlowRed {
+  0% {
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.28), 0 0 20px rgba(220, 38, 38, 0.14), inset 0 0 6px rgba(239, 68, 68, 0.1);
+  }
+  50% {
+    border-color: #ef4444;
+    box-shadow: 0 0 22px rgba(239, 68, 68, 0.7), 0 0 40px rgba(220, 38, 38, 0.38), inset 0 0 12px rgba(239, 68, 68, 0.25);
+  }
+  100% {
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.28), 0 0 20px rgba(220, 38, 38, 0.14), inset 0 0 6px rgba(239, 68, 68, 0.1);
+  }
+}
+
+/* 5. Instagram Magenta / Meesho Pink Glowing Edge */
+@keyframes kinaraGlowPink {
+  0% {
+    border-color: rgba(236, 72, 153, 0.35);
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.28), 0 0 20px rgba(217, 70, 239, 0.14), inset 0 0 6px rgba(236, 72, 153, 0.1);
+  }
+  50% {
+    border-color: #ec4899;
+    box-shadow: 0 0 22px rgba(236, 72, 153, 0.7), 0 0 40px rgba(217, 70, 239, 0.38), inset 0 0 12px rgba(236, 72, 153, 0.25);
+  }
+  100% {
+    border-color: rgba(236, 72, 153, 0.35);
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.28), 0 0 20px rgba(217, 70, 239, 0.14), inset 0 0 6px rgba(236, 72, 153, 0.1);
+  }
+}
+
+/* 6. Facebook / LinkedIn Royal Blue Glowing Edge */
+@keyframes kinaraGlowBlue {
+  0% {
+    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.28), 0 0 20px rgba(37, 99, 235, 0.14), inset 0 0 6px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    border-color: #3b82f6;
+    box-shadow: 0 0 22px rgba(59, 130, 246, 0.7), 0 0 40px rgba(37, 99, 235, 0.38), inset 0 0 12px rgba(59, 130, 246, 0.25);
+  }
+  100% {
+    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.28), 0 0 20px rgba(37, 99, 235, 0.14), inset 0 0 6px rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* 7. Amazon Orange Glowing Edge */
+@keyframes kinaraGlowOrange {
+  0% {
+    border-color: rgba(249, 115, 22, 0.35);
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.28), 0 0 20px rgba(234, 88, 12, 0.14), inset 0 0 6px rgba(249, 115, 22, 0.1);
+  }
+  50% {
+    border-color: #f97316;
+    box-shadow: 0 0 22px rgba(249, 115, 22, 0.7), 0 0 40px rgba(255, 153, 0, 0.38), inset 0 0 12px rgba(249, 115, 22, 0.25);
+  }
+  100% {
+    border-color: rgba(249, 115, 22, 0.35);
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.28), 0 0 20px rgba(234, 88, 12, 0.14), inset 0 0 6px rgba(249, 115, 22, 0.1);
+  }
+}
+
+/* 8. Yellow / Directory IndiaMART Glowing Edge */
+@keyframes kinaraGlowYellow {
+  0% {
+    border-color: rgba(234, 179, 8, 0.35);
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.28), 0 0 20px rgba(202, 138, 4, 0.14), inset 0 0 6px rgba(234, 179, 8, 0.1);
+  }
+  50% {
+    border-color: #eab308;
+    box-shadow: 0 0 22px rgba(234, 179, 8, 0.7), 0 0 40px rgba(250, 204, 21, 0.38), inset 0 0 12px rgba(234, 179, 8, 0.25);
+  }
+  100% {
+    border-color: rgba(234, 179, 8, 0.35);
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.28), 0 0 20px rgba(202, 138, 4, 0.14), inset 0 0 6px rgba(234, 179, 8, 0.1);
+  }
+}
+
+/* 9. AI GEO/AEO Cyan-Teal Glowing Edge */
+@keyframes kinaraGlowTeal {
+  0% {
+    border-color: rgba(6, 182, 212, 0.35);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.28), 0 0 20px rgba(8, 145, 178, 0.14), inset 0 0 6px rgba(6, 182, 212, 0.1);
+  }
+  50% {
+    border-color: #06b6d4;
+    box-shadow: 0 0 22px rgba(6, 182, 212, 0.7), 0 0 40px rgba(34, 211, 238, 0.38), inset 0 0 12px rgba(6, 182, 212, 0.25);
+  }
+  100% {
+    border-color: rgba(6, 182, 212, 0.35);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.28), 0 0 20px rgba(8, 145, 178, 0.14), inset 0 0 6px rgba(6, 182, 212, 0.1);
+  }
+}
+
+/* 10. Sky Blue Glowing Edge (Image Studio / Customer ID) */
+@keyframes kinaraGlowSky {
+  0% {
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.28), 0 0 20px rgba(14, 165, 233, 0.14), inset 0 0 6px rgba(56, 189, 248, 0.1);
+  }
+  50% {
+    border-color: #38bdf8;
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.7), 0 0 40px rgba(14, 165, 233, 0.38), inset 0 0 12px rgba(56, 189, 248, 0.25);
+  }
+  100% {
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.28), 0 0 20px rgba(14, 165, 233, 0.14), inset 0 0 6px rgba(56, 189, 248, 0.1);
+  }
+}
+
+/* 11. Indigo Glowing Edge (SERP Competitors) */
+@keyframes kinaraGlowIndigo {
+  0% {
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.28), 0 0 20px rgba(79, 70, 229, 0.14), inset 0 0 6px rgba(99, 102, 241, 0.1);
+  }
+  50% {
+    border-color: #6366f1;
+    box-shadow: 0 0 22px rgba(99, 102, 241, 0.7), 0 0 40px rgba(79, 70, 229, 0.38), inset 0 0 12px rgba(99, 102, 241, 0.25);
+  }
+  100% {
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.28), 0 0 20px rgba(79, 70, 229, 0.14), inset 0 0 6px rgba(99, 102, 241, 0.1);
+  }
+}
+
+/* 12. Purple Glowing Edge (Omnichannel Suite / Docs) */
+@keyframes kinaraGlowPurple {
+  0% {
+    border-color: rgba(168, 85, 247, 0.35);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.28), 0 0 20px rgba(147, 51, 234, 0.14), inset 0 0 6px rgba(168, 85, 247, 0.1);
+  }
+  50% {
+    border-color: #a855f7;
+    box-shadow: 0 0 22px rgba(168, 85, 247, 0.7), 0 0 40px rgba(147, 51, 234, 0.38), inset 0 0 12px rgba(168, 85, 247, 0.25);
+  }
+  100% {
+    border-color: rgba(168, 85, 247, 0.35);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.28), 0 0 20px rgba(147, 51, 234, 0.14), inset 0 0 6px rgba(168, 85, 247, 0.1);
+  }
+}
+
+/* 13. Crimson Rose Glowing Edge (Review / Gap Sentiment) */
+@keyframes kinaraGlowRose {
+  0% {
+    border-color: rgba(244, 63, 94, 0.35);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.28), 0 0 20px rgba(225, 29, 72, 0.14), inset 0 0 6px rgba(244, 63, 94, 0.1);
+  }
+  50% {
+    border-color: #f43f5e;
+    box-shadow: 0 0 22px rgba(244, 63, 94, 0.7), 0 0 40px rgba(225, 29, 72, 0.38), inset 0 0 12px rgba(244, 63, 94, 0.25);
+  }
+  100% {
+    border-color: rgba(244, 63, 94, 0.35);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.28), 0 0 20px rgba(225, 29, 72, 0.14), inset 0 0 6px rgba(244, 63, 94, 0.1);
+  }
+}
+
+/* 14. Universal Dynamic Glow: Reads --glow-color directly from inline style! */
+@keyframes kinaraGlowDynamic {
+  0% {
+    border-color: color-mix(in srgb, var(--glow-color, #00d2ff) 40%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--glow-color, #00d2ff) 30%, transparent), 
+                inset 0 0 6px color-mix(in srgb, var(--glow-color, #00d2ff) 12%, transparent);
+  }
+  50% {
+    border-color: var(--glow-color, #00d2ff);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--glow-color, #00d2ff) 75%, transparent), 
+                0 0 40px color-mix(in srgb, var(--glow-color, #00d2ff) 38%, transparent), 
+                inset 0 0 12px color-mix(in srgb, var(--glow-color, #00d2ff) 25%, transparent);
+  }
+  100% {
+    border-color: color-mix(in srgb, var(--glow-color, #00d2ff) 40%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--glow-color, #00d2ff) 30%, transparent), 
+                inset 0 0 6px color-mix(in srgb, var(--glow-color, #00d2ff) 12%, transparent);
+  }
+}
+
+/* 15. Active Tab Glowing Aura (High Luminance) */
+@keyframes kinaraGlowActiveTab {
+  0% {
+    border-color: var(--glow-color, #00d2ff);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--glow-color, #00d2ff) 60%, transparent), 
+                0 0 28px color-mix(in srgb, var(--glow-color, #00d2ff) 35%, transparent), 
+                inset 0 0 8px color-mix(in srgb, var(--glow-color, #00d2ff) 25%, transparent);
+  }
+  50% {
+    border-color: #ffffff;
+    box-shadow: 0 0 26px color-mix(in srgb, var(--glow-color, #00d2ff) 90%, transparent), 
+                0 0 50px color-mix(in srgb, var(--glow-color, #00d2ff) 60%, transparent), 
+                inset 0 0 16px color-mix(in srgb, var(--glow-color, #00d2ff) 45%, transparent);
+  }
+  100% {
+    border-color: var(--glow-color, #00d2ff);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--glow-color, #00d2ff) 60%, transparent), 
+                0 0 28px color-mix(in srgb, var(--glow-color, #00d2ff) 35%, transparent), 
+                inset 0 0 8px color-mix(in srgb, var(--glow-color, #00d2ff) 25%, transparent);
+  }
+}
+
+/* =========================================================================
+   COLOR-MATCHED UTILITY CLASSES
+   ========================================================================= */
+.kinara-glow,
+.edge-glow-box,
+.edge-glow-card,
+.edge-glow-col,
+.edge-glow-section,
+.edge-glow-pill {
+  animation: kinaraGlowCyan 3.5s ease-in-out infinite;
+  transition: all 0.25s ease;
+}
+
+.kinara-glow-dynamic {
+  animation: kinaraGlowDynamic 3.2s ease-in-out infinite !important;
+  transition: all 0.25s ease;
+}
+
+.kinara-glow-cyan, .glow-website {
+  animation: kinaraGlowCyan 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-red, .glow-youtube, .glow-critical {
+  animation: kinaraGlowRed 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-pink, .glow-instagram, .glow-meesho {
+  animation: kinaraGlowPink 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-blue, .glow-facebook, .glow-linkedin {
+  animation: kinaraGlowBlue 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-orange, .glow-amazon {
+  animation: kinaraGlowOrange 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-amber, .glow-buybox, .glow-warning {
+  animation: kinaraGlowAmber 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-yellow, .glow-directory {
+  animation: kinaraGlowYellow 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-green, .glow-whatsapp, .glow-passed, .glow-free {
+  animation: kinaraGlowGreen 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-teal, .glow-ai {
+  animation: kinaraGlowTeal 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-sky {
+  animation: kinaraGlowSky 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-rose {
+  animation: kinaraGlowRose 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-indigo, .glow-serp {
+  animation: kinaraGlowIndigo 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-purple, .glow-omnichannel {
+  animation: kinaraGlowPurple 3.2s ease-in-out infinite !important;
+}
+
+.kinara-glow-active {
+  animation: kinaraGlowActiveTab 2.2s ease-in-out infinite !important;
+}
+
+/* Hover shine with custom color */
+.kinara-glow-dynamic:hover {
+  transform: translateY(-2px);
+  border-color: var(--glow-color, #00d2ff) !important;
+  box-shadow: 0 0 28px color-mix(in srgb, var(--glow-color, #00d2ff) 85%, transparent), 
+              0 0 50px color-mix(in srgb, var(--glow-color, #00d2ff) 50%, transparent), 
+              inset 0 0 14px color-mix(in srgb, var(--glow-color, #00d2ff) 35%, transparent) !important;
+}
+
+/* Top Navigation Bar Tabs */
+nav button {
+  position: relative;
+  animation: kinaraGlowDynamic 3.2s ease-in-out infinite;
+  transition: all 0.25s ease !important;
+}
+
+nav button:hover {
+  transform: translateY(-2px);
+  border-color: var(--glow-color, #00d2ff) !important;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--glow-color, #00d2ff) 85%, transparent), 
+              inset 0 0 10px color-mix(in srgb, var(--glow-color, #00d2ff) 35%, transparent) !important;
+}
+
+nav button[data-active="true"] {
+  animation: kinaraGlowActiveTab 2.2s ease-in-out infinite !important;
+}
+
