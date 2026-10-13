@@ -1,0 +1,2 @@
+# Google AdSense ads.txt for sellersuitepro.online
+google.com, pub-6600425381242237, DIRECT, f08c47fec0942fa0

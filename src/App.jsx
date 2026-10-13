@@ -72,6 +72,8 @@ import WorkstationSecurityModal from './WorkstationSecurityModal.jsx';
 import OmnichannelSeoSuite from './OmnichannelSeoSuite.jsx';
 import MarketplaceSyncMonitor, { HeaderSyncAlertButton } from './MarketplaceSyncMonitor.jsx';
 import CommunityUpdatesModal, { HeaderCommunityButton } from './CommunityUpdatesModal.jsx';
+import AdBanner from './AdBanner.jsx';
+import SeoContentDirectory from './SeoContentDirectory.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
   getOrAssignCustomerId, 
@@ -957,6 +959,9 @@ export default function App() {
             })}
           </nav>
 
+          {/* Top Leaderboard High-Viewability Ad Unit (728x90 / Responsive) */}
+          <AdBanner position="top-leaderboard" />
+
           {/* Main Content Area - 100% FREE AND UNLOCKED SUITE */}
           <main style={{ flex: 1, padding: '28px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
             {activeTab === 'listing-audit' && (
@@ -1012,6 +1017,12 @@ export default function App() {
                 )}
               </>
             )}
+
+            {/* In-Feed Mid-Workspace Engagement Ad Unit */}
+            <AdBanner position="in-feed" />
+
+            {/* Comprehensive Industry-Level Seller SEO & Knowledge Index Hub */}
+            <SeoContentDirectory onSwitchTab={setActiveTab} />
           </main>
 
 
@@ -1155,6 +1166,9 @@ export default function App() {
           </a>
         </div>
       </footer>
+
+      {/* Floating Sticky Bottom Anchor Ad (High CPM / Mobile & Desktop) */}
+      <AdBanner position="sticky-footer" />
     </div>
   );
 }

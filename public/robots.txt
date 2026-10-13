@@ -1,0 +1,24 @@
+# Robots.txt for SELLER SUITE PRO 2026 - https://sellersuitepro.online
+# Official E-Commerce Seller Command Center
+
+User-agent: *
+Allow: /
+
+# Googlebot Full Access
+User-agent: Googlebot
+Allow: /
+
+# Bingbot Full Access
+User-agent: Bingbot
+Allow: /
+
+# Yahoo & DuckDuckGo Crawlers
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Sitemaps
+Sitemap: https://sellersuitepro.online/sitemap.xml
+Sitemap: https://www.sellersuitepro.online/sitemap.xml

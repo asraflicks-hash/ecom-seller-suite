@@ -33,7 +33,8 @@ import {
   Bell,
   Send,
   Eye,
-  EyeOff
+  EyeOff,
+  DollarSign
 } from 'lucide-react';
 import { 
   generateBoundKeyForCustomer, 
@@ -47,6 +48,7 @@ import {
 } from './licenseManager.js';
 import { verifyMasterPin, setOwnerMasterPin, checkPinLockoutStatus } from './securityUtils.js';
 import { getStoredOfficialUpdates, saveOfficialUpdates } from './CommunityUpdatesModal.jsx';
+import { getAdConfig, saveAdConfig } from './adConfig.js';
 
 const OFFICIAL_PRESEED_KEYS = [
   'SM26-MASTER-ADMIN-KEY',
@@ -136,6 +138,29 @@ export default function OwnerPortal({ onNavigateToPublic }) {
   const [bPinned, setBPinned] = useState(false);
   const [bActionLabel, setBActionLabel] = useState('');
   const [bActionTab, setBActionTab] = useState('listing-audit');
+
+  // Google AdSense & Monetization state
+  const [adConfigState, setAdConfigState] = useState(() => getAdConfig());
+  const [pubIdInput, setPubIdInput] = useState(() => getAdConfig().pubId || 'ca-pub-XXXXXXXXXXXXXXXX');
+  const [topSlotInput, setTopSlotInput] = useState(() => getAdConfig().topSlotId || '');
+  const [inFeedSlotInput, setInFeedSlotInput] = useState(() => getAdConfig().inFeedSlotId || '');
+  const [footerSlotInput, setFooterSlotInput] = useState(() => getAdConfig().footerSlotId || '');
+  const [adsActiveToggle, setAdsActiveToggle] = useState(() => getAdConfig().adsEnabled !== false);
+
+  const handleSaveAdSettings = (e) => {
+    e?.preventDefault();
+    const cleanPubId = pubIdInput.trim();
+    const updated = saveAdConfig({
+      pubId: cleanPubId,
+      topSlotId: topSlotInput.trim(),
+      inFeedSlotId: inFeedSlotInput.trim(),
+      footerSlotId: footerSlotInput.trim(),
+      adsEnabled: adsActiveToggle
+    });
+    setAdConfigState(updated);
+    setNotification('✅ Google AdSense & Monetization settings updated and live across sellersuitepro.online!');
+    setTimeout(() => setNotification(''), 4500);
+  };
 
   // Persist keys to localStorage whenever changed
   useEffect(() => {
@@ -1098,7 +1123,8 @@ You can now refresh your dashboard at https://sellersuitepro.online/`;
             { id: 'templates', label: '2. WhatsApp AI Auto-Reply Templates (5 Keys)', icon: MessageSquare },
             { id: 'claims', label: `3. Seller Profiles & Lock Control (${claimedProfiles.length}${activeChangeRequest ? ' • 🔔 Request' : ''})`, icon: UserCheck },
             { id: 'broadcast', label: `4. Community Updates Broadcast 📢 (${officialUpdates.length})`, icon: Radio },
-            { id: 'settings', label: '5. Security & Password Settings', icon: Shield }
+            { id: 'settings', label: '5. Security & Password Settings', icon: Shield },
+            { id: 'monetization', label: '6. 💰 Ads & Google AdSense Monetization', icon: DollarSign }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeSubTab === tab.id;
@@ -2294,6 +2320,356 @@ You can now refresh your dashboard at https://sellersuitepro.online/`;
                 Save Master Password
               </button>
             </form>
+          </div>
+        )}
+
+        {/* TAB 6: GOOGLE ADSENSE & SITE MONETIZATION DESK */}
+        {activeSubTab === 'monetization' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+            {/* Top Overview & Status Banner */}
+            <div className="glass-panel" style={{
+              padding: '24px',
+              borderRadius: '18px',
+              border: '1px solid rgba(0, 210, 255, 0.35)',
+              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 20, 36, 0.95) 100%)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '14px',
+                    background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#070d19'
+                  }}>
+                    <DollarSign size={26} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                      Google AdSense & Website Monetization Desk
+                    </h3>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
+                      Monetize traffic on <strong style={{ color: '#25d366' }}>https://sellersuitepro.online</strong> with High-CPM Banner, In-feed & Anchor Ads
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    background: adConfigState.adsEnabled ? 'rgba(37, 211, 102, 0.2)' : 'rgba(244, 63, 94, 0.2)',
+                    border: `1px solid ${adConfigState.adsEnabled ? '#25d366' : '#f43f5e'}`,
+                    color: adConfigState.adsEnabled ? '#25d366' : '#f43f5e',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: adConfigState.adsEnabled ? '#25d366' : '#f43f5e' }}></span>
+                    {adConfigState.adsEnabled ? 'MONETIZATION ACTIVE 🟢' : 'ADS PAUSED 🛑'}
+                  </span>
+
+                  <a
+                    href="https://sellersuitepro.online/ads.txt"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '20px',
+                      background: 'rgba(0, 210, 255, 0.15)',
+                      border: '1px solid rgba(0, 210, 255, 0.4)',
+                      color: '#00d2ff',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <span>View ads.txt</span>
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+              </div>
+
+              {/* 3 Active Ad Slots Visual Badges */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px', marginTop: '20px' }}>
+                <div className="glass-card" style={{ padding: '12px 16px', border: '1px solid rgba(0, 210, 255, 0.25)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>Slot 1: Top Leaderboard</span>
+                    <span style={{ fontSize: '10px', color: '#25d366', fontWeight: '800' }}>728x90 Auto</span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#fff', fontWeight: '800', marginTop: '4px' }}>
+                    Header Nav Below Placement
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+                    100% viewability on tool switch & page load
+                  </div>
+                </div>
+
+                <div className="glass-card" style={{ padding: '12px 16px', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>Slot 2: In-Workspace Feed</span>
+                    <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '800' }}>Native Responsive</span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#fff', fontWeight: '800', marginTop: '4px' }}>
+                    Mid-Content High Engagement
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+                    Directly below tool generator outputs
+                  </div>
+                </div>
+
+                <div className="glass-card" style={{ padding: '12px 16px', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>Slot 3: Floating Sticky Footer</span>
+                    <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: '800' }}>Anchor 100% CPM</span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#fff', fontWeight: '800', marginTop: '4px' }}>
+                    Fixed Bottom Viewport Anchor
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+                    Continuous impressions while sellers work
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Form & Setup Guide Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) minmax(360px, 1.2fr)', gap: '22px' }}>
+              {/* Left Column: Form Settings */}
+              <div className="glass-panel" style={{ padding: '24px', borderRadius: '18px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '6px' }}>
+                  ⚙️ Google AdSense Publisher Settings
+                </h4>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '18px' }}>
+                  Paste your real AdSense Publisher ID here to link all ads to your Google account.
+                </p>
+
+                <form onSubmit={handleSaveAdSettings} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Master Toggle */}
+                  <div style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    background: 'rgba(0, 0, 0, 0.35)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: '#fff' }}>Show Ads Across Entire Site</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Turn off anytime to run 100% ad-free</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAdsActiveToggle(!adsActiveToggle)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '14px',
+                        border: 'none',
+                        background: adsActiveToggle ? '#25d366' : '#64748b',
+                        color: '#070d19',
+                        fontWeight: '800',
+                        fontSize: '11px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {adsActiveToggle ? 'ENABLED ✓' : 'PAUSED ✕'}
+                    </button>
+                  </div>
+
+                  {/* Publisher ID Input */}
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Google AdSense Publisher ID (ca-pub-XXXXXXXXXX) *</span>
+                      <span style={{ color: '#00d2ff' }}>Required</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={pubIdInput}
+                      onChange={(e) => setPubIdInput(e.target.value)}
+                      placeholder="e.g. ca-pub-1234567890123456"
+                      style={{
+                        width: '100%',
+                        fontSize: '13px',
+                        fontFamily: 'monospace',
+                        color: pubIdInput.includes('XXXX') ? '#f59e0b' : '#25d366'
+                      }}
+                    />
+                    <div style={{ fontSize: '10px', color: pubIdInput.includes('XXXX') ? '#f59e0b' : '#25d366', marginTop: '4px' }}>
+                      {pubIdInput.includes('XXXX')
+                        ? '⚠️ Currently in demo mode. Replace with your real Publisher ID from AdSense.'
+                        : '✓ Real Google AdSense ID active! Ads are linked to your account.'}
+                    </div>
+                  </div>
+
+                  {/* Slot IDs (Optional) */}
+                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '12px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#cbd5e1', display: 'block', marginBottom: '10px' }}>
+                      Custom Ad Slot IDs (Optional - for manual ad units):
+                    </span>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div>
+                        <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '3px' }}>
+                          Top Leaderboard Slot ID
+                        </label>
+                        <input
+                          type="text"
+                          value={topSlotInput}
+                          onChange={(e) => setTopSlotInput(e.target.value)}
+                          placeholder="e.g. 1234567890 (or leave blank for Auto)"
+                          style={{ width: '100%', fontSize: '11px', padding: '8px 10px' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '3px' }}>
+                          In-Feed Mid-Content Slot ID
+                        </label>
+                        <input
+                          type="text"
+                          value={inFeedSlotInput}
+                          onChange={(e) => setInFeedSlotInput(e.target.value)}
+                          placeholder="e.g. 9876543210 (or leave blank for Auto)"
+                          style={{ width: '100%', fontSize: '11px', padding: '8px 10px' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '3px' }}>
+                          Sticky Footer Anchor Slot ID
+                        </label>
+                        <input
+                          type="text"
+                          value={footerSlotInput}
+                          onChange={(e) => setFooterSlotInput(e.target.value)}
+                          placeholder="e.g. 5678901234 (or leave blank for Auto)"
+                          style={{ width: '100%', fontSize: '11px', padding: '8px 10px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    style={{
+                      background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
+                      color: '#070d19',
+                      border: 'none',
+                      padding: '13px',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      marginTop: '8px',
+                      boxShadow: '0 4px 18px rgba(0, 210, 255, 0.3)'
+                    }}
+                  >
+                    💾 Save AdSense & Monetization Settings
+                  </button>
+                </form>
+              </div>
+
+              {/* Right Column: Step-by-Step Hindi Guide & Instant Monetization */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Hindi Step-by-step setup guide */}
+                <div className="glass-panel" style={{ padding: '22px', borderRadius: '18px', border: '1px solid rgba(245, 158, 11, 0.35)' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                    <Sparkles size={16} /> Google AdSense से पैसे कमाने के 4 आसान स्टेप्स:
+                  </h4>
+
+                  <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px', color: '#e2e8f0', lineHeight: '1.5' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: '10px', borderLeft: '3px solid #00d2ff' }}>
+                      <strong style={{ color: '#00d2ff' }}>Step 1: AdSense पर अकाउंट बनाएं</strong>
+                      <div style={{ color: '#94a3b8', marginTop: '2px' }}>
+                        👉 <a href="https://adsense.google.com/" target="_blank" rel="noreferrer" style={{ color: '#00d2ff', textDecoration: 'underline' }}>adsense.google.com</a> खोलें और अपने Gmail से Sign Up / Login करें।
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: '10px', borderLeft: '3px solid #25d366' }}>
+                      <strong style={{ color: '#25d366' }}>Step 2: अपनी साइट जोड़ें (Add Site)</strong>
+                      <div style={{ color: '#94a3b8', marginTop: '2px' }}>
+                        AdSense में "Sites" पर क्लिक करें ➔ "New Site" दबाएं ➔ URL में <strong>https://sellersuitepro.online</strong> डालें।
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: '10px', borderLeft: '3px solid #fbbf24' }}>
+                      <strong style={{ color: '#fbbf24' }}>Step 3: अपना Publisher ID यहां पेस्ट करें</strong>
+                      <div style={{ color: '#94a3b8', marginTop: '2px' }}>
+                        AdSense आपको <strong>ca-pub-XXXXXXXXXX</strong> देगा। उसे कॉपी करके बायीं तरफ वाले बॉक्स में पेस्ट करके "Save" कर दें।
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: '10px', borderLeft: '3px solid #a855f7' }}>
+                      <strong style={{ color: '#a855f7' }}>Step 4: ads.txt पहले से लाइव है!</strong>
+                      <div style={{ color: '#94a3b8', marginTop: '2px' }}>
+                        आपकी साइट पर <strong>sellersuitepro.online/ads.txt</strong> पहले से तैयार है। Google 24-48 घंटों में अप्रूव कर देगा और विज्ञापन शुरू हो जाएंगे।
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instant Monetization Network (No Waiting) */}
+                <div className="glass-panel" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(37, 211, 102, 0.35)' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#25d366', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Zap size={16} /> बिना इंतजार तुरंत कमाई शुरू करनी है? (Instant Approval)
+                  </h4>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', lineHeight: '1.4' }}>
+                    AdSense में 2-3 दिन लग सकते हैं। अगर आपको आज ही से डॉलर या रुपये कमाने हैं, तो आप इन 100% Instant Approval नेटवर्क्स का इस्तेमाल भी कर सकते हैं:
+                  </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px' }}>
+                    <a
+                      href="https://monetag.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(0, 210, 255, 0.3)',
+                        textDecoration: 'none',
+                        color: '#fff',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px'
+                      }}
+                    >
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: '#00d2ff' }}>1. Monetag</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Instant 1-min Approval • Bank / PayPal payout</div>
+                    </a>
+
+                    <a
+                      href="https://adsterra.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(244, 63, 94, 0.3)',
+                        textDecoration: 'none',
+                        color: '#fff',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px'
+                      }}
+                    >
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: '#f43f5e' }}>2. Adsterra</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>High CPM Banners • ₹800+ minimum threshold</div>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
