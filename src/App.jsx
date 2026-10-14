@@ -1960,7 +1960,7 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
       city: sellerCity.trim(),
       brand: brandName.trim() || storeName.trim(),
       platform,
-      duration: isLicensed ? 'Commercial Licensed' : 'Trial Freemium'
+      duration: isLicensed ? 'Commercial Licensed' : '100% Free Lifetime Access'
     });
 
     onUpdateProfile({ 
@@ -2098,15 +2098,9 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
             </div>
           </div>
           <div>
-            {isLicensed ? (
-              <span style={{ fontSize: '11px', fontWeight: '800', background: 'rgba(37, 211, 102, 0.2)', color: '#25d366', padding: '5px 12px', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.4)' }}>
-                💎 Pro Commercial Licensed
-              </span>
-            ) : (
-              <span style={{ fontSize: '11px', fontWeight: '800', background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', padding: '5px 12px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
-                🟢 Trial Freemium (Module 7 Active)
-              </span>
-            )}
+            <span style={{ fontSize: '11px', fontWeight: '800', background: 'rgba(37, 211, 102, 0.2)', color: '#25d366', padding: '5px 12px', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.4)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              🇮🇳 100% Free Lifetime (All 8 Tools Unlocked)
+            </span>
           </div>
         </div>
 
@@ -3214,10 +3208,10 @@ function TermsComplianceModal({ onClose }) {
           </div>
 
           <div className="glass-card" style={{ padding: '14px' }}>
-            <strong style={{ color: '#fbbf24', display: 'block', marginBottom: '4px' }}>
-              3. Commercial License Policy
+            <strong style={{ color: '#25d366', display: 'block', marginBottom: '4px' }}>
+              3. 100% Free Unlimited Lifetime Access Policy
             </strong>
-            Each authorized license key grants commercial single-brand or agency multi-brand access according to the issued tier (7-Day Trial, 14-Day Pro, or Lifetime Enterprise). Sharing license keys across unauthorized public channels leads to instant key revocation.
+            Seller Suite Pro is completely 100% free with unlimited lifetime access for all Indian e-commerce sellers across Amazon, Flipkart, and Meesho. All 8 AI tools are permanently unlocked with zero subscriptions or hidden fees.
           </div>
 
           <div className="glass-card" style={{ padding: '14px' }}>
@@ -3336,8 +3330,8 @@ function ContactSupportModal({
   const supportEmail = 'contact@sidramotion.com';
   const whatsappDisplay = OFFICIAL_AGENT_DISPLAY_PHONE;
   const defaultSubject = encodeURIComponent(`Priority Seller Support Ticket - ID: ${currentCustomerId}`);
-  const defaultBody = encodeURIComponent(`Hello Sidra Motion Support Team,\n\nI need technical assistance with Seller Suite Pro.\nCustomer ID: ${currentCustomerId}\nRegistered Name: ${userProfile?.name || 'Seller'}\nRegistered Phone: ${userProfile?.phone || 'N/A'}\nLicense Status: ${hasFullLicense ? 'Official Commercial License' : 'Trial Edition'}\n\nIssue Details:\n`);
-  const whatsappMessage = encodeURIComponent(`Hello Sidra Motion Support Team, I need priority assistance for my Seller Suite Pro account.\nCustomer ID: ${currentCustomerId}\nLicense: ${hasFullLicense ? 'Commercial License' : 'Trial Edition'}`);
+  const defaultBody = encodeURIComponent(`Hello Sidra Motion Support Team,\n\nI need technical assistance with Seller Suite Pro.\nCustomer ID: ${currentCustomerId}\nRegistered Name: ${userProfile?.name || 'Seller'}\nRegistered Phone: ${userProfile?.phone || 'N/A'}\nAccount Status: 100% Free Lifetime Access\n\nIssue Details:\n`);
+  const whatsappMessage = encodeURIComponent(`Hello Sidra Motion Support Team, I need priority assistance for my Seller Suite Pro account.\nCustomer ID: ${currentCustomerId}\nAccount Status: 100% Free Lifetime Access`);
 
   return (
     <div style={{
@@ -3429,15 +3423,15 @@ function ContactSupportModal({
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{
-              background: hasFullLicense ? 'rgba(37, 211, 102, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-              border: hasFullLicense ? '1px solid #25d366' : '1px solid #f59e0b',
-              color: hasFullLicense ? '#25d366' : '#fbbf24',
+              background: 'rgba(37, 211, 102, 0.2)',
+              border: '1px solid #25d366',
+              color: '#25d366',
               padding: '4px 10px',
               borderRadius: '12px',
               fontSize: '10px',
               fontWeight: '800'
             }}>
-              {hasFullLicense ? 'PRO LICENSED' : 'FREE / TRIAL'}
+              100% FREE LIFETIME
             </span>
             <button
               type="button"

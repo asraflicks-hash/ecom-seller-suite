@@ -204,10 +204,10 @@ export default function ModuleLicenseLockScreen({
             </div>
             <div>
               <div style={{ fontSize: '13px', fontWeight: '800', color: '#25d366' }}>
-                🟢 Module 7: Sync & RGB Listing Score is 100% FREE!
+                🟢 All 8 Modules are 100% FREE For Indian Sellers!
               </div>
               <div style={{ fontSize: '11px', color: '#cbd5e1' }}>
-                Your Google/Trial account has unlimited access to URL audit and quality scores.
+                Your account has full unlimited lifetime access to all 8 AI optimization tools.
               </div>
             </div>
           </div>
