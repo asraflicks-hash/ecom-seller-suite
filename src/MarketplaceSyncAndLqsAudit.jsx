@@ -239,8 +239,160 @@ const QUICK_AUDIT_SAMPLES = [
     hasWhiteBg: false,
     price: 199,
     mrp: 499
+  },
+  {
+    id: 'flipkart-bedsheet',
+    platform: 'Flipkart',
+    label: 'Flipkart Bedsheet (46/100 🔴 • 3.7★)',
+    tag: '3.7★ 74 Reviews',
+    asin: 'FSN-BED91820Z',
+    starRating: '3.7',
+    totalReviews: 74,
+    title: 'Double Bedsheet with 2 Pillow Covers (Multicolor)',
+    bullets: [
+      'Fabric: Cotton',
+      'Type: Flat Double',
+      'Includes 2 pillow covers'
+    ],
+    backendKeywords: 'bedsheet, cotton, double bed, flat sheet',
+    imageCount: 2,
+    hasWhiteBg: false,
+    price: 399,
+    mrp: 999
+  },
+  {
+    id: 'meesho-saree',
+    platform: 'Meesho',
+    label: 'Meesho Saree (48/100 🔴 • 3.6★)',
+    tag: '3.6★ 42 Reviews',
+    asin: 'MEES-SAREE-449',
+    starRating: '3.6',
+    totalReviews: 42,
+    title: 'Georgette Saree with Unstitched Blouse Piece',
+    bullets: [
+      'Nice soft fabric saree',
+      'Daily & casual wear'
+    ],
+    backendKeywords: 'saree, georgette, party wear, floral saree',
+    imageCount: 2,
+    hasWhiteBg: false,
+    price: 349,
+    mrp: 799
   }
 ];
+
+// Strict Cross-Platform Validator for Marketplace Sync
+export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
+  const input = (rawInput || '').trim();
+  if (!input) return { isValid: false, message: 'Please enter a product listing URL, ASIN, or ID.' };
+
+  const lower = input.toLowerCase();
+
+  // Social media check
+  const isSocial = lower.includes('instagram.com') || lower.includes('instagr.am') ||
+                   lower.includes('facebook.com') || lower.includes('fb.com') ||
+                   lower.includes('youtube.com') || lower.includes('youtu.be');
+  if (isSocial) {
+    return {
+      isValid: false,
+      message: `⚠️ Yeh social media link hai! ${selectedPlatform} ka valid product link ya ID enter karein.`,
+      detectedPlatform: 'Social Media',
+      suggestedPlatform: null
+    };
+  }
+
+  const isAmazon = lower.includes('amazon.') || lower.includes('amzn.to') || lower.includes('amzn.in') || /^b0[a-z0-9]{8}$/i.test(input);
+  const isFlipkart = lower.includes('flipkart.') || lower.includes('fkrt.it') || /^fsn/i.test(input) || lower.includes('/p/itm');
+  const isMeesho = lower.includes('meesho.') || /^mees/i.test(input);
+
+  const platNorm = (selectedPlatform || 'Amazon').toLowerCase();
+
+  if (platNorm === 'amazon') {
+    if (isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Meesho ka product link hai! Amazon me Meesho link accept nahi hoga.',
+        detectedPlatform: 'Meesho',
+        suggestedPlatform: 'Meesho'
+      };
+    }
+    if (isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Flipkart ka product link hai! Amazon me Flipkart link accept nahi hoga.',
+        detectedPlatform: 'Flipkart',
+        suggestedPlatform: 'Flipkart'
+      };
+    }
+    if (input.startsWith('http') && !isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Amazon product URL or ASIN.',
+        detectedPlatform: 'Non-Amazon',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  if (platNorm === 'flipkart') {
+    if (isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Amazon ka product link hai! Flipkart me Amazon link accept nahi hoga.',
+        detectedPlatform: 'Amazon',
+        suggestedPlatform: 'Amazon'
+      };
+    }
+    if (isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Meesho ka product link hai! Flipkart me Meesho link accept nahi hoga.',
+        detectedPlatform: 'Meesho',
+        suggestedPlatform: 'Meesho'
+      };
+    }
+    if (input.startsWith('http') && !isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Flipkart product URL or FSN.',
+        detectedPlatform: 'Non-Flipkart',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  if (platNorm === 'meesho') {
+    if (isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Amazon ka product link hai! Meesho me Amazon link accept nahi hoga.',
+        detectedPlatform: 'Amazon',
+        suggestedPlatform: 'Amazon'
+      };
+    }
+    if (isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Flipkart ka product link hai! Meesho me Flipkart link accept nahi hoga.',
+        detectedPlatform: 'Flipkart',
+        suggestedPlatform: 'Flipkart'
+      };
+    }
+    if (input.startsWith('http') && !isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Meesho supplier product link.',
+        detectedPlatform: 'Non-Meesho',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  return { isValid: true };
+}
 
 export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey, onSwitchTab, onOpenSyncMonitor }) {
   // Sync Platform selector
@@ -249,6 +401,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
 
   // Form Inputs - Clean & Ready for Seller Product Input
   const [asinInput, setAsinInput] = useState('');
+  const [platformMismatchWarning, setPlatformMismatchWarning] = useState(null);
   const [customTitle, setCustomTitle] = useState('');
   const [customBullets, setCustomBullets] = useState('');
   const [customKeywords, setCustomKeywords] = useState('');
@@ -274,18 +427,23 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
   const [activePackTab, setActivePackTab] = useState('all'); // 'all' | 'title' | 'bullets' | 'keywords' | 'mapping'
 
   // Autonomous Live Marketplace Listing Sync
-  const syncLiveProductData = async (inputStr, forceAudit = true) => {
+  const syncLiveProductData = async (inputStr, forceAudit = true, overridePlatform = null) => {
     const cleaned = (inputStr || asinInput || '').trim();
     if (!cleaned) return;
 
-    setIsScanningLink(true);
-    setLiveScanStatus(`🔍 Scanning live ${platform} listing & customer feedback...`);
+    const activePlat = overridePlatform || platform;
+    const validation = validateSyncMarketplaceLink(activePlat, cleaned);
+    if (!validation.isValid) {
+      setPlatformMismatchWarning(validation);
+      setIsScanningLink(false);
+      return;
+    }
+    setPlatformMismatchWarning(null);
 
-    let targetPlatform = platform;
-    if (/flipkart/i.test(cleaned) || /^FSN/i.test(cleaned)) targetPlatform = 'Flipkart';
-    else if (/meesho/i.test(cleaned) || /^MEES/i.test(cleaned)) targetPlatform = 'Meesho';
-    else if (/amazon/i.test(cleaned)) targetPlatform = 'Amazon';
-    setPlatform(targetPlatform);
+    setIsScanningLink(true);
+    setLiveScanStatus(`🔍 Scanning live ${activePlat} listing & customer feedback...`);
+
+    const targetPlatform = activePlat;
 
     try {
       let data = null;
@@ -326,7 +484,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
             success: true,
             platform: targetPlatform,
             asin: asin || 'CUSTOM-ID',
-            title: slugTitle ? `${slugTitle} Edition` : 'Live Marketplace Product',
+            title: slugTitle ? `${slugTitle} Edition` : `Live ${targetPlatform} Product`,
             rating: '3.8',
             reviews: 42,
             price: '999',
@@ -379,24 +537,42 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
     }
   };
 
-  // Handle ASIN or URL Input Change with automated live scan
+  // Switch Platform Handler with validation check
+  const handlePlatformChange = (newPlat) => {
+    setPlatform(newPlat);
+    if (asinInput.trim()) {
+      const validation = validateSyncMarketplaceLink(newPlat, asinInput);
+      setPlatformMismatchWarning(validation.isValid ? null : validation);
+    } else {
+      setPlatformMismatchWarning(null);
+    }
+  };
+
+  // Handle ASIN or URL Input Change with automated live scan & mismatch blocking
   const handleAsinInputChange = (val) => {
     setAsinInput(val);
     const cleaned = val.trim();
-    if (!cleaned) return;
+    if (!cleaned) {
+      setPlatformMismatchWarning(null);
+      return;
+    }
 
-    if (/flipkart/i.test(cleaned)) setPlatform('Flipkart');
-    else if (/meesho/i.test(cleaned)) setPlatform('Meesho');
-    else if (/amazon/i.test(cleaned)) setPlatform('Amazon');
+    const validation = validateSyncMarketplaceLink(platform, cleaned);
+    if (!validation.isValid) {
+      setPlatformMismatchWarning(validation);
+      return; // Abort auto-sync on mismatch!
+    }
+    setPlatformMismatchWarning(null);
 
-    // Trigger auto-sync when a full link or 10-char ASIN is entered
-    if (cleaned.startsWith('http') || /^[B0-9][A-Z0-9]{9}$/i.test(cleaned)) {
-      syncLiveProductData(cleaned);
+    // Trigger auto-sync when a valid platform link or ASIN is entered
+    if (cleaned.startsWith('http') || /^[B0-9][A-Z0-9]{9}$/i.test(cleaned) || /^FSN/i.test(cleaned) || /^MEES/i.test(cleaned)) {
+      syncLiveProductData(cleaned, true, platform);
     }
   };
 
   // Load a Quick Sample
   const handleLoadSample = (sample) => {
+    setPlatformMismatchWarning(null);
     setPlatform(sample.platform);
     setAsinInput(sample.asin);
     setCustomTitle(sample.title);
@@ -860,7 +1036,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
                 <button
                   key={p}
                   type="button"
-                  onClick={() => setPlatform(p)}
+                  onClick={() => handlePlatformChange(p)}
                   className="kinara-glow-dynamic"
                   style={{
                     '--glow-color': brandColor,
@@ -932,12 +1108,12 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#cbd5e1' }}>
             <Zap size={14} color="#f59e0b" />
-            <strong>1-Click Verified Listing Samples:</strong>
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Test how the RGB engine detects errors on real listings:</span>
+            <strong>1-Click Verified {platform} Samples:</strong>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Test how the RGB engine detects errors on real {platform} listings:</span>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {QUICK_AUDIT_SAMPLES.map(sample => {
+            {QUICK_AUDIT_SAMPLES.filter(sample => sample.platform === platform).map(sample => {
               const brandColor = sample.platform === 'Amazon' ? '#ff9900' : (sample.platform === 'Flipkart' ? '#2874f0' : '#d946ef');
               return (
                 <button
@@ -1018,11 +1194,62 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
 
           {syncMode === 'sync-id' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Platform Mismatch Warning Banner */}
+              {platformMismatchWarning && (
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1.5px solid rgba(239, 68, 68, 0.5)',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  color: '#fca5a5',
+                  fontSize: '12px',
+                  boxShadow: '0 0 16px rgba(239, 68, 68, 0.2)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+                    <AlertTriangle size={16} color="#ef4444" />
+                    <span>{platformMismatchWarning.message}</span>
+                  </div>
+                  {platformMismatchWarning.suggestedPlatform && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newPlat = platformMismatchWarning.suggestedPlatform;
+                          setPlatform(newPlat);
+                          setPlatformMismatchWarning(null);
+                          syncLiveProductData(asinInput, true, newPlat);
+                        }}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: platformMismatchWarning.suggestedPlatform === 'Flipkart' ? '#2874f0' : (platformMismatchWarning.suggestedPlatform === 'Meesho' ? '#d946ef' : '#ff9900'),
+                          color: '#fff',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        <Zap size={13} color="#fff" />
+                        <span>Switch to {platformMismatchWarning.suggestedPlatform} & Sync ⚡</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label style={{ fontSize: '11px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <MarketplaceLogo platform={platform} size={15} />
-                    <span>{platform} Live Product URL or ASIN / FSN</span>
+                    <span>{platform} Live Product URL or {platform === 'Amazon' ? 'ASIN' : platform === 'Flipkart' ? 'FSN / Product URL' : 'Product ID / Link'}</span>
                   </div>
                   <span style={{ fontSize: '10px', color: '#00d2ff', fontWeight: '600' }}>
                     Auto-Fetches Rating, Reviews, Title & Bullets
@@ -1034,7 +1261,13 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
                       type="text"
                       value={asinInput}
                       onChange={(e) => handleAsinInputChange(e.target.value)}
-                      placeholder={`Paste live link (e.g. amazon.in/dp/B0BNBYWXLL...) or ASIN`}
+                      placeholder={
+                        platform === 'Amazon'
+                          ? 'Paste Amazon product URL (e.g. amazon.in/dp/B0...) or ASIN'
+                          : platform === 'Flipkart'
+                          ? 'Paste Flipkart product URL (e.g. flipkart.com/p/itm...) or FSN'
+                          : 'Paste Meesho product link or Product ID (e.g. meesho.com/p/...)'
+                      }
                       style={{ width: '100%', paddingRight: '36px', fontSize: '12px' }}
                     />
                     <ShoppingBag size={15} color="#00d2ff" style={{ position: 'absolute', right: '12px', top: '13px', opacity: 0.7 }} />

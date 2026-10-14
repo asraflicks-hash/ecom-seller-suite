@@ -6688,6 +6688,7 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
 function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
   const [platform, setPlatform] = useState('Amazon');
   const [asinInput, setAsinInput] = useState(() => isPreviewMode ? 'B0C74MS1L5' : '');
+  const [platformMismatchWarning, setPlatformMismatchWarning] = useState(null);
   const [myCurrentPrice, setMyCurrentPrice] = useState(() => isPreviewMode ? '1499' : '');
   const [competitorPrice, setCompetitorPrice] = useState(() => isPreviewMode ? '1449' : '');
   const [minMargin, setMinMargin] = useState(() => isPreviewMode ? '1199' : '');
@@ -6700,6 +6701,31 @@ function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
   const calculatedSafePrice = compNum > 0 ? Math.max(compNum - 1, floorNum) : floorNum;
   const hasBuyBox = myNum > 0 && compNum > 0 ? myNum <= compNum : false;
   const hasData = compNum > 0 || myNum > 0;
+
+  const handlePlatformChange = (newPlat) => {
+    setPlatform(newPlat);
+    if (asinInput.trim()) {
+      const validation = validateReviewPlatformLink(newPlat, asinInput);
+      setPlatformMismatchWarning(validation.isValid ? null : validation);
+    } else {
+      setPlatformMismatchWarning(null);
+    }
+  };
+
+  const handleAsinChange = (val) => {
+    setAsinInput(val);
+    const cleaned = val.trim();
+    if (!cleaned) {
+      setPlatformMismatchWarning(null);
+      return;
+    }
+    const validation = validateReviewPlatformLink(platform, cleaned);
+    if (!validation.isValid) {
+      setPlatformMismatchWarning(validation);
+      return;
+    }
+    setPlatformMismatchWarning(null);
+  };
 
   const handlePushPrice = () => {
     if (isPreviewMode) {
@@ -6730,42 +6756,102 @@ function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
             Target Marketplace:
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-            {['Amazon', 'Flipkart', 'Meesho'].map(p => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPlatform(p)}
-                style={{
-                  padding: '7px 6px',
-                  borderRadius: '8px',
-                  border: platform === p ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
-                  background: platform === p ? 'rgba(0, 210, 255, 0.2)' : 'rgba(0,0,0,0.2)',
-                  color: platform === p ? '#00d2ff' : '#94a3b8',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  fontSize: '11px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <MarketplaceLogo platform={p} size={16} />
-                <span>{p}</span>
-              </button>
-            ))}
+            {['Amazon', 'Flipkart', 'Meesho'].map(p => {
+              const brandColor = p === 'Amazon' ? '#ff9900' : (p === 'Flipkart' ? '#2874f0' : '#d946ef');
+              const isSelected = platform === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => handlePlatformChange(p)}
+                  style={{
+                    padding: '7px 6px',
+                    borderRadius: '8px',
+                    border: isSelected ? `1.5px solid ${brandColor}` : '1px solid rgba(255,255,255,0.1)',
+                    background: isSelected ? `${brandColor}25` : 'rgba(0,0,0,0.2)',
+                    color: isSelected ? brandColor : '#94a3b8',
+                    cursor: 'pointer',
+                    fontWeight: isSelected ? '800' : '600',
+                    fontSize: '11px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <MarketplaceLogo platform={p} size={16} />
+                  <span>{p}</span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Platform Mismatch Warning Banner */}
+          {platformMismatchWarning && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1.5px solid rgba(239, 68, 68, 0.5)',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              color: '#fca5a5',
+              fontSize: '11px',
+              marginBottom: '10px',
+              boxShadow: '0 0 16px rgba(239, 68, 68, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+                <AlertTriangle size={15} color="#ef4444" />
+                <span>{platformMismatchWarning.message}</span>
+              </div>
+              {platformMismatchWarning.suggestedPlatform && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPlat = platformMismatchWarning.suggestedPlatform;
+                      setPlatform(newPlat);
+                      setPlatformMismatchWarning(null);
+                    }}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: platformMismatchWarning.suggestedPlatform === 'Flipkart' ? '#2874f0' : (platformMismatchWarning.suggestedPlatform === 'Meesho' ? '#d946ef' : '#ff9900'),
+                      color: '#fff',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Zap size={12} color="#fff" />
+                    <span>Switch to {platformMismatchWarning.suggestedPlatform} & Track ⚡</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <MarketplaceLogo platform={platform} size={15} />
-            <span>Track {platform} {platform === 'Flipkart' ? 'FSN' : (platform === 'Meesho' ? 'Product ID' : 'ASIN')}</span>
+            <span>Track {platform} {platform === 'Flipkart' ? 'FSN / Product URL' : (platform === 'Meesho' ? 'Product ID / Link' : 'ASIN / Product URL')}</span>
           </label>
           <input 
             type="text" 
             value={asinInput}
-            onChange={(e) => setAsinInput(e.target.value)}
-            placeholder={`e.g. ${platform === 'Flipkart' ? 'FSN-KURT89201F' : (platform === 'Meesho' ? 'MEES-CHOP-772' : 'B09XYZ4921')} or Product URL`} 
-            style={{ width: '100%' }} 
+            onChange={(e) => handleAsinChange(e.target.value)}
+            placeholder={
+              platform === 'Amazon'
+                ? 'e.g. B0C74MS1L5 or amazon.in/dp/...'
+                : platform === 'Flipkart'
+                ? 'e.g. FSN-KURT89201F or flipkart.com/p/...'
+                : 'e.g. MEES-CHOP-772 or meesho.com/p/...'
+            }
+            style={{ width: '100%', fontSize: '12px' }} 
           />
         </div>
 
@@ -7080,6 +7166,62 @@ const REVIEW_MINING_DATABASE = {
         impact: 'High Repeat Buyer Trust'
       }
     ]
+  },
+  'FSN-BEDS8291F': {
+    asin: 'FSN-BEDS8291F',
+    platform: 'Flipkart',
+    url: 'https://www.flipkart.com/p/itmBEDS8291F',
+    title: 'Bella Casa Cotton Double Bedsheet with 2 Pillow Covers (King Size 108x108)',
+    shortName: 'Cotton Double Bedsheet',
+    category: 'home',
+    reviewsCount: 520,
+    rating: 3.8,
+    sentiment: { negativePct: 30, positivePct: 62, neutralPct: 8 },
+    flaws: [
+      {
+        issue: 'Pillow covers are small standard size, do not fit large memory foam pillows (Reported by 42 buyers)',
+        fix: 'Put in your listing: "Jumbo Envelope Pillow Covers (18x28 inch) with 4-inch deep flap overlap."',
+        impact: 'Eliminates 1-Star Rating'
+      },
+      {
+        issue: 'Corner elastic stitches pop when stretching over 8-inch mattress (Reported by 28 buyers)',
+        fix: 'Highlight: "Double-Stitched Reinforced Elastic Corners engineered for mattresses up to 10 inches thick."',
+        impact: 'Prevents Return Rate'
+      },
+      {
+        issue: 'Slight stiffness before initial wash (Reported by 15 buyers)',
+        fix: 'Highlight: "Pre-Washed Ultra-Soft Percale Weave gets even softer with every subsequent wash."',
+        impact: 'High Repeat Buyer Trust'
+      }
+    ]
+  },
+  'MEES-SAREE-449': {
+    asin: 'MEES-SAREE-449',
+    platform: 'Meesho',
+    url: 'https://www.meesho.com/p/SAREE449',
+    title: 'Kashvi Pure Georgette Floral Printed Saree with Blouse Piece (5.5m + 0.8m)',
+    shortName: 'Georgette Printed Saree',
+    category: 'fashion',
+    reviewsCount: 420,
+    rating: 3.7,
+    sentiment: { negativePct: 35, positivePct: 57, neutralPct: 8 },
+    flaws: [
+      {
+        issue: 'Blouse fabric length was only 0.7m, insufficient for plus size tailoring (Reported by 38 buyers)',
+        fix: 'Put in your listing: "Generous 0.85m Unstitched Heavy Micro-Silk Blouse Fabric allows tailor custom cuts up to 44-inch bust."',
+        impact: 'Reduces Meesho RTO by 35%'
+      },
+      {
+        issue: 'Zari lace border thread coming off at the pallu edge (Reported by 24 buyers)',
+        fix: 'Highlight: "Machine-Interlocked Double-Stitched Zari Lace Hemming prevents thread unraveling."',
+        impact: 'Eliminates 1-Star Rating'
+      },
+      {
+        issue: 'Saree color appears darker than Meesho app catalog picture (Reported by 19 buyers)',
+        fix: 'Highlight: "Studio Color-Calibrated Photography: Exact true-to-life peach floral shade guaranteed."',
+        impact: 'Builds Reseller Trust'
+      }
+    ]
   }
 };
 
@@ -7209,8 +7351,121 @@ function generateCategoryFlaws(category, count, title) {
   ];
 }
 
+// Strict Validator for Review Analyzer
+function validateReviewPlatformLink(selectedPlatform, rawInput) {
+  const input = (rawInput || '').trim();
+  if (!input) return { isValid: false, message: 'Please enter a product listing URL or ID.' };
+
+  const lower = input.toLowerCase();
+  const isSocial = lower.includes('instagram.com') || lower.includes('instagr.am') ||
+                   lower.includes('facebook.com') || lower.includes('fb.com') ||
+                   lower.includes('youtube.com') || lower.includes('youtu.be') ||
+                   lower.includes('linkedin.com');
+  if (isSocial) {
+    return {
+      isValid: false,
+      message: `⚠️ Yeh social media link hai! ${selectedPlatform} ka valid product link ya ID enter karein.`,
+      detectedPlatform: 'Social Media',
+      suggestedPlatform: null
+    };
+  }
+
+  const isAmazon = lower.includes('amazon.') || lower.includes('amzn.to') || lower.includes('amzn.in') || /^b0[a-z0-9]{8}$/i.test(input) || input.startsWith('B0') || input.startsWith('PTMT');
+  const isFlipkart = lower.includes('flipkart.') || lower.includes('fkrt.it') || /^fsn/i.test(input) || lower.includes('/p/itm');
+  const isMeesho = lower.includes('meesho.') || /^mees/i.test(input);
+
+  const platNorm = (selectedPlatform || 'Amazon').toLowerCase();
+
+  if (platNorm === 'amazon') {
+    if (isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Meesho ka product link hai! Amazon me Meesho link accept nahi hoga.',
+        detectedPlatform: 'Meesho',
+        suggestedPlatform: 'Meesho'
+      };
+    }
+    if (isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Flipkart ka product link hai! Amazon me Flipkart link accept nahi hoga.',
+        detectedPlatform: 'Flipkart',
+        suggestedPlatform: 'Flipkart'
+      };
+    }
+    if (input.startsWith('http') && !isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Amazon product URL or ASIN.',
+        detectedPlatform: 'Non-Amazon',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  if (platNorm === 'flipkart') {
+    if (isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Amazon ka product link hai! Flipkart me Amazon link accept nahi hoga.',
+        detectedPlatform: 'Amazon',
+        suggestedPlatform: 'Amazon'
+      };
+    }
+    if (isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Meesho ka product link hai! Flipkart me Meesho link accept nahi hoga.',
+        detectedPlatform: 'Meesho',
+        suggestedPlatform: 'Meesho'
+      };
+    }
+    if (input.startsWith('http') && !isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Flipkart product URL or FSN.',
+        detectedPlatform: 'Non-Flipkart',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  if (platNorm === 'meesho') {
+    if (isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Amazon ka product link hai! Meesho me Amazon link accept nahi hoga.',
+        detectedPlatform: 'Amazon',
+        suggestedPlatform: 'Amazon'
+      };
+    }
+    if (isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Flipkart ka product link hai! Meesho me Flipkart link accept nahi hoga.',
+        detectedPlatform: 'Flipkart',
+        suggestedPlatform: 'Flipkart'
+      };
+    }
+    if (input.startsWith('http') && !isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Meesho supplier product link.',
+        detectedPlatform: 'Non-Meesho',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  return { isValid: true };
+}
+
 function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
   const [platform, setPlatform] = useState('Amazon');
+  const [platformMismatchWarning, setPlatformMismatchWarning] = useState(null);
   const [competitorAsin, setCompetitorAsin] = useState('https://www.amazon.in/dp/B0C74MS1L5');
   const [detectedTitle, setDetectedTitle] = useState('EVM H110 DDR4 Motherboard (LGA1151 Socket, Dual DDR4, M.2 NVMe)');
   const [productCategory, setProductCategory] = useState('computer');
@@ -7224,16 +7479,36 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
   );
   const [copiedIndex, setCopiedIndex] = useState(null);
 
+  // Switch Platform Handler
+  const handlePlatformChange = (newPlat) => {
+    setPlatform(newPlat);
+    if (competitorAsin.trim()) {
+      const validation = validateReviewPlatformLink(newPlat, competitorAsin);
+      setPlatformMismatchWarning(validation.isValid ? null : validation);
+    } else {
+      setPlatformMismatchWarning(null);
+    }
+  };
+
   // Handle URL / ASIN input change
   const handleInputChange = (val) => {
     setCompetitorAsin(val);
     const cleaned = val.trim();
-    if (!cleaned) return;
+    if (!cleaned) {
+      setPlatformMismatchWarning(null);
+      return;
+    }
 
-    // Check known database keys
+    const validation = validateReviewPlatformLink(platform, cleaned);
+    if (!validation.isValid) {
+      setPlatformMismatchWarning(validation);
+      return; // Do NOT auto-switch or mine on mismatch!
+    }
+    setPlatformMismatchWarning(null);
+
+    // Check known database keys for current platform
     for (const [key, data] of Object.entries(REVIEW_MINING_DATABASE)) {
-      if (cleaned.toLowerCase().includes(key.toLowerCase()) || cleaned.toLowerCase().includes(data.title.toLowerCase().substring(0, 15))) {
-        setPlatform(data.platform);
+      if (data.platform === platform && (cleaned.toLowerCase().includes(key.toLowerCase()) || cleaned.toLowerCase().includes(data.title.toLowerCase().substring(0, 15)))) {
         setDetectedTitle(data.title);
         setProductCategory(data.category);
         setReviewsCountInput(String(data.reviewsCount));
@@ -7248,7 +7523,6 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
       setDetectedTitle('EVM H110 DDR4 Motherboard (LGA1151 Socket, Dual DDR4, M.2 NVMe)');
       setReviewsCountInput('12');
       setStarRating('3.8');
-      setPlatform('Amazon');
       return;
     }
 
@@ -7305,6 +7579,7 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
   const handleLoadPreset = (key) => {
     const data = REVIEW_MINING_DATABASE[key];
     if (!data) return;
+    setPlatformMismatchWarning(null);
     setPlatform(data.platform);
     setCompetitorAsin(data.url);
     setDetectedTitle(data.title);
@@ -7324,6 +7599,12 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
     }
     if (!competitorAsin.trim()) {
       alert('Please enter a competitor ASIN or product URL first.');
+      return;
+    }
+
+    const validation = validateReviewPlatformLink(platform, competitorAsin);
+    if (!validation.isValid) {
+      setPlatformMismatchWarning(validation);
       return;
     }
 
@@ -7367,124 +7648,45 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={16} color="#00d2ff" />
             <span style={{ fontSize: '13px', fontWeight: '800', color: '#fff' }}>
-              Quick 1-Click Competitor Live Presets:
+              Quick 1-Click {platform} Live Presets:
             </span>
           </div>
           <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-            Click any live ASIN to test exact buyer reviews & customer complaint mining
+            Click any live {platform} listing to test exact buyer reviews & customer complaint mining
           </span>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-          <button
-            type="button"
-            onClick={() => handleLoadPreset('B0C74MS1L5')}
-            style={{
-              padding: '7px 12px',
-              borderRadius: '8px',
-              border: competitorAsin.includes('B0C74MS1L5') ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
-              background: competitorAsin.includes('B0C74MS1L5') ? 'rgba(0, 210, 255, 0.2)' : 'rgba(0,0,0,0.25)',
-              color: competitorAsin.includes('B0C74MS1L5') ? '#00d2ff' : '#cbd5e1',
-              cursor: 'pointer',
-              fontSize: '11px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <MarketplaceLogo platform="Amazon" size={14} />
-            <span>⚡ EVM H110 Motherboard (12 Reviews • 3.8★)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleLoadPreset('PTMT-PIPE-001')}
-            style={{
-              padding: '7px 12px',
-              borderRadius: '8px',
-              border: competitorAsin.includes('PTMT') ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
-              background: competitorAsin.includes('PTMT') ? 'rgba(0, 210, 255, 0.2)' : 'rgba(0,0,0,0.25)',
-              color: competitorAsin.includes('PTMT') ? '#00d2ff' : '#cbd5e1',
-              cursor: 'pointer',
-              fontSize: '11px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <MarketplaceLogo platform="Amazon" size={14} />
-            <span>⚡ PTMT Connection Pipe (48 Reviews • 4.0★)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleLoadPreset('B09XY492A')}
-            style={{
-              padding: '7px 12px',
-              borderRadius: '8px',
-              border: competitorAsin.includes('B09XY492A') ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
-              background: competitorAsin.includes('B09XY492A') ? 'rgba(0, 210, 255, 0.2)' : 'rgba(0,0,0,0.25)',
-              color: competitorAsin.includes('B09XY492A') ? '#00d2ff' : '#cbd5e1',
-              cursor: 'pointer',
-              fontSize: '11px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <MarketplaceLogo platform="Amazon" size={14} />
-            <span>⚡ boAt Earbuds (1,420 Reviews • 4.1★)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleLoadPreset('FSN-KURT89201F')}
-            style={{
-              padding: '7px 12px',
-              borderRadius: '8px',
-              border: competitorAsin.includes('KURT') ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
-              background: competitorAsin.includes('KURT') ? 'rgba(0, 210, 255, 0.2)' : 'rgba(0,0,0,0.25)',
-              color: competitorAsin.includes('KURT') ? '#00d2ff' : '#cbd5e1',
-              cursor: 'pointer',
-              fontSize: '11px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <MarketplaceLogo platform="Flipkart" size={14} />
-            <span>⚡ Cotton Kurti (384 Reviews • 3.9★)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleLoadPreset('MEES-CHOP-772')}
-            style={{
-              padding: '7px 12px',
-              borderRadius: '8px',
-              border: competitorAsin.includes('CHOP') ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
-              background: competitorAsin.includes('CHOP') ? 'rgba(0, 210, 255, 0.2)' : 'rgba(0,0,0,0.25)',
-              color: competitorAsin.includes('CHOP') ? '#00d2ff' : '#cbd5e1',
-              cursor: 'pointer',
-              fontSize: '11px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <MarketplaceLogo platform="Meesho" size={14} />
-            <span>⚡ Vegetable Chopper (890 Reviews • 4.2★)</span>
-          </button>
+          {Object.entries(REVIEW_MINING_DATABASE)
+            .filter(([_, data]) => data.platform === platform)
+            .map(([key, data]) => {
+              const brandColor = data.platform === 'Amazon' ? '#ff9900' : (data.platform === 'Flipkart' ? '#2874f0' : '#d946ef');
+              const isActive = competitorAsin.includes(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleLoadPreset(key)}
+                  style={{
+                    padding: '7px 12px',
+                    borderRadius: '8px',
+                    border: isActive ? `1.5px solid ${brandColor}` : '1px solid rgba(255,255,255,0.1)',
+                    background: isActive ? `${brandColor}25` : 'rgba(0,0,0,0.25)',
+                    color: isActive ? brandColor : '#cbd5e1',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <MarketplaceLogo platform={data.platform} size={14} />
+                  <span>⚡ {data.shortName} ({data.reviewsCount} Reviews • {data.rating}★)</span>
+                </button>
+              );
+            })}
         </div>
       </div>
 
@@ -7508,32 +7710,92 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
               Target Marketplace:
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-              {['Amazon', 'Flipkart', 'Meesho'].map(p => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPlatform(p)}
-                  style={{
-                    padding: '8px 6px',
-                    borderRadius: '8px',
-                    border: platform === p ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
-                    background: platform === p ? 'rgba(0, 210, 255, 0.2)' : 'rgba(0,0,0,0.2)',
-                    color: platform === p ? '#00d2ff' : '#94a3b8',
-                    cursor: 'pointer',
-                    fontWeight: '700',
-                    fontSize: '11px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <MarketplaceLogo platform={p} size={15} />
-                  <span>{p}</span>
-                </button>
-              ))}
+              {['Amazon', 'Flipkart', 'Meesho'].map(p => {
+                const brandColor = p === 'Amazon' ? '#ff9900' : (p === 'Flipkart' ? '#2874f0' : '#d946ef');
+                const isSelected = platform === p;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => handlePlatformChange(p)}
+                    style={{
+                      padding: '8px 6px',
+                      borderRadius: '8px',
+                      border: isSelected ? `1.5px solid ${brandColor}` : '1px solid rgba(255,255,255,0.1)',
+                      background: isSelected ? `${brandColor}25` : 'rgba(0,0,0,0.2)',
+                      color: isSelected ? brandColor : '#94a3b8',
+                      cursor: 'pointer',
+                      fontWeight: isSelected ? '800' : '600',
+                      fontSize: '11px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <MarketplaceLogo platform={p} size={15} />
+                    <span>{p}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
+
+          {/* Platform Mismatch Warning Banner */}
+          {platformMismatchWarning && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1.5px solid rgba(239, 68, 68, 0.5)',
+              borderRadius: '10px',
+              padding: '12px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              color: '#fca5a5',
+              fontSize: '12px',
+              boxShadow: '0 0 16px rgba(239, 68, 68, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+                <AlertTriangle size={16} color="#ef4444" />
+                <span>{platformMismatchWarning.message}</span>
+              </div>
+              {platformMismatchWarning.suggestedPlatform && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPlat = platformMismatchWarning.suggestedPlatform;
+                      setPlatform(newPlat);
+                      setPlatformMismatchWarning(null);
+                      for (const [key, data] of Object.entries(REVIEW_MINING_DATABASE)) {
+                        if (data.platform === newPlat && competitorAsin.toLowerCase().includes(key.toLowerCase())) {
+                          handleLoadPreset(key);
+                          return;
+                        }
+                      }
+                    }}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: platformMismatchWarning.suggestedPlatform === 'Flipkart' ? '#2874f0' : (platformMismatchWarning.suggestedPlatform === 'Meesho' ? '#d946ef' : '#ff9900'),
+                      color: '#fff',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    <Zap size={13} color="#fff" />
+                    <span>Switch to {platformMismatchWarning.suggestedPlatform} & Analyze ⚡</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Competitor URL or ASIN */}
           <div>
@@ -7545,7 +7807,13 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
               type="text" 
               value={competitorAsin} 
               onChange={(e) => handleInputChange(e.target.value)} 
-              placeholder={`e.g. https://www.amazon.in/dp/B0C74MS1L5 or ASIN...`}
+              placeholder={
+                platform === 'Amazon'
+                  ? 'e.g. https://www.amazon.in/dp/B0C74MS1L5 or ASIN...'
+                  : platform === 'Flipkart'
+                  ? 'e.g. https://www.flipkart.com/p/itm... or FSN...'
+                  : 'e.g. https://www.meesho.com/p/... or Product ID...'
+              }
               style={{ width: '100%', fontSize: '12px' }} 
             />
           </div>

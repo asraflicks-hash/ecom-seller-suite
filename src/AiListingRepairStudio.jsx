@@ -10,6 +10,7 @@ import {
   Wrench, 
   MapPin, 
   AlertTriangle,
+  Zap,
   Gauge,
   ExternalLink,
   Layers,
@@ -193,8 +194,210 @@ const URL_AUDIT_PRESETS = [
       aPlusHeading: 'Chop in 5 Pulls with Zero Electricity',
       aPlusStory: 'ChefMaster engineered this kitchen chopper for Indian homes to effortlessly chop hard vegetables, nuts, and garlic without teary eyes.'
     }
+  },
+  {
+    id: 'flipkart-bedsheet',
+    platform: 'flipkart',
+    label: 'Cotton Bedsheet (Score 46/100 🔴)',
+    url: 'https://www.flipkart.com/p/itmBED91820Z',
+    asin: 'FSN-BED91820Z',
+    currentListing: {
+      brand: 'HomeComfort',
+      title: 'Double Bedsheet with 2 Pillow Covers (Multicolor)',
+      bullets: [
+        'Fabric: Cotton',
+        'Type: Flat',
+        'Includes pillow covers'
+      ],
+      searchTerms: 'bedsheet, cotton, bed cover, double bed',
+      description: 'Good quality double bedsheet for bedroom.'
+    },
+    audit: {
+      score: 46,
+      status: 'NEEDS REPAIR',
+      color: '#f43f5e',
+      flaws: [
+        { field: 'Product Title', issue: 'Missing thread count (TC), GSM, and exact dimensions in title.', rule: 'Flipkart buyers search by "180 TC Double Bedsheet".' },
+        { field: 'Key Highlights', issue: 'Only 3 short bullets. Lacks color-fastness guarantee and wash instructions.', rule: 'Flipkart Gold Listing requires 5 detailed highlights.' }
+      ]
+    },
+    repaired: {
+      brand: 'AuraHome',
+      productName: '100% Pure Cotton 210 TC Double Bedsheet with 2 Pillow Covers',
+      category: 'Home & Furnishing',
+      title: 'AuraHome 100% Pure Cotton 210 TC Breathable Floral Double Bedsheet with 2 Matching Pillow Covers (90x100 Inch, Indigo Bloom)',
+      bullets: [
+        '100% PREMIUM COMBED COTTON (210 TC): Woven from long-staple cotton yarns for an ultra-soft, breathable luxury touch.',
+        'GENEROUS KING/DOUBLE SIZE (90x100 INCH): Offers easy, deep tuck-in on thick 8-inch mattresses without popping off.',
+        'FADE-RESISTANT AZO-FREE DYES: Certified skin-safe reactive dyes that maintain vibrant color clarity wash after wash.',
+        'INCLUDES 2 MATCHING PILLOW COVERS: Coordinated standard size pillowcases (18x27 inch) with flap closure.',
+        'MACHINE WASH FRIENDLY: Pre-shrunk fabric ensures zero shrinkage; cold gentle wash recommended.'
+      ],
+      searchTerms: 'pure cotton double bedsheet 210 tc floral bed cover king size flat sheet 2 pillow covers indigo blue',
+      description: 'Elevate your bedroom with AuraHome 210 TC 100% Cotton Double Bedsheet set. Designed for everyday comfort and lasting vibrancy.',
+      aPlusHeading: 'Sleep in Pure Long-Staple Cotton Luxury',
+      aPlusStory: 'AuraHome delivers certified skin-friendly, high-density cotton bedding that stays cool and soft through every season.'
+    }
+  },
+  {
+    id: 'meesho-saree',
+    platform: 'meesho',
+    label: 'Georgette Printed Saree (Score 48/100 🔴)',
+    url: 'https://www.meesho.com/p/SAREE449',
+    asin: 'MEES-SAREE-449',
+    currentListing: {
+      brand: 'Fashion',
+      title: 'Georgette Saree with Unstitched Blouse Piece',
+      bullets: [
+        'Nice fabric saree',
+        'Daily wear'
+      ],
+      searchTerms: 'saree, georgette, party wear, low price',
+      description: 'Party wear georgette saree at wholesale price.'
+    },
+    audit: {
+      score: 48,
+      status: 'NEEDS REPAIR',
+      color: '#f43f5e',
+      flaws: [
+        { field: 'Product Title', issue: 'Length (5.5m), blouse length (0.8m), and print technique missing from title.', rule: 'Unclear length details cause 38% customer return rate (RTO) on Meesho.' },
+        { field: 'Catalog Highlights', issue: 'Only 2 vague bullets. Missing border work details and drape guidance.', rule: 'Clear specifications build trust on Meesho Reseller app.' }
+      ]
+    },
+    repaired: {
+      brand: 'Kashvi Creations',
+      productName: 'Pure Georgette Floral Printed Saree with Blouse Piece',
+      category: 'Women Ethnic Wear',
+      title: 'Kashvi Creations Pure Lightweight Georgette Floral Printed Saree with Zari Lace Border & Unstitched Blouse Piece (5.5m + 0.8m Blouse, Peach Rose)',
+      bullets: [
+        'PREMIUM LIGHTWEIGHT GEORGETTE: Fluid, wrinkle-resistant drape that stays comfortable all day in any season.',
+        'ACCENTED WITH SHIMMER ZARI LACE BORDER: Delicate metallic woven border adds subtle festive sparkle for parties and casual functions.',
+        'COMPLETE SAREE LENGTH 5.5 METERS: Ample pleat volume ensuring graceful silhouette for all body types.',
+        'UNSTITCHED 0.8M MATCHING BLOUSE PIECE: High-quality coordinating fabric ready for custom neck and sleeve tailoring.',
+        'EASY MAINTENANCE: Dry clean for first wash, followed by gentle machine wash; iron on low silk setting.'
+      ],
+      searchTerms: 'georgette saree floral print zari lace border party wear lightweight daily festive peach pink unstitched blouse',
+      description: 'Add effortless grace to your ethnic collection with Kashvi Creations Georgette Saree. Featuring delicate floral motifs and luminous lace border.',
+      aPlusHeading: 'Fluid Georgette Drape for Every Occasion',
+      aPlusStory: 'Kashvi Creations brings timeless Indian textiles to modern women with lightweight, easy-care fabrics and artisanal lace accents.'
+    }
   }
 ];
+
+// Strict Cross-Platform Validator: Prevents accepting wrong marketplace links
+export function validateMarketplaceLink(selectedPlatform, rawInput) {
+  const input = (rawInput || '').trim();
+  if (!input) {
+    return { isValid: false, message: 'Please enter a product listing URL or ID.' };
+  }
+
+  const lower = input.toLowerCase();
+
+  // Social media check
+  const isSocial = lower.includes('instagram.com') || lower.includes('instagr.am') ||
+                   lower.includes('facebook.com') || lower.includes('fb.com') ||
+                   lower.includes('youtube.com') || lower.includes('youtu.be') ||
+                   lower.includes('linkedin.com');
+  if (isSocial) {
+    return {
+      isValid: false,
+      message: `⚠️ Yeh social media link hai! ${selectedPlatform.toUpperCase()} Marketplace ka valid product link ya ID enter karein.`,
+      detectedPlatform: 'Social Media',
+      suggestedPlatform: null
+    };
+  }
+
+  // Marketplace detection
+  const isAmazon = lower.includes('amazon.') || lower.includes('amzn.to') || lower.includes('amzn.in') || /^b0[a-z0-9]{8}$/i.test(input);
+  const isFlipkart = lower.includes('flipkart.') || lower.includes('fkrt.it') || /^fsn/i.test(input) || lower.includes('/p/itm');
+  const isMeesho = lower.includes('meesho.') || /^mees/i.test(input);
+
+  if (selectedPlatform === 'amazon') {
+    if (isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Meesho ka product link hai! Amazon me Meesho link accept nahi hoga.',
+        detectedPlatform: 'Meesho',
+        suggestedPlatform: 'meesho'
+      };
+    }
+    if (isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Flipkart ka product link hai! Amazon me Flipkart link accept nahi hoga.',
+        detectedPlatform: 'Flipkart',
+        suggestedPlatform: 'flipkart'
+      };
+    }
+    if (input.startsWith('http') && !isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Amazon product link (e.g. https://www.amazon.in/dp/...) ya ASIN (e.g. B0...).',
+        detectedPlatform: 'Non-Amazon URL',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  if (selectedPlatform === 'flipkart') {
+    if (isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Amazon ka product link hai! Flipkart me Amazon link accept nahi hoga.',
+        detectedPlatform: 'Amazon',
+        suggestedPlatform: 'amazon'
+      };
+    }
+    if (isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Meesho ka product link hai! Flipkart me Meesho link accept nahi hoga.',
+        detectedPlatform: 'Meesho',
+        suggestedPlatform: 'meesho'
+      };
+    }
+    if (input.startsWith('http') && !isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Flipkart product link (e.g. https://www.flipkart.com/p/...) ya FSN.',
+        detectedPlatform: 'Non-Flipkart URL',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  if (selectedPlatform === 'meesho') {
+    if (isAmazon) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Amazon ka product link hai! Meesho me Amazon link accept nahi hoga.',
+        detectedPlatform: 'Amazon',
+        suggestedPlatform: 'amazon'
+      };
+    }
+    if (isFlipkart) {
+      return {
+        isValid: false,
+        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Flipkart ka product link hai! Meesho me Flipkart link accept nahi hoga.',
+        detectedPlatform: 'Flipkart',
+        suggestedPlatform: 'flipkart'
+      };
+    }
+    if (input.startsWith('http') && !isMeesho) {
+      return {
+        isValid: false,
+        message: '⚠️ Invalid URL: Please enter a valid Meesho supplier product link (e.g. https://www.meesho.com/p/...).',
+        detectedPlatform: 'Non-Meesho URL',
+        suggestedPlatform: null
+      };
+    }
+    return { isValid: true };
+  }
+
+  return { isValid: true };
+}
 
 export default function AiListingRepairStudio({ 
   copyToClipboard, 
@@ -202,7 +405,7 @@ export default function AiListingRepairStudio({
   isPreviewMode = false,
   onRequireKey
 }) {
-  // Input Modes: 'url' (Amazon URL / ASIN Importer) | 'manual'
+  // Input Modes: 'url' (Marketplace URL / ASIN Importer) | 'manual'
   const [inputMode, setInputMode] = useState('url');
   const [platform, setPlatform] = useState('amazon'); // 'amazon' | 'flipkart' | 'meesho'
   
@@ -210,6 +413,7 @@ export default function AiListingRepairStudio({
   const [urlInput, setUrlInput] = useState('');
   const [isAuditingUrl, setIsAuditingUrl] = useState(false);
   const [auditData, setAuditData] = useState(null);
+  const [platformMismatchWarning, setPlatformMismatchWarning] = useState(null);
   
   // Manual Inputs State
   const [productName, setProductName] = useState('');
@@ -223,10 +427,26 @@ export default function AiListingRepairStudio({
   const [output, setOutput] = useState(null);
   const [viewStep, setViewStep] = useState('idle'); // 'idle' | 'audit' | 'repaired'
 
+  // Switch Platform Handler with real-time validation check
+  const handlePlatformChange = (newPlatform) => {
+    setPlatform(newPlatform);
+    if (urlInput.trim()) {
+      const validation = validateMarketplaceLink(newPlatform, urlInput);
+      if (!validation.isValid) {
+        setPlatformMismatchWarning(validation);
+      } else {
+        setPlatformMismatchWarning(null);
+      }
+    } else {
+      setPlatformMismatchWarning(null);
+    }
+  };
+
   // Load a pre-configured sample URL for instant testing
   const handleSelectSample = (sample) => {
     setUrlInput(sample.url);
     setPlatform(sample.platform);
+    setPlatformMismatchWarning(null);
     setIsAuditingUrl(true);
     setViewStep('idle');
 
@@ -239,12 +459,20 @@ export default function AiListingRepairStudio({
   };
 
   // Run audit on user-pasted URL or ASIN
-  const handleAuditUrl = (e) => {
+  const handleAuditUrl = (e, overridePlatform) => {
     e?.preventDefault();
+    const activePlat = overridePlatform || platform;
     if (!urlInput.trim()) {
-      alert('Please enter an Amazon product URL or ASIN (e.g. https://www.amazon.in/dp/B0B849201Z)');
+      alert(`Please enter a valid ${activePlat.toUpperCase()} product listing URL or ID.`);
       return;
     }
+
+    const validation = validateMarketplaceLink(activePlat, urlInput);
+    if (!validation.isValid) {
+      setPlatformMismatchWarning(validation);
+      return;
+    }
+    setPlatformMismatchWarning(null);
 
     setIsAuditingUrl(true);
     setViewStep('idle');
@@ -254,32 +482,50 @@ export default function AiListingRepairStudio({
       
       // Match sample if ASIN matches
       const matched = URL_AUDIT_PRESETS.find(p => 
-        urlInput.toLowerCase().includes(p.asin.toLowerCase()) || 
-        urlInput.toLowerCase().includes(p.id.toLowerCase())
+        p.platform === activePlat && (
+          urlInput.toLowerCase().includes(p.asin.toLowerCase()) || 
+          urlInput.toLowerCase().includes(p.id.toLowerCase())
+        )
       );
 
       if (matched) {
         setAuditData(matched);
-        setPlatform(matched.platform);
       } else {
-        // Dynamic audit for any custom Amazon / marketplace URL
+        // Dynamic audit for any custom marketplace URL
         let extractedTitle = 'Imported Marketplace Product';
         try {
           const parsed = new URL(urlInput);
-          const slug = parsed.pathname.split('/')[1];
-          if (slug && slug !== 'dp' && slug !== 'p' && slug.length > 3) {
-            extractedTitle = decodeURIComponent(slug.replace(/-/g, ' '));
+          const slug = parsed.pathname.split('/').filter(Boolean).find(s => s !== 'dp' && s !== 'p' && s.length > 3);
+          if (slug) {
+            extractedTitle = decodeURIComponent(slug.replace(/[-_]/g, ' '));
           }
         } catch (err) {
           extractedTitle = urlInput.substring(0, 45);
         }
 
+        const isAmz = activePlat === 'amazon';
+        const isFkp = activePlat === 'flipkart';
+
+        const platformFlaws = isAmz ? [
+          { field: 'Product Title', issue: 'Missing registered brand prefix, lacks secondary keyword hooks, under 90 characters.', rule: 'Amazon A9 Algorithm requires Brand + Model + Core Specs (Max 200 chars).' },
+          { field: 'Bullet Points', issue: 'Only 2 generic bullets detected. Amazon strictly mandates 5 benefit-driven bullets with CAPITALIZED tags.', rule: 'Suppression risk & high bounce rate on mobile app.' },
+          { field: 'Backend Search Terms', issue: 'Uses commas separating keywords, wasting byte capacity.', rule: 'Commas waste byte limits. Space-separated unique search terms strictly within 249 bytes.' }
+        ] : isFkp ? [
+          { field: 'Product Title', issue: 'Title under 60 chars. Missing fabric/type and occasion attributes.', rule: 'Flipkart Search Algorithm ranks titles with Brand + Type + Occasion (Max 120 chars).' },
+          { field: 'Key Highlights', issue: 'Only 2 highlights found. Flipkart Gold Listing requires 5 detailed highlights.', rule: 'Missing wash care instructions and size fit guidance.' },
+          { field: 'Search Queries', issue: 'Missing high-volume keywords frequently searched on Flipkart mobile app.', rule: 'Keyword enrichment directly increases listing impressions.' }
+        ] : [
+          { field: 'Product Title', issue: 'Missing exact capacity/size and pack count in title.', rule: 'Unclear specifications cause 35%+ customer returns (RTO) on Meesho.' },
+          { field: 'Catalog Highlights', issue: 'Only 1 specification bullet detected. Incomplete product attributes.', rule: 'Detailed bullet specifications build trust and reduce Meesho RTO.' },
+          { field: 'Catalog Discovery', issue: 'Lacks high-conversion reseller search keywords.', rule: 'Meesho algorithm prioritizes products with clear package specifications.' }
+        ];
+
         const dynamicSample = {
           id: 'custom-' + Date.now(),
-          platform: platform,
-          label: `Imported Listing (${extractedTitle.substring(0, 24)}...)`,
+          platform: activePlat,
+          label: `Imported ${activePlat.toUpperCase()} Listing (${extractedTitle.substring(0, 24)}...)`,
           url: urlInput,
-          asin: urlInput.match(/[B0-9][A-Z0-9]{9}/i)?.[0] || 'ASIN-LIVE',
+          asin: urlInput.match(/[B0-9][A-Z0-9]{9}/i)?.[0] || (isAmz ? 'ASIN-LIVE' : isFkp ? 'FSN-LIVE' : 'MEES-LIVE'),
           currentListing: {
             brand: 'Unbranded',
             title: extractedTitle,
@@ -294,17 +540,13 @@ export default function AiListingRepairStudio({
             score: 41,
             status: 'CRITICAL POOR',
             color: '#f43f5e',
-            flaws: [
-              { field: 'Product Title', issue: 'Missing registered brand name, lacks secondary keyword hooks, under 90 characters.', rule: 'Amazon A9 Algorithm requires Brand + Model + Core Specs for indexing.' },
-              { field: 'Bullet Points', issue: 'Only 2 generic bullets detected. Amazon strictly mandates 5 benefit-driven bullets.', rule: 'Suppression risk & high bounce rate on mobile app.' },
-              { field: 'Backend Search Terms', issue: 'Uses commas separating keywords, wasting byte capacity.', rule: 'Commas penalize Amazon backend indexing capacity.' }
-            ]
+            flaws: platformFlaws
           },
           repaired: {
             brand: 'ApexPro',
             productName: extractedTitle,
             category: 'Commercial Retail',
-            title: `ApexPro ${extractedTitle} - Heavy-Duty Performance, Ergonomic Design, Long-Lasting Durability (2026 Pro Edition)`,
+            title: `ApexPro ${extractedTitle} - Heavy-Duty Performance, Ergonomic Design, Long-Lasting Durability (${activePlat.toUpperCase()} 2026 Edition)`,
             bullets: [
               'ENGINEERED FOR HIGH PERFORMANCE: Precision crafted with premium materials ensuring dependable daily longevity.',
               '100% CERTIFIED QUALITY STANDARD: Rigorously quality-checked across multiple checkpoints for consistent durability.',
@@ -599,7 +841,11 @@ ${output.description}`;
               AI Listing & Repair Generator
             </h2>
             <p style={{ fontSize: '11px', color: '#94a3b8' }}>
-              Amazon URL Score Check, Error Diagnostic & 1-Click Seller Central Fix
+              {platform === 'amazon' 
+                ? 'Amazon URL & ASIN Score Check, Error Diagnostic & 1-Click Seller Central Fix'
+                : platform === 'flipkart'
+                ? 'Flipkart FSN & URL Score Check, Error Diagnostic & 1-Click Seller Hub Fix'
+                : 'Meesho Product URL Score Check, Error Diagnostic & 1-Click Supplier Panel Fix'}
             </p>
           </div>
         </div>
@@ -625,7 +871,7 @@ ${output.description}`;
               gap: '6px'
             }}
           >
-            <Link2 size={13} /> 🔗 Amazon / URL Import
+            <Link2 size={13} /> 🔗 {platform === 'amazon' ? 'Amazon' : platform === 'flipkart' ? 'Flipkart' : 'Meesho'} / URL Import
           </button>
           <button
             type="button"
@@ -664,7 +910,7 @@ ${output.description}`;
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setPlatform(p.id)}
+                onClick={() => handlePlatformChange(p.id)}
                 style={{
                   padding: '8px 6px',
                   borderRadius: '8px',
@@ -687,16 +933,75 @@ ${output.description}`;
           </div>
         </div>
 
+        {/* Platform Mismatch Warning Banner */}
+        {platformMismatchWarning && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(220, 38, 38, 0.08) 100%)',
+            border: '1.5px solid #ef4444',
+            borderRadius: '12px',
+            padding: '12px 14px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '10px',
+            boxShadow: '0 4px 14px rgba(239, 68, 68, 0.25)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: 1, minWidth: '220px' }}>
+              <AlertTriangle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#f87171' }}>
+                  Platform Mismatch Detected
+                </div>
+                <p style={{ fontSize: '11px', color: '#fecaca', margin: '2px 0 0', lineHeight: '1.4' }}>
+                  {platformMismatchWarning.message}
+                </p>
+              </div>
+            </div>
+            {platformMismatchWarning.suggestedPlatform && (
+              <button
+                type="button"
+                onClick={() => {
+                  const targetPlat = platformMismatchWarning.suggestedPlatform;
+                  setPlatform(targetPlat);
+                  setPlatformMismatchWarning(null);
+                  handleAuditUrl(null, targetPlat);
+                }}
+                style={{
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+                }}
+              >
+                <Zap size={13} /> Switch to {platformMismatchWarning.suggestedPlatform.toUpperCase()} & Audit ⚡
+              </button>
+            )}
+          </div>
+        )}
+
         {/* ----------------- MODE 1: URL IMPORTER & AUDIT ----------------- */}
         {inputMode === 'url' ? (
           <form onSubmit={handleAuditUrl} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <label style={{ fontSize: '11px', fontWeight: '700', color: '#cbd5e1' }}>
-                  Paste Product Listing URL or ASIN:
+                  {platform === 'amazon' 
+                    ? 'Paste Amazon Product Listing URL or ASIN:'
+                    : platform === 'flipkart'
+                    ? 'Paste Flipkart Product Listing URL or FSN:'
+                    : 'Paste Meesho Product Listing URL or Product ID:'}
                 </label>
                 <span style={{ fontSize: '10px', color: '#00d2ff' }}>
-                  Auto-Detects ASIN
+                  {platform === 'amazon' ? 'Auto-Detects ASIN' : platform === 'flipkart' ? 'Auto-Detects FSN' : 'Auto-Detects Product ID'}
                 </span>
               </div>
               <div style={{ position: 'relative' }}>
@@ -704,7 +1009,13 @@ ${output.description}`;
                   type="text"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="https://www.amazon.in/dp/B09XY492A or ASIN..."
+                  placeholder={
+                    platform === 'amazon' 
+                      ? 'https://www.amazon.in/dp/B09XY492A or ASIN (e.g. B0C74MS1L5)...'
+                      : platform === 'flipkart'
+                      ? 'https://www.flipkart.com/p/itmKURT89201F or FSN...'
+                      : 'https://www.meesho.com/p/CHOP772 or Product ID...'
+                  }
                   style={{
                     width: '100%',
                     padding: '11px 12px',
@@ -718,13 +1029,13 @@ ${output.description}`;
               </div>
             </div>
 
-            {/* Quick 1-Click Test Samples */}
+            {/* Quick 1-Click Test Samples - Strictly Filtered By Active Platform */}
             <div>
               <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: '600' }}>
-                ⚡ Or Select 1-Click Sample to Test Score & Repair:
+                ⚡ Or Select 1-Click {platform.toUpperCase()} Sample to Test Score & Repair:
               </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {URL_AUDIT_PRESETS.map(sample => (
+                {URL_AUDIT_PRESETS.filter(sample => sample.platform === platform).map(sample => (
                   <button
                     key={sample.id}
                     type="button"
@@ -773,7 +1084,7 @@ ${output.description}`;
               }}
             >
               {isAuditingUrl ? <RefreshCw className="pulse-radar-dot" size={15} /> : <Gauge size={15} />}
-              {isAuditingUrl ? 'Analyzing Live Listing...' : '🔍 Fetch & Check Listing Score'}
+              {isAuditingUrl ? `Analyzing Live ${platform.toUpperCase()} Listing...` : `🔍 Fetch & Check ${platform.toUpperCase()} Listing Score`}
             </button>
           </form>
         ) : (
@@ -880,9 +1191,17 @@ ${output.description}`;
           lineHeight: '1.5'
         }}>
           <strong style={{ color: '#00d2ff', display: 'block', marginBottom: '2px' }}>
-            💡 Amazon A9 Algorithm Standard:
+            💡 {platform === 'amazon' 
+              ? 'Amazon A9/A10 Algorithm Standard:' 
+              : platform === 'flipkart' 
+              ? 'Flipkart Search & Gold Listing Standard:' 
+              : 'Meesho Low-RTO Catalog Standard:'}
           </strong>
-          Titles are auto-formatted with Brand + Model + Specs (under 200 chars), bullets with capitalized hooks, and keywords strictly within 249 bytes with zero commas.
+          {platform === 'amazon'
+            ? 'Titles are auto-formatted with Brand + Model + Specs (under 200 chars), bullets with capitalized hooks, and keywords strictly within 249 bytes with zero commas.'
+            : platform === 'flipkart'
+            ? 'Titles are auto-formatted with Brand + Fabric/Type + Occasion (under 120 chars), 5 descriptive highlights with wash care, and high-CTR color/size variants.'
+            : 'Titles must include exact capacity/size and pack count to prevent customer returns, with clear bullet specifications reducing RTO by up to 35%.'}
         </div>
       </div>
 
@@ -975,21 +1294,21 @@ ${output.description}`;
               <Link2 size={26} />
             </div>
             <h4 style={{ fontSize: '17px', fontWeight: '800', color: '#fff', marginBottom: '8px' }}>
-              Paste Any Amazon Product URL
+              Paste Any {platform === 'amazon' ? 'Amazon' : platform === 'flipkart' ? 'Flipkart' : 'Meesho'} Product URL
             </h4>
             <p style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '420px', lineHeight: '1.5', margin: '0 auto 18px' }}>
               Enter any live product listing URL on the left or select a 1-click test sample. 
-              The engine will <strong>audit the score</strong>, detect every listing mistake, and provide a <strong>1-click repaired copy</strong> with exact Seller Central paste instructions.
+              The engine will <strong>audit the score</strong>, detect every listing mistake against {platform.toUpperCase()} rules, and provide a <strong>1-click repaired copy</strong> with exact {platform === 'amazon' ? 'Seller Central' : platform === 'flipkart' ? 'Seller Hub' : 'Supplier Panel'} paste instructions.
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <span style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1' }}>
-                ✓ Amazon URL & ASIN Score Audit
+                ✓ {platform === 'amazon' ? 'Amazon URL & ASIN' : platform === 'flipkart' ? 'Flipkart URL & FSN' : 'Meesho Product URL'} Score Audit
               </span>
               <span style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1' }}>
                 ✓ Error Diagnostic & 1-Click Repair Option
               </span>
               <span style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1' }}>
-                ✓ Exact Seller Central Paste Paths
+                ✓ Exact {platform === 'amazon' ? 'Seller Central' : platform === 'flipkart' ? 'Seller Hub' : 'Supplier Panel'} Paste Paths
               </span>
             </div>
           </div>
