@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { performWebsiteSeoAudit } from './seoAuditEngine.js';
+import { performDynamicPlatformAudit, POPULAR_SEO_AI_SYNC_TOOLS } from './platformSeoEngine.js';
 import { 
   Globe, 
   Search, 
@@ -1192,6 +1193,8 @@ export default function OmnichannelSeoSuite({
 
   // Live Crawled Website Audit State
   const [liveWebsiteAudit, setLiveWebsiteAudit] = useState(null);
+  // Dynamic Multi-Platform Audit State (GMB, Instagram, YouTube, E-Commerce, etc.)
+  const [dynamicAuditResult, setDynamicAuditResult] = useState(null);
 
   // Active Code View Sub-Tab inside Auto-Fix
   const [codeSubTab, setCodeSubTab] = useState('snippet1'); // 'snippet1' | 'snippet2' | 'snippet3' | 'snippet4'
@@ -1218,6 +1221,7 @@ export default function OmnichannelSeoSuite({
     setSelectedEngineId(engineId);
     const eng = PLATFORM_SEO_ENGINES.find(e => e.id === engineId) || PLATFORM_SEO_ENGINES[0];
     setCustomInput(eng.sampleInput);
+    setDynamicAuditResult(null);
     setIsAuditing(false);
     setAuditDone(true);
     setShowFixedCode(true);
@@ -1229,7 +1233,7 @@ export default function OmnichannelSeoSuite({
     }
   };
 
-  // Run Real Audit for the Selected Platform
+  // Run Real Dynamic Audit for the Selected Platform
   const handleRunAudit = async (e) => {
     e?.preventDefault();
     if (!customInput.trim()) {
@@ -1240,15 +1244,14 @@ export default function OmnichannelSeoSuite({
     setIsAuditing(true);
     setAuditDone(false);
 
-    if (selectedEngineId === 'website-seo') {
-      try {
-        const auditRes = await performWebsiteSeoAudit(customInput);
+    try {
+      const auditRes = await performDynamicPlatformAudit(selectedEngineId, customInput);
+      setDynamicAuditResult(auditRes);
+      if (selectedEngineId === 'website-seo') {
         setLiveWebsiteAudit(auditRes);
-      } catch (err) {
-        console.error('Audit crawl failed:', err);
       }
-    } else {
-      await new Promise(r => setTimeout(r, 650));
+    } catch (err) {
+      console.error('Dynamic audit failed:', err);
     }
 
     setIsAuditing(false);
@@ -1285,11 +1288,14 @@ export default function OmnichannelSeoSuite({
 
   // Get active audit data for the currently selected platform engine
   const currentAudit = useMemo(() => {
+    if (dynamicAuditResult) {
+      return dynamicAuditResult;
+    }
     if (selectedEngineId === 'website-seo' && liveWebsiteAudit) {
       return liveWebsiteAudit;
     }
     return DEDICATED_AUDIT_DATA[selectedEngineId] || DEDICATED_AUDIT_DATA['website-seo'];
-  }, [selectedEngineId, liveWebsiteAudit]);
+  }, [selectedEngineId, liveWebsiteAudit, dynamicAuditResult]);
 
   // Filtered Directory Items
   const filteredCategories = useMemo(() => {
@@ -2145,6 +2151,94 @@ export default function OmnichannelSeoSuite({
                 </div>
               </div>
             )}
+
+            {/* 3. POPULAR AI & INDUSTRY SEO SOFTWARE SYNC HUB */}
+            <div className="glass-panel" style={{ padding: '24px', marginTop: '22px', border: '1px solid rgba(0, 210, 255, 0.35)', background: 'rgba(12, 24, 46, 0.85)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px', marginBottom: '18px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '18px' }}>⚡</span>
+                    <h3 style={{ fontSize: '17px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                      Sync With Popular AI &amp; SEO Software (Live 1-Click Verification)
+                    </h3>
+                    <span style={{ fontSize: '10px', background: 'rgba(37, 211, 102, 0.2)', color: '#25d366', padding: '2px 8px', borderRadius: '12px', fontWeight: '800', border: '1px solid rgba(37, 211, 102, 0.4)' }}>
+                      LIVE SYNC CONNECTED
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#94a3b8', margin: '6px 0 0' }}>
+                    Cross-verify <strong style={{ color: '#00d2ff' }}>"{customInput || activeEngine.name}"</strong> across the world's top official Google tools, enterprise SEO platforms, and generative AI search models.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                {POPULAR_SEO_AI_SYNC_TOOLS.map(tool => (
+                  <div
+                    key={tool.id}
+                    className="glass-card"
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.45)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '14px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '12px'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: '800',
+                          color: tool.badgeColor,
+                          background: `${tool.badgeColor}20`,
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          border: `1px solid ${tool.badgeColor}40`
+                        }}>
+                          {tool.badge}
+                        </span>
+                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>{tool.provider}</span>
+                      </div>
+
+                      <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', margin: '0 0 6px 0' }}>
+                        {tool.name}
+                      </h4>
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>
+                        {tool.desc}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => window.open(tool.getSyncUrl(customInput || activeEngine.sampleInput), '_blank', 'noopener,noreferrer')}
+                      style={{
+                        background: `linear-gradient(135deg, ${tool.badgeColor} 0%, #0072ff 100%)`,
+                        color: '#fff',
+                        border: 'none',
+                        padding: '9px 14px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        width: '100%',
+                        boxShadow: `0 4px 15px ${tool.badgeColor}30`,
+                        transition: 'opacity 0.2s'
+                      }}
+                    >
+                      <span>Run Live Analysis on {tool.name.split(' ')[0]}</span>
+                      <ExternalLink size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
