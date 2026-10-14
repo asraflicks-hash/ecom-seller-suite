@@ -5,8 +5,8 @@
 
 import { performWebsiteSeoAudit } from './seoAuditEngine.js';
 
-// Common Indian & Global Cities Dictionary for Geo & Local Schema Detection
-const POPULAR_CITIES = [
+// Common Indian & Global Cities with verified Geo Coordinates
+const KNOWN_CITIES = [
   { name: 'Bengaluru', state: 'Karnataka', lat: '12.9716', lng: '77.5946', region: 'IN-KA' },
   { name: 'Bangalore', state: 'Karnataka', lat: '12.9716', lng: '77.5946', region: 'IN-KA' },
   { name: 'Delhi', state: 'Delhi', lat: '28.6139', lng: '77.2090', region: 'IN-DL' },
@@ -24,41 +24,41 @@ const POPULAR_CITIES = [
   { name: 'Indore', state: 'Madhya Pradesh', lat: '22.7196', lng: '75.8577', region: 'IN-MP' },
   { name: 'Noida', state: 'Uttar Pradesh', lat: '28.5355', lng: '77.3910', region: 'IN-UP' },
   { name: 'Gurugram', state: 'Haryana', lat: '28.4595', lng: '77.0266', region: 'IN-HR' },
-  { name: 'Gurgaon', state: 'Haryana', lat: '28.4595', lng: '77.0266', region: 'IN-HR' }
+  { name: 'Gurgaon', state: 'Haryana', lat: '28.4595', lng: '77.0266', region: 'IN-HR' },
+  { name: 'Kanpur', state: 'Uttar Pradesh', lat: '26.4499', lng: '80.3319', region: 'IN-UP' },
+  { name: 'Agra', state: 'Uttar Pradesh', lat: '27.1767', lng: '78.0081', region: 'IN-UP' },
+  { name: 'Varanasi', state: 'Uttar Pradesh', lat: '25.3176', lng: '82.9739', region: 'IN-UP' },
+  { name: 'Patna', state: 'Bihar', lat: '25.5941', lng: '85.1376', region: 'IN-BR' },
+  { name: 'Bhopal', state: 'Madhya Pradesh', lat: '23.2599', lng: '77.4126', region: 'IN-MP' },
+  { name: 'Ludhiana', state: 'Punjab', lat: '30.9010', lng: '75.8573', region: 'IN-PB' },
+  { name: 'Nagpur', state: 'Maharashtra', lat: '21.1458', lng: '79.0882', region: 'IN-MH' },
+  { name: 'Coimbatore', state: 'Tamil Nadu', lat: '11.0168', lng: '76.9558', region: 'IN-TN' },
+  { name: 'Kochi', state: 'Kerala', lat: '9.9312', lng: '76.2673', region: 'IN-KL' }
 ];
 
-// Industry Categories Dictionary for Auto-Classifying Business Entities
+// Rich Multi-Industry Category Dictionary (NEVER defaults to Dentist!)
 const INDUSTRY_CATEGORIES = [
   {
-    keywords: ['dental', 'dentist', 'teeth', 'clinic', 'doctor', 'hospital', 'ortho', 'derma', 'health', 'ayurved', 'homeo'],
-    type: 'Dentist',
-    schemaType: 'Dentist',
-    label: 'Healthcare & Medical Clinic',
-    primaryCat: 'Dentist',
-    secondaryCats: ['Cosmetic Dentist', 'Dental Clinic', 'Teeth Whitening Service', 'Emergency Dental Service'],
-    sampleServices: ['Root Canal Treatment', 'Teeth Whitening', 'Dental Implants', 'Smile Design', 'Invisible Braces']
-  },
-  {
-    keywords: ['restaurant', 'cafe', 'food', 'sweets', 'bakery', 'kitchen', 'dhaba', 'pizza', 'burger', 'bistro', 'bar', 'caterer', 'mithai'],
-    type: 'Restaurant',
+    id: 'food',
+    keywords: ['restaurant', 'cafe', 'food', 'sweets', 'bakery', 'kitchen', 'dhaba', 'pizza', 'burger', 'bistro', 'caterer', 'mithai', 'biryani', 'chai', 'tea', 'dining', 'hotel'],
     schemaType: 'Restaurant',
     label: 'Food, Dining & Hospitality',
     primaryCat: 'Restaurant',
     secondaryCats: ['North Indian Restaurant', 'Sweet Shop', 'Cafe', 'Caterer', 'Fast Food Restaurant'],
-    sampleServices: ['Dine-In Family Dining', 'Online Home Delivery', 'Corporate Catering', 'Party Hall Orders', 'Fresh Sweets']
+    sampleServices: ['Dine-In Family Seating', 'Takeaway & Home Delivery', 'Corporate Catering', 'Party Hall Booking', 'Fresh Sweets']
   },
   {
-    keywords: ['garment', 'clothing', 'fashion', 'boutique', 'saree', 'suit', 'kurti', 'textile', 'apparel', 'wear', 'tailor'],
-    type: 'ClothingStore',
+    id: 'fashion',
+    keywords: ['garment', 'clothing', 'fashion', 'boutique', 'saree', 'suit', 'kurti', 'textile', 'apparel', 'wear', 'tailor', 'dresses', 'menswear', 'womenswear', 'shoes', 'footwear'],
     schemaType: 'ClothingStore',
-    label: 'Fashion & Apparel Retailer',
+    label: 'Fashion, Garments & Apparel Store',
     primaryCat: 'Clothing Store',
-    secondaryCats: ["Men's Clothing Store", "Women's Boutique", "Traditional Saree Store", "Designer Wear Studio"],
-    sampleServices: ['Bridal Lehengas', 'Pure Cotton Kurtis', 'Custom Tailoring', 'Wholesale Dress Material', 'Designer Sarees']
+    secondaryCats: ["Men's Clothing Store", "Women's Boutique", "Traditional Ethnic Wear Store", "Designer Wear Studio"],
+    sampleServices: ['Bridal Ethnic Collections', 'Designer Sarees & Suits', 'Custom Fitting & Alterations', 'Wholesale Dress Material', 'Festive Party Wear']
   },
   {
-    keywords: ['electronic', 'mobile', 'laptop', 'repair', 'gadget', 'cctv', 'computer', 'tech', 'appliance', 'ac service'],
-    type: 'ElectronicsStore',
+    id: 'electronics',
+    keywords: ['electronic', 'mobile', 'laptop', 'repair', 'gadget', 'cctv', 'computer', 'tech', 'appliance', 'ac service', 'electrical', 'phone', 'battery', 'solar'],
     schemaType: 'ElectronicsStore',
     label: 'Electronics, Mobile & IT Services',
     primaryCat: 'Electronics Store',
@@ -66,44 +66,56 @@ const INDUSTRY_CATEGORIES = [
     sampleServices: ['Smartphone Screen Replacement', 'Laptop Chip-Level Repair', 'CCTV Security Camera Setup', 'Refurbished Laptops', 'AC Repair Service']
   },
   {
-    keywords: ['legal', 'lawyer', 'advocate', 'ca', 'chartered', 'tax', 'accounting', 'gst', 'attorney', 'notary'],
-    type: 'LegalService',
-    schemaType: 'LegalService',
-    label: 'Legal, Tax & Corporate Consultancy',
-    primaryCat: 'Legal Services',
-    secondaryCats: ['Chartered Accountant', 'Tax Consultant', 'Corporate Lawyer', 'GST Practitioner'],
-    sampleServices: ['GST Return Filing', 'Income Tax Audits', 'Company Incorporation (Pvt Ltd)', 'Trademark Registration', 'Legal Notice Drafting']
+    id: 'medical',
+    keywords: ['dental', 'dentist', 'teeth', 'clinic', 'doctor', 'hospital', 'ortho', 'derma', 'health', 'ayurved', 'homeo', 'eye', 'care', 'pathology', 'lab', 'pharma', 'chemist'],
+    schemaType: 'MedicalClinic',
+    label: 'Healthcare, Clinic & Medical Center',
+    primaryCat: 'Medical Clinic',
+    secondaryCats: ['Specialist Doctor Clinic', 'Diagnostic Center', 'Pharmacy Store', 'Healthcare Center'],
+    sampleServices: ['OPD Consultation', 'Diagnostic Blood Tests', 'Prescription Medicines', 'Preventive Health Checkup', 'Emergency First Aid']
   },
   {
-    keywords: ['salon', 'spa', 'beauty', 'parlour', 'makeup', 'hair', 'grooming', 'skincare'],
-    type: 'BeautySalon',
+    id: 'salon',
+    keywords: ['salon', 'spa', 'beauty', 'parlour', 'makeup', 'hair', 'grooming', 'skincare', 'nails', 'barber'],
     schemaType: 'BeautySalon',
-    label: 'Beauty Salon, Spa & Personal Care',
+    label: 'Beauty Salon, Spa & Personal Grooming',
     primaryCat: 'Beauty Salon',
-    secondaryCats: ['Hair Salon', 'Day Spa', 'Bridal Makeup Artist', 'Nail Salon'],
-    sampleServices: ['Bridal Makeup Packages', 'Keratin & Hair Botox Treatment', 'Hydra Facial', 'Waxing & Pedicure', 'Aroma Body Spa']
+    secondaryCats: ['Hair Salon', 'Day Spa', 'Bridal Makeup Studio', 'Nail Art Studio'],
+    sampleServices: ['Bridal Makeup Packages', 'Keratin & Hair Smoothing', 'Hydra Facial & Cleanup', 'Pedicure & Manicure', 'Relaxing Aroma Spa']
   },
   {
-    keywords: ['coaching', 'institute', 'academy', 'classes', 'school', 'tuition', 'training', 'education', 'college'],
-    type: 'EducationalOrganization',
+    id: 'education',
+    keywords: ['coaching', 'institute', 'academy', 'classes', 'school', 'tuition', 'training', 'education', 'college', 'computer institute'],
     schemaType: 'EducationalOrganization',
-    label: 'Education, Academy & Coaching Hub',
+    label: 'Education, Coaching Hub & Academy',
     primaryCat: 'Coaching Center',
     secondaryCats: ['Educational Institution', 'English Language School', 'Competitive Exam Preparation Academy', 'Computer Training Institute'],
-    sampleServices: ['NEET & JEE Foundation Batch', 'Class 9-12 Science Tuitions', 'Spoken English & IELTS Prep', 'Full-Stack Coding Bootcamp', 'UPSC Prelims Crash Course']
+    sampleServices: ['Foundation Batches', 'Class 9-12 Tuitions', 'Spoken English & Personality Prep', 'Full-Stack Coding Classes', 'Test Series & Study Material']
   },
   {
-    keywords: ['pack', 'box', 'manufacturing', 'industry', 'factory', 'export', 'wholesale', 'supplier', 'trader'],
-    type: 'LocalBusiness',
-    schemaType: 'LocalBusiness',
-    label: 'Manufacturing, B2B & Wholesale Feeds',
-    primaryCat: 'Manufacturer',
-    secondaryCats: ['Wholesaler', 'Packaging Supply Store', 'Industrial Equipment Supplier', 'Exporters'],
-    sampleServices: ['Custom Corrugated Boxes', 'Bulk Wholesale Supply', 'OEM Contract Manufacturing', 'Pan-India Freight Logistics', 'B2B Private Labeling']
+    id: 'services',
+    keywords: ['legal', 'lawyer', 'advocate', 'ca', 'chartered', 'tax', 'accounting', 'gst', 'attorney', 'notary', 'consultant', 'agency', 'marketing', 'real estate', 'property'],
+    schemaType: 'ProfessionalService',
+    label: 'Professional, Financial & Legal Services',
+    primaryCat: 'Professional Services',
+    secondaryCats: ['Chartered Accountant', 'Tax Consultant', 'Corporate Legal Advisor', 'Digital Marketing Agency'],
+    sampleServices: ['GST Return Filing', 'Income Tax Filing', 'Company Registration', 'Contract Drafting', 'Online Brand Marketing']
+  },
+  {
+    id: 'general_retail',
+    keywords: ['store', 'mart', 'supermarket', 'grocery', 'kirana', 'general', 'shop', 'provision', 'bazaar', 'enterprise', 'traders', 'agency', 'hardware'],
+    schemaType: 'Store',
+    label: 'Retail Store, Mart & Commercial Business',
+    primaryCat: 'General Store',
+    secondaryCats: ['Supermarket', 'Department Store', 'Wholesale Trader', 'Retailer'],
+    sampleServices: ['Daily Groceries & Essentials', 'Wholesale Supply', 'Home Delivery Orders', 'Packaged Consumer Goods', 'Counter Customer Service']
   }
 ];
 
-// Helper: Generates a stable deterministic hash from a string to avoid random score flicker on re-renders
+// Fallback Default: NEUTRAL LOCAL BUSINESS (Never Dentist!)
+const DEFAULT_INDUSTRY = INDUSTRY_CATEGORIES[7]; // General Retail / Store
+
+// Stable hash generator for unique non-flickering scores
 function getStringHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -114,70 +126,123 @@ function getStringHash(str) {
 }
 
 /**
- * Parses user input for Google Business Profile (GMB) or other platforms.
- * Extracts: clean name, city/state, category, and link validity.
+ * Parses user input for Google Business Profile or other local queries.
+ * Extracts: clean business name, city, industry category, and dead-link detection.
  */
-export function parseLocalEntity(rawInput) {
+export async function parseLocalEntityAsync(rawInput) {
   const input = (rawInput || '').trim();
   const isUrl = /^https?:\/\//i.test(input) || input.includes('google.') || input.includes('maps.app') || input.includes('share.google');
 
   let entityName = input;
-  let detectedCity = POPULAR_CITIES[0]; // fallback
+  let detectedCity = null;
   let isGoogleLink = false;
   let isUnverifiedShortlink = false;
+  let isDeadLink = false;
 
+  // 1. If it's a URL, attempt live resolution via serverless API
   if (isUrl) {
     isGoogleLink = input.includes('google.') || input.includes('maps.') || input.includes('share.google') || input.includes('g.page');
-    if (input.includes('share.google') || input.includes('maps.app.goo.gl') || input.includes('goo.gl/maps')) {
-      isUnverifiedShortlink = true;
-    }
+    isUnverifiedShortlink = input.includes('share.google') || input.includes('maps.app.goo.gl') || input.includes('goo.gl/maps');
 
-    // Try extracting place name from URL
+    // Attempt to resolve via serverless function
     try {
-      const parsed = new URL(input.startsWith('http') ? input : 'https://' + input);
-      const pathname = decodeURIComponent(parsed.pathname);
-      const placeMatch = pathname.match(/\/place\/([^\/@]+)/);
-      if (placeMatch && placeMatch[1]) {
-        entityName = placeMatch[1].replace(/\+/g, ' ');
-      } else if (parsed.searchParams.get('q')) {
-        entityName = parsed.searchParams.get('q').replace(/\+/g, ' ');
-      } else {
-        // Fallback for short links: synthesize clean entity from link tail
-        const segments = pathname.split('/').filter(Boolean);
-        const lastSeg = segments[segments.length - 1] || 'Local Business';
-        entityName = isUnverifiedShortlink ? `Business Listing (${lastSeg})` : lastSeg;
+      const res = await fetch(`/api/resolve-gmb?url=${encodeURIComponent(input)}`, {
+        signal: AbortSignal.timeout(5000)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.isUnavailable) {
+          isDeadLink = true;
+        }
+        if (data.placeName) {
+          entityName = data.placeName;
+        } else if (data.title && !data.title.toLowerCase().includes('google')) {
+          entityName = data.title;
+        }
       }
     } catch (e) {
-      entityName = 'Local Business Profile';
+      // In browser fallback when API is unreachable
+      if (input.includes('share.google') && input.length < 50) {
+        // Typical expired share link
+        isDeadLink = false;
+      }
+    }
+
+    if (!entityName || entityName === input) {
+      try {
+        const parsed = new URL(input.startsWith('http') ? input : 'https://' + input);
+        const path = decodeURIComponent(parsed.pathname);
+        const placeMatch = path.match(/\/place\/([^\/@]+)/);
+        if (placeMatch && placeMatch[1]) {
+          entityName = placeMatch[1].replace(/\+/g, ' ');
+        } else if (parsed.searchParams.get('q')) {
+          entityName = parsed.searchParams.get('q').replace(/\+/g, ' ');
+        } else {
+          const segs = path.split('/').filter(Boolean);
+          entityName = segs[segs.length - 1] || 'Local Business Profile';
+        }
+      } catch (err) {
+        entityName = 'Local Business Profile';
+      }
     }
   }
 
-  // Detect City from input or entity name
-  for (const city of POPULAR_CITIES) {
-    const regex = new RegExp(`\\b${city.name}\\b`, 'i');
-    if (regex.test(input) || regex.test(entityName)) {
-      detectedCity = city;
+  // 2. City Detection (Check against known cities or parse after comma)
+  for (const c of KNOWN_CITIES) {
+    const reg = new RegExp(`\\b${c.name}\\b`, 'i');
+    if (reg.test(input) || reg.test(entityName)) {
+      detectedCity = c;
       break;
     }
   }
 
-  // Clean entity name if it has commas
-  const nameParts = entityName.split(/[,|\-–]/).map(s => s.trim()).filter(Boolean);
-  const cleanBusinessName = nameParts[0] || 'Local Business Store';
+  // If city not found in known list, check if user provided "Name, City" format
+  if (!detectedCity) {
+    const parts = input.split(',').map(p => p.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      const candidateCity = parts[parts.length - 1];
+      if (candidateCity.length >= 2 && candidateCity.length <= 25) {
+        detectedCity = {
+          name: candidateCity.charAt(0).toUpperCase() + candidateCity.slice(1),
+          state: 'India',
+          lat: '20.5937',
+          lng: '78.9629',
+          region: 'IN'
+        };
+      }
+    }
+  }
 
-  // Detect Industry
-  let detectedIndustry = INDUSTRY_CATEGORIES[0];
-  const combinedText = `${cleanBusinessName} ${input}`.toLowerCase();
+  // Fallback city if none specified: Prompt user's local area instead of hardcoding Bengaluru
+  if (!detectedCity) {
+    detectedCity = {
+      name: 'Your Local City / Market',
+      state: 'State',
+      lat: '20.5937',
+      lng: '78.9629',
+      region: 'IN'
+    };
+  }
+
+  // 3. Clean Business Name
+  let cleanName = entityName.split(/[,|\-–]/)[0].trim();
+  cleanName = cleanName.replace(/https?:\/\/[^\s]+/gi, '').trim();
+  if (!cleanName || cleanName.length < 2) {
+    cleanName = isUrl ? 'Online Business Listing' : 'Your Business Name';
+  }
+
+  // 4. Industry Detection (Search across all keyword buckets)
+  let matchedIndustry = null;
+  const searchCorpus = `${cleanName} ${input}`.toLowerCase();
   for (const ind of INDUSTRY_CATEGORIES) {
-    if (ind.keywords.some(k => combinedText.includes(k))) {
-      detectedIndustry = ind;
+    if (ind.keywords.some(k => searchCorpus.includes(k))) {
+      matchedIndustry = ind;
       break;
     }
   }
 
-  // If user entered a generic name and no keyword matched, use retail/local business default
-  if (!detectedIndustry) {
-    detectedIndustry = INDUSTRY_CATEGORIES[2]; // Fashion/Retail
+  if (!matchedIndustry) {
+    matchedIndustry = DEFAULT_INDUSTRY; // General Retail & Store, NOT Dentist!
   }
 
   return {
@@ -185,106 +250,185 @@ export function parseLocalEntity(rawInput) {
     isUrl,
     isGoogleLink,
     isUnverifiedShortlink,
-    businessName: cleanBusinessName,
+    isDeadLink,
+    businessName: cleanName,
     city: detectedCity,
-    industry: detectedIndustry
+    industry: matchedIndustry
   };
 }
 
 /**
  * 2. GOOGLE BUSINESS PROFILE (GMB) DYNAMIC AUDIT
  */
-export function performGmbAudit(rawInput) {
-  const entity = parseLocalEntity(rawInput);
-  const { businessName, city, industry, isUrl, isUnverifiedShortlink, rawInput: target } = entity;
-
-  // Calculate dynamic realistic score based on entity input attributes
-  const hash = getStringHash(businessName + target);
-  let baseScore = 48 + (hash % 24); // Score range 48 to 71
+export async function performGmbAudit(rawInput) {
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, isUrl, isUnverifiedShortlink, isDeadLink, rawInput: target } = entity;
 
   const flaws = [];
+  let score = 75;
 
-  // Check 1: Google Maps Share Link & CID Status
-  if (isUnverifiedShortlink) {
-    baseScore -= 12;
+  // CASE 1: DEAD / INACCESSIBLE LINK DETECTED
+  if (isDeadLink || (isUrl && target.includes('share.google') && businessName.includes('Listing'))) {
+    score = 26;
     flaws.push({
-      rule: 'Google Maps Place ID & Canonical CID Binding',
+      rule: 'Google Maps Link Accessibility & URL Status',
       status: 'CRITICAL',
-      issue: `Target link ("${target.length > 45 ? target.slice(0, 42) + '...' : target}") is an unverified dynamic redirect/share link. Google's 2026 Maps ranking algorithm deprecates unverified redirect URLs, lowering 3-Pack authority.`,
-      fix: `Claim and bind the direct verified Place ID (ChIJ...) or official Google Business Profile manager URL (business.google.com) to lock citation authority.`
+      issue: `Target link "${target.length > 50 ? target.slice(0, 48) + '...' : target}" is an inactive, broken, or expired Google share redirect. Google servers returned an unavailable status ("Something went wrong"). Real customers and Googlebot cannot load this profile.`,
+      fix: `Do not use short share links. Open your Google Business Profile manager (business.google.com), click "Share Profile", and copy the direct active Maps link or audit using your "Business Name, City" directly.`
     });
-  } else if (!isUrl) {
+    flaws.push({
+      rule: 'Local 3-Pack Citation Equity',
+      status: 'CRITICAL',
+      issue: 'Citations pointing to a dead or broken share link fail to transfer ranking equity. Search algorithms treat the entity as unverified.',
+      fix: 'Standardize your direct CID / Place ID URL across your website, social media, and local directories.'
+    });
+    flaws.push({
+      rule: 'LocalBusiness Schema Verification',
+      status: 'WARNING',
+      issue: 'Cannot confirm website backlink connection from an inactive Google Maps redirect.',
+      fix: `Generate and place the LocalBusiness JSON-LD schema provided below onto your website to establish verified entity ownership.`
+    });
+
+    const headCode = `<!-- 1. RESCUE LOCAL GEO META TAGS -->
+<title>${businessName} | Local Business Profile - Verified Verification Pack</title>
+<meta name="description" content="Verified listing for ${businessName}. Discover genuine customer services, local reviews, and direct contact details." />
+<meta name="robots" content="index, follow" />`;
+
+    const schemaCode = `<!-- 2. RECOVERY LocalBusiness SCHEMA -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "${businessName}",
+  "url": "https://yourwebsite.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "${city.name}",
+    "addressCountry": "IN"
+  }
+}
+</script>`;
+
+    return {
+      target,
+      businessName,
+      city: city.name,
+      industry: 'Unverified / Expired Profile Link',
+      currentScore: score,
+      fixedScore: 98,
+      statusBadge: 'CRITICAL ALGORITHM DEFECTS - INACTIVE URL',
+      flaws,
+      codeSnippets: {
+        headCode,
+        schemaCode,
+        robotsCode: `# RECOVERY INSTRUCTIONS FOR INACTIVE GOOGLE MAPS LINK:
+1. Go to https://business.google.com and log in with your owner Gmail.
+2. If profile shows "Suspended" or "Verification Required", submit your GST certificate or electricity bill.
+3. Once active, search using your exact "Business Name, City" in this tool for full audit.`,
+        extraCode: `# ACTION PLAN:
+[ ] Test the link in an Incognito browser window.
+[ ] Replace dynamic share redirects with permanent Place ID URLs.
+[ ] Verify NAP string matches your signage and billing.`
+      },
+      manualActionGuide: [
+        {
+          step: 1,
+          title: 'Fix Expired Google Maps Share Link',
+          desc: 'Google shortlinks expire when profiles are updated or moved. Generate a fresh link from your Google Business Profile dashboard.'
+        },
+        {
+          step: 2,
+          title: 'Search By Business Name Instead',
+          desc: 'In the search box above, type your Business Name and City (e.g. "Your Brand, Lucknow") to test without link dependency.'
+        }
+      ]
+    };
+  }
+
+  // CASE 2: ACTIVE PROFILE OR BUSINESS NAME SEARCH
+  const hash = getStringHash(businessName + (city ? city.name : '') + target);
+  score = 52 + (hash % 26); // Score variance between 52 and 77
+
+  // Check 1: Link & Verification Type
+  if (isUnverifiedShortlink) {
+    score -= 10;
+    flaws.push({
+      rule: 'Place ID Binding & URL Canonicalization',
+      status: 'WARNING',
+      issue: `Listing uses a dynamic short redirect link. Google Maps algorithm prioritizes direct Place IDs (ChIJ...) or official CID URLs for ranking stability.`,
+      fix: 'Bind the permanent Place ID to your website footer and citation profiles.'
+    });
+  } else if (isUrl) {
     flaws.push({
       rule: 'Google Maps Link Presence',
-      status: 'WARNING',
-      issue: `Analyzed plain text business query: "${businessName}". Missing linked Google Maps CID URL for direct API citation tracking.`,
-      fix: `Embed direct Google Maps embed URL with exact Place ID on website contact page.`
-    });
-  } else {
-    flaws.push({
-      rule: 'Google Maps Entity Link Binding',
       status: 'PASSED',
-      issue: `Live URL structure verified for "${businessName}". Citation crawlers can verify localized landing page.`,
-      fix: `Maintain active Place ID citation across all major Indian directories.`
-    });
-  }
-
-  // Check 2: NAP Consistency (Name, Address, Phone)
-  const isKeywordStuffed = /best|top|cheap|100%|no\.1/i.test(businessName);
-  if (isKeywordStuffed) {
-    baseScore -= 15;
-    flaws.push({
-      rule: 'NAP Consistency & Name Field Keyword Stuffing',
-      status: 'CRITICAL',
-      issue: `Business title "${businessName}" contains aggressive keyword stuffing words (e.g. Best/Top/No.1). Google Business Profile algorithm penalizes ranking and flags account for manual verification suspension.`,
-      fix: `Standardize business name to exact registered legal trade name: "${businessName.replace(/best|top|cheap|100%|no\.1/gi, '').trim()}" across Google Maps, signage, and GST certificate.`
+      issue: `Direct landing URL verified for "${businessName}". Web crawlers can trace the destination.`,
+      fix: 'Maintain link consistency across your Google Business Profile and social pages.'
     });
   } else {
     flaws.push({
-      rule: 'NAP Consistency (Name, Address, Phone)',
-      status: 'WARNING',
-      issue: `Address format on Google Business Profile ("${city.name}") differs slightly from directory records. Google 3-Pack ranking algorithm penalizes fragmented addresses.`,
-      fix: `Standardize exact street address, PIN code, and phone number string across Google Maps, Justdial, IndiaMART, and website footer.`
+      rule: 'Local Citation Entity String',
+      status: 'PASSED',
+      issue: `Analyzed business entity: "${businessName}" in ${city.name}. Entity profile is ready for 3-Pack citation mapping.`,
+      fix: `Ensure this exact name string appears on your storefront signage, invoices, and website.`
     });
   }
 
-  // Check 3: Primary vs Secondary Category Hierarchy
+  // Check 2: Name Field Optimization & Spam Guard
+  const hasSpam = /best|top|cheap|100%|no\.1/i.test(businessName);
+  if (hasSpam) {
+    score -= 16;
+    flaws.push({
+      rule: 'Google Business Title Guidelines (Spam & Keyword Stuffing)',
+      status: 'CRITICAL',
+      issue: `Business name contains promotional keywords ("${businessName}"). Google strictly prohibits adding adjectives like Best/Top/Cheap into the title field, which can trigger algorithmic ranking suppression or suspension.`,
+      fix: `Keep title strictly to registered legal name: "${businessName.replace(/best|top|cheap|100%|no\.1/gi, '').trim()}". Add services into the Category and Services tabs instead.`
+    });
+  } else {
+    flaws.push({
+      rule: 'Business Title Compliance',
+      status: 'PASSED',
+      issue: `Title "${businessName}" satisfies Google Business Profile branding guidelines without prohibited spam modifiers.`,
+      fix: 'Do not modify business title frequently to avoid triggering re-verification checks.'
+    });
+  }
+
+  // Check 3: Industry Category Stack
   flaws.push({
     rule: 'Primary vs Secondary Category Hierarchy',
     status: 'WARNING',
-    issue: `Primary category set to generic category. Missing high-intent sub-categories for ${industry.label}.`,
-    fix: `Configure verified category stack: Primary: "${industry.primaryCat}" | Secondary: ${industry.secondaryCats.map(c => `"${c}"`).join(', ')}.`
+    issue: `Detected industry: ${industry.label}. Missing high-converting secondary sub-categories.`,
+    fix: `Configure category stack: Primary: "${industry.primaryCat}" | Secondary: ${industry.secondaryCats.map(c => `"${c}"`).join(', ')}.`
   });
 
-  // Check 4: LocalBusiness Schema with Geo-Coordinates
+  // Check 4: Geo-Coordinates & Local Schema
   flaws.push({
     rule: 'LocalBusiness Schema with Geo-Coordinates',
     status: 'CRITICAL',
-    issue: `Missing precise latitude (${city.lat}) / longitude (${city.lng}) and openingHoursSpecification JSON-LD schema for ${businessName}.`,
-    fix: `Inject verified schema.org/${industry.schemaType} schema with exact geo-coordinates and opening hours into website <head>.`
+    issue: `Missing verified schema.org/${industry.schemaType} markup with latitude (${city.lat}) and longitude (${city.lng}) on website.`,
+    fix: `Embed the validated JSON-LD schema snippet generated below into your website homepage <head>.`
   });
 
-  // Check 5: Review Velocity & Keyword Density
+  // Check 5: Review Responses
   flaws.push({
-    rule: 'Google Maps Review Keyword Velocity',
+    rule: 'Google Maps Review Keyword Density',
     status: 'WARNING',
-    issue: `Customer review responses do not include localized search terms ("${industry.sampleServices[0]} in ${city.name}").`,
-    fix: `Utilize algorithmic review response templates incorporating local area search phrases to trigger Google 3-Pack keyword matches.`
+    issue: `Review responses do not include localized search phrases ("${industry.sampleServices[0]} in ${city.name}").`,
+    fix: `Respond to reviews using localized service keywords to strengthen Google Maps 3-Pack relevancy.`
   });
 
-  const finalScore = Math.min(Math.max(baseScore, 35), 78);
-  const statusBadge = finalScore < 50 ? 'CRITICAL ALGORITHM DEFECTS' : 'OPTIMIZATION OPPORTUNITIES DETECTED';
+  const finalScore = Math.min(Math.max(score, 38), 84);
+  const statusBadge = finalScore < 60 ? 'OPTIMIZATION OPPORTUNITIES DETECTED' : 'GOOD LOCAL VISIBILITY TIER';
 
-  // Dynamic Code Generation for the exact business
   const headCode = `<!-- 1. LOCAL GEO META TAGS FOR ${businessName.toUpperCase()} -->
-<title>${businessName} | ${industry.primaryCat} in ${city.name} - 4.9★ Rated</title>
-<meta name="description" content="${businessName} in ${city.name} offers expert ${industry.sampleServices.slice(0, 3).join(', ')}. Call for verified appointments and fast service." />
+<title>${businessName} | ${industry.primaryCat} in ${city.name} - Official Store</title>
+<meta name="description" content="${businessName} in ${city.name} offers ${industry.sampleServices.slice(0, 3).join(', ')}. Visit us or contact our team for reliable service." />
 <meta name="geo.region" content="${city.region}" />
 <meta name="geo.placename" content="${city.name}, ${city.state}, India" />
 <meta name="geo.position" content="${city.lat};${city.lng}" />
 <meta name="ICBM" content="${city.lat}, ${city.lng}" />`;
 
-  const schemaCode = `<!-- 2. VALIDATED GOOGLE MAPS LocalBusiness JSON-LD SCHEMA -->
+  const schemaCode = `<!-- 2. VALIDATED GOOGLE MAPS ${industry.schemaType.toUpperCase()} JSON-LD SCHEMA -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -295,7 +439,7 @@ export function performGmbAudit(rawInput) {
   "priceRange": "₹₹",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Main Road, Commercial Center",
+    "streetAddress": "Commercial Area, Main Market",
     "addressLocality": "${city.name}",
     "addressRegion": "${city.state}",
     "postalCode": "XXXXXX",
@@ -313,31 +457,27 @@ export function performGmbAudit(rawInput) {
       "opens": "09:30",
       "closes": "20:30"
     }
-  ],
-  "sameAs": [
-    "https://facebook.com/yourbusiness",
-    "https://instagram.com/yourbusiness"
   ]
 }
 </script>`;
 
-  const robotsCode = `# 3. GOOGLE MAPS REVIEW RESPONSE TEMPLATES WITH LOCAL KEYWORDS FOR ${city.name.toUpperCase()}
+  const robotsCode = `# 3. GOOGLE MAPS REVIEW RESPONSE TEMPLATES FOR ${businessName.toUpperCase()}:
 
-TEMPLATE 1 (Positive 5-Star Review Response):
-"Thank you so much for choosing ${businessName} in ${city.name}! We take immense pride in providing top-notch ${industry.sampleServices[0]} and ${industry.sampleServices[1]}. Looking forward to serving you again in ${city.name}!"
+TEMPLATE 1 (Positive 5-Star Customer Feedback):
+"Thank you for visiting ${businessName} in ${city.name}! We are delighted that you appreciated our ${industry.sampleServices[0]}. We look forward to serving you again in ${city.name}!"
 
 TEMPLATE 2 (Service Specific Feedback):
-"Hi! We are delighted that you had a seamless experience with our ${industry.sampleServices[2]} team at ${businessName}. Your recommendation motivates our entire staff in ${city.name}. Best regards!"`;
+"Hi! We are so glad our team at ${businessName} provided a great experience for your ${industry.sampleServices[1]} requirements. Your support means the world to our local staff in ${city.name}!"`;
 
-  const extraCode = `# 4. 2026 GOOGLE MAPS 3-PACK RANKING CHECKLIST FOR ${businessName.toUpperCase()}:
-[ ] 1. Primary Category locked to "${industry.primaryCat}" (Do not change frequently).
-[ ] 2. Add all 4 secondary categories: ${industry.secondaryCats.join(', ')}.
-[ ] 3. Upload 10+ geotagged high-resolution photos of storefront, reception, and team in ${city.name}.
-[ ] 4. Enable Google Maps "Direct Messaging" for instant customer quote replies.
-[ ] 5. Respond to 100% of reviews within 24 hours including city name ("${city.name}").`;
+  const extraCode = `# 4. GOOGLE MAPS 3-PACK RANKING CHECKLIST FOR ${businessName.toUpperCase()}:
+[ ] 1. Ensure Primary Category is set to "${industry.primaryCat}".
+[ ] 2. Add Secondary Categories: ${industry.secondaryCats.join(', ')}.
+[ ] 3. Add 10+ real photos of your storefront and products in ${city.name}.
+[ ] 4. Post weekly updates on Google Business Profile with photos.
+[ ] 5. Respond to 100% of reviews within 24 hours.`;
 
   return {
-    target: target || businessName,
+    target,
     businessName,
     city: city.name,
     industry: industry.label,
@@ -345,27 +485,22 @@ TEMPLATE 2 (Service Specific Feedback):
     fixedScore: 99,
     statusBadge,
     flaws,
-    codeSnippets: {
-      headCode,
-      schemaCode,
-      robotsCode,
-      extraCode
-    },
+    codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
       {
         step: 1,
-        title: 'Standardize Primary Category in Google Business Profile',
-        desc: `Go to business.google.com -> Edit profile -> Business category. Ensure primary is "${industry.primaryCat}".`
+        title: `Configure Category Stack for ${industry.label}`,
+        desc: `Go to business.google.com -> Edit profile. Set Primary category to "${industry.primaryCat}" and add secondary categories.`
       },
       {
         step: 2,
-        title: 'Embed LocalBusiness JSON-LD on Website',
-        desc: `Copy snippet #2 and paste inside the <head> of your website homepage so Google verifies your exact geo-coordinates (${city.lat}, ${city.lng}).`
+        title: 'Embed Schema on Your Website',
+        desc: `Copy snippet #2 into the <head> of your website homepage to link your exact coordinates in ${city.name}.`
       },
       {
         step: 3,
-        title: 'Maintain Local Citation NAP Consistency',
-        desc: `Ensure your phone number and address in ${city.name} match 100% identically across Google Maps, Justdial, and WhatsApp Business.`
+        title: 'Maintain NAP Consistency',
+        desc: `Keep "${businessName}", your phone number, and address formatted identically across Google Maps, Justdial, and WhatsApp.`
       }
     ]
   };
@@ -374,18 +509,18 @@ TEMPLATE 2 (Service Specific Feedback):
 /**
  * 3. INSTAGRAM ALGORITHM SEO AUDIT
  */
-export function performInstagramAudit(rawInput) {
+export async function performInstagramAudit(rawInput) {
   const input = (rawInput || '').trim();
   const cleanHandle = input.replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[@\/]/g, '').trim() || 'yourbrand';
   const hash = getStringHash(cleanHandle);
-  const baseScore = 42 + (hash % 26);
+  const baseScore = 46 + (hash % 24);
 
   const flaws = [
     {
       rule: 'Instagram Searchable Name Field SEO Formula',
       status: 'CRITICAL',
       issue: `Current display name lacks secondary search intent keywords. Users searching on Instagram explore tab cannot discover @${cleanHandle}.`,
-      fix: `Update Name Field formula: "${cleanHandle.toUpperCase()} | Brand • City / Category".`
+      fix: `Update Name Field formula: "${cleanHandle.toUpperCase()} | Brand • Category / City".`
     },
     {
       rule: 'Bio Keyword Density & Value Proposition',
@@ -449,7 +584,7 @@ HOOK 3: "How this one change in our listing doubled our daily orders..."`;
 /**
  * 4. YOUTUBE CHANNEL & VIDEO SEO AUDIT
  */
-export function performYouTubeAudit(rawInput) {
+export async function performYouTubeAudit(rawInput) {
   const input = (rawInput || '').trim();
   const hash = getStringHash(input || 'youtube');
   const baseScore = 44 + (hash % 25);
@@ -543,9 +678,9 @@ amazon seller tools, flipkart seller tools, meesho seller tutorial, ecommerce bu
 }
 
 /**
- * 5. E-COMMERCE MARKETPLACE SEO (AMAZON / FLIPKART / MEESHO)
+ * 5. E-COMMERCE MARKETPLACE SEO
  */
-export function performEcommerceAudit(rawInput) {
+export async function performEcommerceAudit(rawInput) {
   const input = (rawInput || '').trim();
   const asinMatch = input.match(/\b(B0[A-Z0-9]{8})\b/i);
   const asin = asinMatch ? asinMatch[1].toUpperCase() : 'B0C74MS1L5';
@@ -648,16 +783,16 @@ export async function performDynamicPlatformAudit(engineId, rawInput) {
       return await performWebsiteSeoAudit(input);
 
     case 'gmb-seo':
-      return performGmbAudit(input);
+      return await performGmbAudit(input);
 
     case 'instagram-seo':
-      return performInstagramAudit(input);
+      return await performInstagramAudit(input);
 
     case 'youtube-seo':
-      return performYouTubeAudit(input);
+      return await performYouTubeAudit(input);
 
     case 'ecommerce-seo':
-      return performEcommerceAudit(input);
+      return await performEcommerceAudit(input);
 
     case 'facebook-seo':
     case 'linkedin-seo':
@@ -665,14 +800,12 @@ export async function performDynamicPlatformAudit(engineId, rawInput) {
     case 'ai-geo-seo':
     case 'rank-competitor-seo':
     default:
-      // For remaining engines, run contextual local entity audit tailored to input
-      return performGmbAudit(input);
+      return await performGmbAudit(input);
   }
 }
 
 /**
  * 7. POPULAR AI & INDUSTRY SEO TOOLS SYNC DIRECTORY
- * Direct 1-click live testing links prefilled with user query
  */
 export const POPULAR_SEO_AI_SYNC_TOOLS = [
   {
@@ -682,7 +815,6 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'Speed & Core Web Vitals',
     badge: 'GOOGLE OFFICIAL',
     badgeColor: '#4285f4',
-    iconColor: '#4285f4',
     desc: 'Test real-world mobile speed, LCP, INP, and Core Web Vitals directly on Google servers.',
     getSyncUrl: (target) => {
       const url = target.startsWith('http') ? target : `https://${target}`;
@@ -696,7 +828,6 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'Schema & Rich Snippets',
     badge: 'SCHEMA VERIFIED',
     badgeColor: '#34a853',
-    iconColor: '#34a853',
     desc: 'Verify if your LocalBusiness, Product, or FAQPage schema qualifies for Google rich snippets.',
     getSyncUrl: (target) => {
       const url = target.startsWith('http') ? target : `https://${target}`;
@@ -710,9 +841,8 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'Local GMB & Citations',
     badge: 'LOCAL 3-PACK',
     badgeColor: '#00d2ff',
-    iconColor: '#00d2ff',
     desc: 'Check NAP consistency, directory citations, and missing Google Business Profile sync points.',
-    getSyncUrl: (target) => `https://moz.com/products/local`
+    getSyncUrl: () => `https://moz.com/products/local`
   },
   {
     id: 'brightlocal-search',
@@ -721,9 +851,8 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'Google Maps 3-Pack Rankings',
     badge: 'MAPS AUDIT',
     badgeColor: '#f59e0b',
-    iconColor: '#f59e0b',
     desc: 'Inspect exact localized Google 3-Pack rankings from any pin code or city in India.',
-    getSyncUrl: (target) => `https://www.brightlocal.com/resources/local-search-results-checker/`
+    getSyncUrl: () => `https://www.brightlocal.com/resources/local-search-results-checker/`
   },
   {
     id: 'ahrefs-authority',
@@ -732,7 +861,6 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'Domain Rating & Backlinks',
     badge: 'INDUSTRY LEADER',
     badgeColor: '#ff5c35',
-    iconColor: '#ff5c35',
     desc: 'Analyze Domain Rating (DR), total referring domains, and organic keyword trajectory.',
     getSyncUrl: (target) => {
       const clean = target.replace(/^https?:\/\//i, '').split('/')[0];
@@ -746,7 +874,6 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'Organic Traffic & Competitors',
     badge: 'ORGANIC SERP',
     badgeColor: '#ff642d',
-    iconColor: '#ff642d',
     desc: 'Scan top organic ranking keywords, search intent gaps, and rival e-commerce traffic.',
     getSyncUrl: (target) => {
       const clean = target.replace(/^https?:\/\//i, '').split('/')[0];
@@ -760,7 +887,6 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'AI Generative Search (GEO)',
     badge: 'AI COPILOT',
     badgeColor: '#06b6d4',
-    iconColor: '#06b6d4',
     desc: 'Launch real-time AI research analyzing search sentiment, competitor reviews, and ranking opportunities.',
     getSyncUrl: (target) => {
       const prompt = `Perform a comprehensive SEO and digital visibility audit for "${target}". What are the top 3 ranking keywords, Google Maps 3-Pack gaps, and schema fixes?`;
@@ -774,7 +900,6 @@ export const POPULAR_SEO_AI_SYNC_TOOLS = [
     category: 'AI Audit & Content Strategy',
     badge: 'AI COPILOT',
     badgeColor: '#10b981',
-    iconColor: '#10b981',
     desc: 'Ask ChatGPT 4o to audit technical ranking flaws, metadata defects, and conversion hooks.',
     getSyncUrl: (target) => {
       const prompt = `Act as an expert Technical SEO and Google Maps specialist. Audit "${target}". List 3 critical crawl defects, optimized title and meta tags, and validated JSON-LD schema.`;

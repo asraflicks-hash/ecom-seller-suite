@@ -108,9 +108,9 @@ const PLATFORM_SEO_ENGINES = [
     bgGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(5, 150, 105, 0.05) 100%)',
     borderColor: 'rgba(16, 185, 129, 0.45)',
     inputLabel: 'Google Business Name, City or Google Maps Link:',
-    placeholder: 'Business Name, Locality, City (e.g. Apex Dental Clinic, Indiranagar, Bengaluru)',
-    sampleInput: 'Apex Dental Care, 100 Feet Road, Indiranagar, Bengaluru',
-    sampleLabel: 'Local Dental Clinic (Bengaluru)',
+    placeholder: 'Business Name, City or Google Maps Link (e.g. Sharma Sweets, Lucknow or https://maps.app.goo.gl/...)',
+    sampleInput: 'Sharma Sweets & Bakery, Hazratganj, Lucknow',
+    sampleLabel: 'Sweets & Bakery (Lucknow)',
     deliverables: ['LocalBusiness Schema', 'NAP Standardization Pack', 'Geo-Coordinates Tag', 'Maps Review Response Templates', 'Local Citation Guide']
   },
   {
@@ -390,100 +390,89 @@ Sitemap: https://myshop.in/sitemap.xml`,
 
   // 2. GOOGLE BUSINESS PROFILE (GMB) SEO
   'gmb-seo': {
-    target: 'Apex Dental Care, Indiranagar, Bengaluru',
-    currentScore: 46,
+    target: 'Sharma Sweets & Bakery, Hazratganj, Lucknow',
+    currentScore: 58,
     fixedScore: 99,
     flaws: [
       {
         rule: 'NAP Consistency (Name, Address, Phone)',
-        status: 'CRITICAL',
-        issue: 'Address format on Google Business Profile ("100ft Rd") differs from website ("100 Feet Road, HAL Stage 2"). Google Maps penalizes rank.',
-        fix: 'Standardized exact NAP string across Google Business Profile, LocalBusiness schema, and directories.'
+        status: 'WARNING',
+        issue: 'Address format on Google Business Profile ("Hazratganj") differs slightly from directory listings. Google 3-Pack rank prioritizes identical street addresses.',
+        fix: 'Standardize exact registered address across Google Maps, Justdial, and website footer.'
       },
       {
         rule: 'LocalBusiness Schema with Geo-Coordinates',
         status: 'CRITICAL',
-        issue: 'Missing precise latitude / longitude and openingHoursSpecification JSON-LD schema on clinic website.',
-        fix: 'Generated Dentist / LocalBusiness schema with exact geo-coordinates (12.9784, 77.6408) and clinic hours.'
+        issue: 'Missing precise latitude (26.8467) / longitude (80.9462) and openingHoursSpecification JSON-LD schema on store website.',
+        fix: 'Generated Restaurant / Bakery LocalBusiness schema with exact geo-coordinates and daily store hours.'
       },
       {
         rule: 'Primary vs Secondary Category Hierarchy',
         status: 'WARNING',
-        issue: 'Primary category set to generic "Dental Clinic" instead of high-converting "Dentist". Missing secondary categories.',
-        fix: 'Configured optimal category stack: Primary: "Dentist" | Secondary: "Cosmetic Dentist", "Dental Implants Periodontist", "Teeth Whitening Service".'
+        issue: 'Primary category set to generic "Food". Missing high-converting categories like Sweet Shop and Bakery.',
+        fix: 'Configured optimal category stack: Primary: "Sweet Shop" | Secondary: "Bakery", "North Indian Restaurant", "Caterer".'
       },
       {
         rule: 'Google Maps Review Keyword Velocity',
         status: 'WARNING',
-        issue: 'Customer review responses do not include local search terms ("root canal in Indiranagar").',
+        issue: 'Customer review responses do not include local search terms ("fresh sweets in Hazratganj").',
         fix: 'Generated keyword-optimized review response templates to boost Google Maps local keyword relevancy.'
       }
     ],
     codeSnippets: {
-      headCode: `<!-- 1. LOCAL GEO META TAGS FOR CLINIC WEBSITE <head> -->
-<title>Best Dentist in Indiranagar, Bengaluru | Apex Dental Care - 4.9★ Clinic</title>
-<meta name="description" content="Apex Dental Care in Indiranagar, Bengaluru offers painless root canal, invisible braces, and teeth whitening. Call +91-80-25251234 for same-day appointments." />
-<link rel="canonical" href="https://apexdental.in/" />
-<meta name="geo.region" content="IN-KA" />
-<meta name="geo.placename" content="Bengaluru" />
-<meta name="geo.position" content="12.9784;77.6408" />
-<meta name="ICBM" content="12.9784, 77.6408" />`,
+      headCode: `<!-- 1. LOCAL GEO META TAGS FOR STORE WEBSITE <head> -->
+<title>Sharma Sweets & Bakery in Hazratganj, Lucknow | Fresh Mithai & Cakes - 4.9★</title>
+<meta name="description" content="Sharma Sweets & Bakery in Hazratganj, Lucknow offers pure desi ghee sweets, fresh bakery cakes, and savory snacks. Order online or visit our store." />
+<link rel="canonical" href="https://sharmasweets.in/" />
+<meta name="geo.region" content="IN-UP" />
+<meta name="geo.placename" content="Lucknow, Uttar Pradesh, India" />
+<meta name="geo.position" content="26.8467;80.9462" />
+<meta name="ICBM" content="26.8467, 80.9462" />`,
 
-      schemaCode: `<!-- 2. VALIDATED GOOGLE MAPS LocalBusiness JSON-LD SCHEMA -->
+      schemaCode: `<!-- 2. VALIDATED GOOGLE MAPS Bakery / LocalBusiness JSON-LD SCHEMA -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Dentist",
-  "name": "Apex Dental Care",
-  "image": "https://apexdental.in/assets/clinic.jpg",
-  "telephone": "+91-80-25251234",
-  "url": "https://apexdental.in",
+  "@type": "Bakery",
+  "name": "Sharma Sweets & Bakery",
+  "telephone": "+91-522-XXXXXXXX",
+  "url": "https://sharmasweets.in",
   "priceRange": "₹₹",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "100 Feet Road, HAL 2nd Stage, Indiranagar",
-    "addressLocality": "Bengaluru",
-    "addressRegion": "Karnataka",
-    "postalCode": "560038",
+    "streetAddress": "Main Market, Hazratganj",
+    "addressLocality": "Lucknow",
+    "addressRegion": "Uttar Pradesh",
+    "postalCode": "226001",
     "addressCountry": "IN"
   },
   "geo": {
     "@type": "GeoCoordinates",
-    "latitude": 12.9784,
-    "longitude": 77.6408
+    "latitude": 26.8467,
+    "longitude": 80.9462
   },
   "openingHoursSpecification": [
     {
       "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      "opens": "09:00",
-      "closes": "20:00"
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      "opens": "08:00",
+      "closes": "22:00"
     }
-  ],
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "184"
-  }
+  ]
 }
 </script>`,
 
       robotsCode: `=== GOOGLE BUSINESS PROFILE (GMB) EXACT NAP CITATION PACK ===
-BUSINESS NAME: Apex Dental Care
-PRIMARY CATEGORY: Dentist
-SECONDARY CATEGORIES: Cosmetic Dentist, Dental Implants Periodontist, Teeth Whitening Service
-ADDRESS: 100 Feet Road, HAL 2nd Stage, Indiranagar, Bengaluru, Karnataka 560038
-PHONE: +91-80-25251234
-WEBSITE URL: https://apexdental.in?utm_source=gmb&utm_medium=organic&utm_campaign=local_seo
-APPOINTMENT LINK: https://apexdental.in/book-appointment`,
+BUSINESS NAME: Sharma Sweets & Bakery
+PRIMARY CATEGORY: Sweet Shop
+SECONDARY CATEGORIES: Bakery, Fast Food Restaurant, Caterer
+ADDRESS: Main Market, Hazratganj, Lucknow, Uttar Pradesh 226001
+PHONE: +91-522-XXXXXXXX
+WEBSITE URL: https://sharmasweets.in?utm_source=gmb&utm_medium=organic`,
 
-      extraCode: `=== GOOGLE MAPS 5-STAR REVIEW RESPONSE TEMPLATES WITH EMBEDDED KEYWORDS ===
-
-[TEMPLATE 1: POSITIVE GENERAL TREATMENT]
-"Thank you so much [Patient Name] for trusting Apex Dental Care! Our team in Indiranagar, Bengaluru is committed to providing painless dental treatments and gentle oral care. We look forward to seeing you for your regular 6-month dental checkup!"
-
-[TEMPLATE 2: ROOT CANAL & IMPLANTS]
-"Thank you for sharing your experience, [Patient Name]! We are glad our advanced microscopic root canal treatment in Indiranagar gave you a comfortable, pain-free recovery. Take care and keep smiling!"`
+      extraCode: `=== GOOGLE MAPS 5-STAR REVIEW RESPONSE TEMPLATES ===
+[TEMPLATE 1: POSITIVE SWEETS FEEDBACK]
+"Thank you for choosing Sharma Sweets & Bakery in Hazratganj, Lucknow! We take pride in preparing pure desi ghee mithai and look forward to serving your family again!"`
     }
   },
 
@@ -1203,34 +1192,41 @@ export default function OmnichannelSeoSuite({
   const [directorySearch, setDirectorySearch] = useState('');
   const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
 
-  // Trigger live audit on mount or when website-seo is selected
+  // Trigger dynamic audit on engine change or input update
   useEffect(() => {
     let isMounted = true;
-    if (selectedEngineId === 'website-seo' && !liveWebsiteAudit && customInput) {
-      performWebsiteSeoAudit(customInput)
+    if (customInput && customInput.trim()) {
+      performDynamicPlatformAudit(selectedEngineId, customInput)
         .then(res => {
-          if (isMounted) setLiveWebsiteAudit(res);
+          if (isMounted && res) {
+            setDynamicAuditResult(res);
+            if (selectedEngineId === 'website-seo') {
+              setLiveWebsiteAudit(res);
+            }
+          }
         })
-        .catch(err => console.warn('Initial audit warning:', err));
+        .catch(err => console.warn('Dynamic audit error:', err));
     }
     return () => { isMounted = false; };
-  }, [selectedEngineId]);
+  }, [selectedEngineId, customInput]);
 
   // Switch Platform Engine Handler
   const handleSelectEngine = (engineId) => {
     setSelectedEngineId(engineId);
     const eng = PLATFORM_SEO_ENGINES.find(e => e.id === engineId) || PLATFORM_SEO_ENGINES[0];
     setCustomInput(eng.sampleInput);
-    setDynamicAuditResult(null);
     setIsAuditing(false);
     setAuditDone(true);
     setShowFixedCode(true);
     setCodeSubTab('snippet1');
-    if (engineId === 'website-seo') {
-      performWebsiteSeoAudit(eng.sampleInput)
-        .then(res => setLiveWebsiteAudit(res))
-        .catch(() => {});
-    }
+    performDynamicPlatformAudit(engineId, eng.sampleInput)
+      .then(res => {
+        if (res) {
+          setDynamicAuditResult(res);
+          if (engineId === 'website-seo') setLiveWebsiteAudit(res);
+        }
+      })
+      .catch(() => {});
   };
 
   // Run Real Dynamic Audit for the Selected Platform
