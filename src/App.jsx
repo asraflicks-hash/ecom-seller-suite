@@ -80,7 +80,6 @@ import AdBanner from './AdBanner.jsx';
 import SeoContentDirectory from './SeoContentDirectory.jsx';
 import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
 import MobileFolderMenu from './MobileFolderMenu.jsx';
-import PromoPosterModal from './PromoPosterModal.jsx';
 import { TopFreeIndiaTickerBanner } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
@@ -164,7 +163,6 @@ export default function App() {
   const [showLockModal, setShowLockModal] = useState(false);
   const [showSyncMonitor, setShowSyncMonitor] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
-  const [showPromoPosterModal, setShowPromoPosterModal] = useState(false);
   const docsFolderRef = useRef(null);
 
   // Desktop vs Mobile View Mode State
@@ -984,53 +982,6 @@ export default function App() {
                     </div>
                   </div>
                 </button>
-
-                {/* 6. Promotional Poster & Kit */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDocsFolder(false);
-                    setShowPromoPosterModal(true);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    width: '100%'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 153, 51, 0.12)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '8px',
-                    background: 'rgba(255, 153, 51, 0.15)',
-                    border: '1px solid rgba(255, 153, 51, 0.35)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '15px',
-                    flexShrink: 0
-                  }}>
-                    📢
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
-                      Promo Poster & Kit
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      Download HD poster & WhatsApp message
-                    </div>
-                  </div>
-                </button>
               </div>
             )}
           </div>
@@ -1076,30 +1027,6 @@ export default function App() {
               title="Hire Sidra Motion for Listing & Photography or Claim Logistics Deals"
             >
               <Briefcase size={13} color="#25d366" /> 💼 Agency Services & Deals
-            </button>
-
-            <button
-              onClick={() => setShowPromoPosterModal(true)}
-              className="kinara-glow-dynamic"
-              style={{
-                '--glow-color': '#ff9933',
-                background: 'linear-gradient(135deg, rgba(255, 153, 51, 0.22) 0%, rgba(37, 211, 102, 0.22) 100%)',
-                border: '1.5px solid #ff9933',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                color: '#ffb74d',
-                fontSize: '11px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                boxShadow: '0 0 15px rgba(255, 153, 51, 0.3)',
-                transition: 'all 0.2s'
-              }}
-              title="Official Promotional Marketing Poster & WhatsApp Kit"
-            >
-              <span>📢 Promo Poster</span>
             </button>
 
             <button
@@ -1785,16 +1712,6 @@ export default function App() {
           const el = document.getElementById('seller-growth-hub');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }}
-        onOpenPromoPoster={() => {
-          setShowMobileFolderMenu(false);
-          setShowPromoPosterModal(true);
-        }}
-      />
-
-      {/* Official Promotional Marketing Poster Modal */}
-      <PromoPosterModal 
-        isOpen={showPromoPosterModal} 
-        onClose={() => setShowPromoPosterModal(false)} 
       />
 
       {/* Floating Mobile Bottom Navigation Dock */}
