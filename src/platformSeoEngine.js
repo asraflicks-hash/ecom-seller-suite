@@ -332,14 +332,47 @@ export async function performGmbAudit(rawInput) {
       },
       manualActionGuide: [
         {
-          step: 1,
+          step: '1',
           title: 'Fix Expired Google Maps Share Link',
-          desc: 'Google shortlinks expire when profiles are updated or moved. Generate a fresh link from your Google Business Profile dashboard.'
+          severity: 'CRITICAL',
+          severityColor: '#ef4444',
+          summary: 'Google shortlinks (share.google or maps.app) expire or fail when profiles are updated or moved. Use permanent Google Maps links:',
+          instructions: [
+            {
+              platform: 'Google Business Dashboard (Desktop)',
+              steps: [
+                'Go to https://business.google.com and log in with your primary Gmail.',
+                'Click "View profile" or open the listing directly on Google Search.',
+                'Click the three dots ⋮ -> "Share review form" or copy the full Google Maps URL directly from your browser bar.',
+                'Audit again using the clean URL or your "Business Name, City".'
+              ]
+            },
+            {
+              platform: 'Alternative Direct Search (Fastest)',
+              steps: [
+                'In the search box above, clear the short link.',
+                'Type your exact registered business name and city (e.g. "Sharma Sweets, Hazratganj, Lucknow").',
+                'Hit "Run Omnichannel Audit" to get instant dynamic audits without broken links.'
+              ]
+            }
+          ]
         },
         {
-          step: 2,
-          title: 'Search By Business Name Instead',
-          desc: 'In the search box above, type your Business Name and City (e.g. "Your Brand, Lucknow") to test without link dependency.'
+          step: '2',
+          title: 'Verify Google Profile Status & Suspension Check',
+          severity: 'HIGH PRIORITY',
+          severityColor: '#f59e0b',
+          summary: 'If your link displays "Something went wrong" to all users, verify account health:',
+          instructions: [
+            {
+              platform: 'Google Business Profile Manager',
+              steps: [
+                'Check if your profile status says "Suspended" or "Verification Required".',
+                'If suspended, click "Learn more" and submit an appeal with business proof (GST certificate, electricity bill, storefront signboard photo).',
+                'Ensure the business address matches municipal records exactly.'
+              ]
+            }
+          ]
         }
       ]
     };
@@ -488,19 +521,56 @@ TEMPLATE 2 (Service Specific Feedback):
     codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
       {
-        step: 1,
+        step: '1',
         title: `Configure Category Stack for ${industry.label}`,
-        desc: `Go to business.google.com -> Edit profile. Set Primary category to "${industry.primaryCat}" and add secondary categories.`
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Google algorithm ranks profiles higher in the 3-Pack when both primary and secondary categories match local intent:',
+        instructions: [
+          {
+            platform: 'Google Business Profile Manager',
+            steps: [
+              'Log into business.google.com and click "Edit profile".',
+              `Set Primary category strictly to: "${industry.primaryCat}".`,
+              `Add Secondary categories: ${industry.secondaryCats.slice(0, 4).map(c => `"${c}"`).join(', ')}.`,
+              'Click "Save". Changes take 24-48 hours to fully index across Google 3-Pack.'
+            ]
+          }
+        ]
       },
       {
-        step: 2,
-        title: 'Embed Schema on Your Website',
-        desc: `Copy snippet #2 into the <head> of your website homepage to link your exact coordinates in ${city.name}.`
+        step: '2',
+        title: 'Embed LocalBusiness Schema on Your Website',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: `Connect your official website to your Google Maps pin (${city.name} coordinates: ${city.lat}, ${city.lng}):`,
+        instructions: [
+          {
+            platform: 'Website Homepage <head>',
+            steps: [
+              'Copy snippet #2 (Validated LocalBusiness Schema) from the Code panel above.',
+              'Paste into your website homepage <head> section (via WPCode plugin in WordPress or theme.liquid in Shopify).',
+              'Test in Google Rich Results Test (search.google.com/test/rich-results) to confirm green verification.'
+            ]
+          }
+        ]
       },
       {
-        step: 3,
-        title: 'Maintain NAP Consistency',
-        desc: `Keep "${businessName}", your phone number, and address formatted identically across Google Maps, Justdial, and WhatsApp.`
+        step: '3',
+        title: 'Review Response Keyword Optimization',
+        severity: 'RECOMMENDED',
+        severityColor: '#00d2ff',
+        summary: 'Boost local search ranking by including service keywords in all customer review replies:',
+        instructions: [
+          {
+            platform: 'Google Maps Reviews',
+            steps: [
+              'Reply to all new reviews within 24 hours.',
+              `Mention your city and core service: e.g. "Thank you for choosing ${businessName} for your ${industry.sampleServices[0]} in ${city.name}!"`,
+              'Never copy-paste identical generic responses — customize each with the customer\'s name.'
+            ]
+          }
+        ]
       }
     ]
   };
@@ -575,8 +645,40 @@ HOOK 3: "How this one change in our listing doubled our daily orders..."`;
     flaws,
     codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
-      { step: 1, title: 'Edit Name Field on Profile', desc: 'Add 2 high-volume search keywords right next to your brand name.' },
-      { step: 2, title: 'Paste High-Converting Bio', desc: 'Replace vague quotes with clear value points and WhatsApp link.' }
+      {
+        step: '1',
+        title: 'Edit Name Field on Profile (Explore SEO)',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'Your Instagram Name field is searchable by the Instagram search algorithm, unlike your bio text:',
+        instructions: [
+          {
+            platform: 'Instagram Mobile App',
+            steps: [
+              'Open your Instagram profile and tap "Edit profile".',
+              `Change Name to: "${cleanHandle.slice(0, 14)} | Trending Fashion 🇮🇳" (under 30 characters).`,
+              'Tap "Done" to save. Now anyone searching for these keywords will find your profile in Explore.'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Deploy High-Converting Bio & Direct CTA',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Turn profile visitors into paying customers with clear value points and WhatsApp link:',
+        instructions: [
+          {
+            platform: 'Bio Settings',
+            steps: [
+              'Replace vague bios with 3 clear bullet points (India delivery, happy customers, product specialty).',
+              'Add direct link: wa.me/91XXXXXXXXXX or linktree in the "Links" field.',
+              'Set Category to "Shopping & Retail" or "E-commerce Store".'
+            ]
+          }
+        ]
+      }
     ]
   };
 }
@@ -671,8 +773,40 @@ amazon seller tools, flipkart seller tools, meesho seller tutorial, ecommerce bu
     flaws,
     codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
-      { step: 1, title: 'Update Title with Bracketed Proof', desc: 'Add [2026 Guide] or [Step-by-Step] to boost CTR by 30%.' },
-      { step: 2, title: 'Embed Chapters in Description', desc: 'Add 00:00 timestamps to rank in Google Search Key Moments carousel.' }
+      {
+        step: '1',
+        title: 'Update Video Title with High-CTR Formula',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'YouTube algorithm prioritizes Click-Through Rate (CTR) in the first 24 hours of release:',
+        instructions: [
+          {
+            platform: 'YouTube Studio',
+            steps: [
+              'Open YouTube Studio -> Content -> Select Video.',
+              'Add brackets or year modifier: e.g. "[2026 Blueprint]" or "[Live Proof]" to increase CTR by 25-35%.',
+              'Keep the first 45 characters focused on the viewer\'s main curiosity or benefit.'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Embed Chapters in Description for Google SERP Key Moments',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'Add timestamps in description to rank directly on Google Search video carousels:',
+        instructions: [
+          {
+            platform: 'Description Tab',
+            steps: [
+              'Start timestamps with 00:00 (Intro).',
+              'Add at least 3 chapters with keyword-rich titles (e.g. 02:15 - Amazon A9 Listing SEO Optimization).',
+              'Ensure each chapter is at least 10 seconds long.'
+            ]
+          }
+        ]
+      }
     ]
   };
 }
@@ -766,8 +900,40 @@ earphone bluetooth wireless airpod headphones buds gaming mic anc noise cancelli
     flaws,
     codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
-      { step: 1, title: 'Update Title in Seller Central', desc: 'Paste the structured title into Amazon Seller Central or Flipkart Seller Hub.' },
-      { step: 2, title: 'Refresh Backend Search Terms', desc: 'Copy the 249-byte terms into the generic keywords tab with zero commas.' }
+      {
+        step: '1',
+        title: 'Update Title in Seller Central (Amazon / Flipkart)',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'Marketplace search algorithms index words in titles with highest weight:',
+        instructions: [
+          {
+            platform: 'Amazon Seller Central / Flipkart Seller Hub',
+            steps: [
+              'Go to Inventory -> Manage All Inventory -> Edit Listing.',
+              'Update Title following formula: [Brand] + [Model] + [Core Benefit] + [Color/Size].',
+              'Ensure title is under 180 characters and contains no banned promotional terms (free shipping, 100% quality).'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Refresh Generic Backend Search Terms (249 Bytes)',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Backend keywords index your product for alternate search queries without cluttering the buyer-facing title:',
+        instructions: [
+          {
+            platform: 'Keywords Tab',
+            steps: [
+              'Paste the 249-byte space-separated keywords from snippet #3.',
+              'Do NOT use commas or repeat words that are already in your title.',
+              'Save changes. Indexing updates within 15 minutes.'
+            ]
+          }
+        ]
+      }
     ]
   };
 }

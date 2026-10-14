@@ -2053,7 +2053,7 @@ export default function OmnichannelSeoSuite({
                     </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                      {currentAudit.manualActionGuide.map((guide, gIdx) => (
+                      {(currentAudit.manualActionGuide || []).map((guide, gIdx) => (
                         <div
                           key={gIdx}
                           className="glass-card kinara-glow-dynamic"
@@ -2079,52 +2079,60 @@ export default function OmnichannelSeoSuite({
                                 fontWeight: '800',
                                 fontSize: '11px'
                               }}>
-                                {guide.step}
+                                {guide.step || gIdx + 1}
                               </span>
                               <strong style={{ fontSize: '14px', color: '#fff' }}>{guide.title}</strong>
                             </div>
-                            <span style={{
-                              fontSize: '10px',
-                              fontWeight: '800',
-                              background: 'rgba(255,255,255,0.06)',
-                              color: guide.severityColor,
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              border: `1px solid ${guide.severityColor}40`
-                            }}>
-                              {guide.severity}
-                            </span>
+                            {guide.severity && (
+                              <span style={{
+                                fontSize: '10px',
+                                fontWeight: '800',
+                                background: 'rgba(255,255,255,0.06)',
+                                color: guide.severityColor || '#f59e0b',
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                border: `1px solid ${guide.severityColor || '#f59e0b'}40`
+                              }}>
+                                {guide.severity}
+                              </span>
+                            )}
                           </div>
 
-                          <p style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '12px', lineHeight: '1.4' }}>
-                            {guide.summary}
-                          </p>
+                          {(guide.summary || guide.desc) && (
+                            <p style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '12px', lineHeight: '1.4' }}>
+                              {guide.summary || guide.desc}
+                            </p>
+                          )}
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
-                            {guide.instructions.map((inst, iIdx) => (
-                              <div
-                                key={iIdx}
-                                className="glass-card kinara-glow"
-                                style={{
-                                  background: 'rgba(0, 0, 0, 0.4)',
-                                  padding: '12px 14px',
-                                  borderRadius: '10px',
-                                  border: '1px solid rgba(255, 255, 255, 0.06)'
-                                }}
-                              >
-                                <span style={{ fontSize: '11px', fontWeight: '800', color: '#00d2ff', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                                  📌 {inst.platform}:
-                                </span>
-                                <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11px', color: '#94a3b8', lineHeight: '1.6' }}>
-                                  {inst.steps.map((s, sIdx) => (
-                                    <li key={sIdx} style={{ marginBottom: '4px' }}>
-                                      {s}
-                                    </li>
-                                  ))}
-                                </ol>
-                              </div>
-                            ))}
-                          </div>
+                          {Array.isArray(guide.instructions) && guide.instructions.length > 0 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
+                              {guide.instructions.map((inst, iIdx) => (
+                                <div
+                                  key={iIdx}
+                                  className="glass-card kinara-glow"
+                                  style={{
+                                    background: 'rgba(0, 0, 0, 0.4)',
+                                    padding: '12px 14px',
+                                    borderRadius: '10px',
+                                    border: '1px solid rgba(255, 255, 255, 0.06)'
+                                  }}
+                                >
+                                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#00d2ff', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                                    📌 {inst.platform}:
+                                  </span>
+                                  {Array.isArray(inst.steps) && (
+                                    <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11px', color: '#94a3b8', lineHeight: '1.6' }}>
+                                      {inst.steps.map((s, sIdx) => (
+                                        <li key={sIdx} style={{ marginBottom: '4px' }}>
+                                          {s}
+                                        </li>
+                                      ))}
+                                    </ol>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
