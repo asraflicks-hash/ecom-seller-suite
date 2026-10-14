@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-  <!-- Primary Homepage & Complete Suite Hub -->
+  <!-- Primary Homepage (www & root domain) -->
+  <url>
+    <loc>https://www.sellersuitepro.online/</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.sellersuitepro.online/seller-suite-pro-promo-poster.jpg</image:loc>
+      <image:title>Seller Suite Pro 2026 - 100% Free AI Operating Tools for Indian E-Commerce Sellers</image:title>
+      <image:caption>Free Amazon, Flipkart and Meesho seller AI optimization workstation</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.sellersuitepro.online/sidra-logo.png</image:loc>
+      <image:title>Sidra Motion Official Gold Logo</image:title>
+    </image:image>
+  </url>
+
   <url>
     <loc>https://sellersuitepro.online/</loc>
     <lastmod>2026-10-14</lastmod>
@@ -12,9 +29,9 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Module 1: AI Listing & SEO Repair Studio (Amazon, Flipkart, Meesho) -->
+  <!-- Module 1: AI Listing & SEO Repair Studio -->
   <url>
-    <loc>https://sellersuitepro.online/#listing-ai</loc>
+    <loc>https://www.sellersuitepro.online/#listing-ai</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -22,7 +39,7 @@
 
   <!-- Module 2: Image Compliance & #FFFFFF Pure White Studio -->
   <url>
-    <loc>https://sellersuitepro.online/#image-studio</loc>
+    <loc>https://www.sellersuitepro.online/#image-studio</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -30,7 +47,7 @@
 
   <!-- Module 3: Bulk Catalog Converter (Amazon to Flipkart to Meesho) -->
   <url>
-    <loc>https://sellersuitepro.online/#catalog-convert</loc>
+    <loc>https://www.sellersuitepro.online/#catalog-convert</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -38,7 +55,7 @@
 
   <!-- Module 4: BuyBox & Real-Time Auto Repricer -->
   <url>
-    <loc>https://sellersuitepro.online/#buybox-repricer</loc>
+    <loc>https://www.sellersuitepro.online/#buybox-repricer</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -46,7 +63,7 @@
 
   <!-- Module 5: Competitor Review & Gap Mining Studio -->
   <url>
-    <loc>https://sellersuitepro.online/#review-analyzer</loc>
+    <loc>https://www.sellersuitepro.online/#review-analyzer</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -54,7 +71,7 @@
 
   <!-- Module 6: RTO & Real Net Profit Simulator -->
   <url>
-    <loc>https://sellersuitepro.online/#rto-calculator</loc>
+    <loc>https://www.sellersuitepro.online/#rto-calculator</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -62,7 +79,7 @@
 
   <!-- Module 7: Sync & RGB Listing Quality Score (LQS) Live Engine -->
   <url>
-    <loc>https://sellersuitepro.online/#listing-audit</loc>
+    <loc>https://www.sellersuitepro.online/#listing-audit</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -70,7 +87,7 @@
 
   <!-- Module 8: 360° Omnichannel SEO & Marketing Suite -->
   <url>
-    <loc>https://sellersuitepro.online/#omnichannel-seo</loc>
+    <loc>https://www.sellersuitepro.online/#omnichannel-seo</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
