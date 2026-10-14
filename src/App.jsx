@@ -80,7 +80,7 @@ import AdBanner from './AdBanner.jsx';
 import SeoContentDirectory from './SeoContentDirectory.jsx';
 import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
 import MobileFolderMenu from './MobileFolderMenu.jsx';
-import { TopFreeIndiaTickerBanner, FreeIndiaCelebrationModal } from './FreeIndiaCelebrationBanner.jsx';
+import { TopFreeIndiaTickerBanner } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
   getOrAssignCustomerId, 
@@ -164,22 +164,6 @@ export default function App() {
   const [showSyncMonitor, setShowSyncMonitor] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
   const docsFolderRef = useRef(null);
-
-  // 100% Free For All Indians Animated Celebration Modal State
-  const [showFreeIndiaPopup, setShowFreeIndiaPopup] = useState(() => {
-    try {
-      return sessionStorage.getItem('sidra_free_india_popup_closed') !== 'true';
-    } catch (e) {
-      return true;
-    }
-  });
-
-  const handleCloseFreeIndiaPopup = () => {
-    setShowFreeIndiaPopup(false);
-    try {
-      sessionStorage.setItem('sidra_free_india_popup_closed', 'true');
-    } catch (e) {}
-  };
 
   // Desktop vs Mobile View Mode State
   const [viewMode, setViewMode] = useState(() => {
@@ -318,27 +302,29 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'radial-gradient(circle at 50% 0%, #173359 0%, #0c182e 45%, #070d19 100%)' }}>
-      {/* 🇮🇳 SAB SE TOP PE: 100% FREE FOR ALL INDIANS ANIMATED TICKER BAR (Desktop & Mobile) */}
-      <TopFreeIndiaTickerBanner 
-        onOpenDetails={() => setShowFreeIndiaPopup(true)} 
-        viewMode={viewMode} 
-      />
-
-      {/* Top Glass Header */}
+      {/* Top Glass Header (Sticky Container) */}
       <header style={{
-        background: 'rgba(11, 23, 44, 0.88)',
+        background: 'rgba(11, 23, 44, 0.94)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(0, 210, 255, 0.25)',
-        padding: viewMode === 'mobile' ? '10px 14px' : '14px 28px',
         position: 'sticky',
         top: 0,
         zIndex: 50,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: viewMode === 'mobile' ? '10px' : '16px'
+        flexDirection: 'column'
       }}>
+        {/* 🇮🇳 HAMESHA HEADER PE LIKHA RAHE BAS EK TITLE */}
+        <TopFreeIndiaTickerBanner viewMode={viewMode} />
+
+        {/* Main Header Content Bar */}
+        <div style={{
+          padding: viewMode === 'mobile' ? '8px 14px' : '10px 28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: viewMode === 'mobile' ? '10px' : '16px'
+        }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: viewMode === 'mobile' ? '10px' : '14px' }}>
           {/* Official Sidra Motion Logo with Animated Yellow Aura */}
           <div style={{
@@ -1152,6 +1138,7 @@ export default function App() {
             </button>
           </div>
         )}
+        </div>
       </header>
 
       {/* Main Suite Content - DIRECT OPEN (Zero sign-in barrier) */}
@@ -1725,16 +1712,7 @@ export default function App() {
           const el = document.getElementById('seller-growth-hub');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }}
-        onOpenFreeCelebration={() => {
-          setShowMobileFolderMenu(false);
-          setShowFreeIndiaPopup(true);
-        }}
       />
-
-      {/* 🇮🇳 100% FREE FOR ALL INDIANS ANIMATED POPUP */}
-      {showFreeIndiaPopup && (
-        <FreeIndiaCelebrationModal onClose={handleCloseFreeIndiaPopup} />
-      )}
 
       {/* Floating Mobile Bottom Navigation Dock */}
       {viewMode === 'mobile' && (

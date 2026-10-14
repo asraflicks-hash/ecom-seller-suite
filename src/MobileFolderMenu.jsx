@@ -162,43 +162,32 @@ export default function MobileFolderMenu({
         flexDirection: 'column',
         gap: '20px'
       }}>
-        {/* Special 100% Free For All Indians Announcement Banner */}
-        <button
-          type="button"
-          onClick={() => {
-            if (onOpenFreeCelebration) onOpenFreeCelebration();
-            onClose();
-          }}
+        {/* Special 100% Free For All Indians Status Banner */}
+        <div
           className="kinara-glow-dynamic"
           style={{
             '--glow-color': '#ff9933',
-            background: 'linear-gradient(135deg, rgba(255, 153, 51, 0.2) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(37, 211, 102, 0.2) 100%)',
+            background: 'linear-gradient(135deg, rgba(255, 153, 51, 0.2) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(37, 211, 102, 0.2) 100%)',
             border: '1.5px solid #ff9933',
             borderRadius: '16px',
             padding: '12px 14px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '10px',
-            cursor: 'pointer',
-            textAlign: 'left',
+            gap: '12px',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 153, 51, 0.25)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>🇮🇳</span>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '900', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>100% FREE FOR ALL INDIANS</span>
-                <span style={{ fontSize: '9px', background: '#25d366', color: '#000', padding: '1px 6px', borderRadius: '8px', fontWeight: '900' }}>0₹</span>
-              </div>
-              <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
-                Amazon, Flipkart & Meesho sellers ke liye lifetime free • Tap for details
-              </div>
+          <span style={{ fontSize: '26px' }}>🇮🇳</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: '900', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>100% FREE FOR ALL INDIANS</span>
+              <span style={{ fontSize: '9px', background: '#25d366', color: '#000', padding: '1px 6px', borderRadius: '8px', fontWeight: '900' }}>0₹</span>
+            </div>
+            <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
+              Amazon, Flipkart & Meesho sellers ke liye all 8 tools lifetime free
             </div>
           </div>
-          <ChevronRight size={16} color="#ff9933" />
-        </button>
+        </div>
 
         {/* Section 1: All 8 Suite Modules */}
         <div>
