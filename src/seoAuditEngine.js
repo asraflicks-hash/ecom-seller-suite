@@ -720,6 +720,19 @@ Sitemap: ${cleanUrl}/sitemap_index.xml`;
     }
   ];
 
+  const onPageScore = Math.min(Math.max(Math.round(85 - (h1Tags.length === 0 ? 15 : 0) - (title.length < 30 ? 10 : 0) - (description.length < 50 ? 10 : 0)), 40), 98);
+  const respSec = parseFloat(crawled.responseTime || '0.35');
+  const speedScore = Math.min(Math.max(Math.round(98 - (respSec * 25)), 45), 99);
+  const securityScore = isHttps ? 96 : 42;
+  const accessibilityScore = Math.min(Math.max(Math.round(94 - (imagesWithoutAlt * 3) + (hasViewport ? 5 : -20)), 38), 98);
+
+  const subScores = {
+    onPage: { label: 'On-Page & Meta Tags SEO', score: onPageScore },
+    speed: { label: 'Speed & Core Web Vitals', score: speedScore },
+    security: { label: 'Security & SSL Protocol', score: securityScore },
+    accessibility: { label: 'Mobile & Accessibility UX', score: accessibilityScore }
+  };
+
   return {
     target: cleanUrl,
     domain,
@@ -728,6 +741,7 @@ Sitemap: ${cleanUrl}/sitemap_index.xml`;
     fixedScore: 98,
     statusBadge,
     statusColor,
+    subScores,
     telemetry: {
       status: crawled.status || 200,
       responseTime: crawled.responseTime || '0.27s',

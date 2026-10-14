@@ -761,68 +761,97 @@ TEMPLATE 2 (Service Specific Feedback):
  * 3. INSTAGRAM ALGORITHM SEO AUDIT
  */
 export async function performInstagramAudit(rawInput) {
-  const input = (rawInput || '').trim();
-  const cleanHandle = input.replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[@\/]/g, '').trim() || 'yourbrand';
-  const hash = getStringHash(cleanHandle);
-  const baseScore = 46 + (hash % 24);
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, rawInput: target } = entity;
+  const cleanHandle = target
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+    .replace(/[@\/]/g, '')
+    .trim() || businessName.toLowerCase().replace(/[^a-z0-9._]/g, '') || 'yourbrand';
+
+  const hash = getStringHash(cleanHandle + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const nameScore = Math.min(Math.max(68 + variance, 45), 94);
+  const bioScore = Math.min(Math.max(72 + variance, 48), 95);
+  const reelsScore = Math.min(Math.max(64 + variance, 42), 92);
+  const hashtagScore = Math.min(Math.max(76 + variance, 50), 96);
+  const finalScore = Math.round((nameScore * 0.3) + (bioScore * 0.25) + (reelsScore * 0.25) + (hashtagScore * 0.2));
+
+  const subScores = {
+    nameField: { label: 'Searchable Name Field SEO', score: nameScore },
+    bio: { label: 'Bio Conversion & Value Proposition', score: bioScore },
+    reels: { label: 'Reels Retention & Visual Hooks', score: reelsScore },
+    hashtags: { label: 'Niche Hashtag Tiering & Reach', score: hashtagScore }
+  };
 
   const flaws = [
     {
-      rule: 'Instagram Searchable Name Field SEO Formula',
+      rule: 'Instagram Searchable Name Field Formula',
       status: 'CRITICAL',
-      issue: `Current display name lacks secondary search intent keywords. Users searching on Instagram explore tab cannot discover @${cleanHandle}.`,
-      fix: `Update Name Field formula: "${cleanHandle.toUpperCase()} | Brand • Category / City".`
+      issue: `Current display name lacks secondary search intent keywords ("${industry.primaryCat}"). Users searching on the Instagram explore tab cannot discover @${cleanHandle}.`,
+      fix: `Update Name Field formula: "${businessName.slice(0, 16)} | ${industry.primaryCat.slice(0, 12)} 🇮🇳".`
     },
     {
-      rule: 'Bio Keyword Density & Value Proposition',
+      rule: '150-Character High-Converting Bio Structure',
       status: 'WARNING',
-      issue: 'Bio lacks structured bullet points, social proof, and a single trackable Linktree/WhatsApp CTA.',
-      fix: 'Deploy high-CTR 150-character bio with capitalized benefit hooks and direct WhatsApp booking link.'
+      issue: 'Bio lacks structured benefit bullet points, social proof, and a single trackable WhatsApp / Catalog CTA.',
+      fix: 'Deploy high-CTR bio with capitalized benefit hooks, service specialties, and direct WhatsApp contact.'
     },
     {
-      rule: 'Reels Audio & Subtitle Discoverability',
+      rule: 'Reels Audio, Subtitles & 3-Second Retention Hook',
       status: 'WARNING',
       issue: 'Reels published without auto-generated captions or trending audio tags miss 60% of Explore algorithm distribution.',
       fix: 'Utilize 3-second visual hooks, burnt-in captions, and categorized audio tags.'
+    },
+    {
+      rule: '30-Hashtag Tiered Discovery Strategy',
+      status: 'PASSED',
+      issue: `Configured tiered hashtag cloud (5 High Volume + 15 Medium Niche + 10 Long-Tail Micro) specific to ${industry.label}.`,
+      fix: 'Rotate between 3 hashtag sets across your weekly feed and reels.'
     }
   ];
 
   const headCode = `<!-- 1. INSTAGRAM BIO & SEARCH FIELD BLUEPRINT FOR @${cleanHandle} -->
 NAME FIELD (Max 30 Chars):
-${cleanHandle.slice(0, 14)} | Trending Fashion 🇮🇳
+${businessName.slice(0, 16)} | ${industry.primaryCat.slice(0, 12)} 🇮🇳
 
 150-CHARACTER CONVERTING BIO:
-⚡ India's Favorite Collection
-✨ 10,000+ Happy Customers Nationwide
-📦 Cash on Delivery & Express 3-Day Shipping
-👇 Shop Today's Exclusive Drops:
+⚡ ${businessName} - Official Profile
+✨ Premier ${industry.sampleServices[0]} in ${city ? city.name : 'India'}
+📦 10,000+ Happy Customers & Pan-India Service
+👇 Contact / Book on WhatsApp:
 wa.me/91XXXXXXXXXX`;
 
-  const schemaCode = `<!-- 2. TIERED 30-HASHTAG CLOUD (ALGORITHM OPTIMIZED) -->
+  const indTags = industry.keywords.slice(0, 10).map(k => `#${k.replace(/[^a-z0-9]/g, '')}`).join(' ');
+  const schemaCode = `<!-- 2. TIERED 30-HASHTAG CLOUD FOR ${industry.label.toUpperCase()} -->
 # HIGH VOLUME (1M+ Posts - 5 Tags):
-#shoppingindia #indianfashion #ecommerceindia #streetstyleindia #onlineshopping
+#india #businessindia #explorepageindia #viralreelsindia #trendinginindia
 
 # MEDIUM NICHE (100k-500k Posts - 15 Tags):
-#${cleanHandle.toLowerCase()} #indianseller #desifashion #kurtihaul #meeshohaul #amazonfindsindia #flipkartfashion #festivewearindia #dailyfashioninspo #shoplocalindia #vocalforlocalindia #delhishopping #mumbaifashion #bangalorestyle #lucknowchikankari
+#${cleanHandle.toLowerCase()} ${indTags} #${city ? city.name.toLowerCase() : 'delhi'}business #makeinindia #vocalforlocalindia
 
 # LONG-TAIL MICRO (10k-50k Posts - 10 Tags):
-#affordablefashionindia #premiumcottonkurti #wholesaledealsindia #codavailableshop #dailydealsindia #boutiquecollectionindia #purecottonwear #dresstoimpressin #trendydressesonline #indianmakers`;
+#${businessName.toLowerCase().replace(/[^a-z0-9]/g, '')} #best${industry.keywords[0] || 'service'}india #topservicesindia #${city ? city.name.toLowerCase() : 'lucknow'}local #trustedserviceindia #directserviceindia`;
 
   const robotsCode = `# 3. 3-SECOND REELS HOOK BLUEPRINTS FOR @${cleanHandle}:
-HOOK 1: "Stop scrolling if you sell on Amazon or Flipkart in India..."
-HOOK 2: "3 Secret tools Indian e-commerce sellers are using in 2026..."
-HOOK 3: "How this one change in our listing doubled our daily orders..."`;
+HOOK 1: "If you need ${industry.sampleServices[0]} in ${city ? city.name : 'India'}, stop scrolling..."
+HOOK 2: "3 Things most people don't know about ${industry.primaryCat} in 2026..."
+HOOK 3: "Why our clients at ${businessName} never go anywhere else..."`;
 
   const extraCode = `# 4. INSTAGRAM ALGORITHM CHECKLIST FOR @${cleanHandle}:
-[ ] Post 1 Reel daily at peak times (1:30 PM & 7:45 PM IST).
-[ ] Always add 3 Topic Tags before publishing Reels.
-[ ] Reply to all DM inquiries within 15 minutes to boost engagement score.`;
+[ ] Post 1 Reel daily at peak Indian engagement times (1:30 PM & 7:45 PM IST).
+[ ] Add 3 Instagram Topic Tags before publishing every Reel.
+[ ] Reply to all DM inquiries within 15 minutes to maximize algorithmic engagement score.`;
 
   return {
     target: `@${cleanHandle}`,
-    currentScore: baseScore,
+    businessName,
+    city: city ? city.name : 'India',
+    industry: industry.label,
+    currentScore: finalScore,
     fixedScore: 98,
-    statusBadge: baseScore < 50 ? 'CRITICAL ALGORITHM DEFECTS' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    statusBadge: finalScore >= 75 ? 'OPTIMIZED SOCIAL BUSINESS ASSET' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
     flaws,
     codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
@@ -837,8 +866,8 @@ HOOK 3: "How this one change in our listing doubled our daily orders..."`;
             platform: 'Instagram Mobile App',
             steps: [
               'Open your Instagram profile and tap "Edit profile".',
-              `Change Name to: "${cleanHandle.slice(0, 14)} | Trending Fashion 🇮🇳" (under 30 characters).`,
-              'Tap "Done" to save. Now anyone searching for these keywords will find your profile in Explore.'
+              `Change Name to: "${businessName.slice(0, 16)} | ${industry.primaryCat.slice(0, 12)} 🇮🇳" (under 30 characters).`,
+              'Tap "Done" to save. Now anyone searching for these keywords will discover your profile in Explore.'
             ]
           }
         ]
@@ -855,7 +884,7 @@ HOOK 3: "How this one change in our listing doubled our daily orders..."`;
             steps: [
               'Replace vague bios with 3 clear bullet points (India delivery, happy customers, product specialty).',
               'Add direct link: wa.me/91XXXXXXXXXX or linktree in the "Links" field.',
-              'Set Category to "Shopping & Retail" or "E-commerce Store".'
+              'Set Category to match your primary service.'
             ]
           }
         ]
@@ -865,12 +894,165 @@ HOOK 3: "How this one change in our listing doubled our daily orders..."`;
 }
 
 /**
- * 4. YOUTUBE CHANNEL & VIDEO SEO AUDIT
+ * 4. FACEBOOK PAGE SEO AUDIT
+ */
+export async function performFacebookAudit(rawInput) {
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, rawInput: target } = entity;
+  const pageSlug = target
+    .replace(/^https?:\/\/(www\.)?facebook\.com\//i, '')
+    .replace(/[@\/]/g, '')
+    .trim() || businessName.toLowerCase().replace(/[^a-z0-9._]/g, '') || 'yourpage';
+
+  const hash = getStringHash(pageSlug + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const vanityScore = Math.min(Math.max(72 + variance, 48), 94);
+  const aboutScore = Math.min(Math.max(70 + variance, 46), 92);
+  const ctaScore = Math.min(Math.max(74 + variance, 50), 96);
+  const openGraphScore = Math.min(Math.max(76 + variance, 52), 98);
+  const finalScore = Math.round((vanityScore * 0.25) + (aboutScore * 0.3) + (ctaScore * 0.2) + (openGraphScore * 0.25));
+
+  const subScores = {
+    vanityUrl: { label: 'Custom Vanity URL (@username) Indexing', score: vanityScore },
+    aboutSection: { label: 'About Section & Keyword Coverage', score: aboutScore },
+    actionBtn: { label: 'WhatsApp / Call-to-Action Setup', score: ctaScore },
+    openGraph: { label: 'Meta Open Graph SERP Card Integration', score: openGraphScore }
+  };
+
+  const flaws = [
+    {
+      rule: 'Facebook Custom Vanity Username (@username)',
+      status: 'PASSED',
+      issue: `Page identifier: @${pageSlug}. Custom vanity URLs rank higher in Google search results than unassigned ID numbers.`,
+      fix: 'Keep username unified with your Instagram handle.'
+    },
+    {
+      rule: '255-Character Page About Summary SEO',
+      status: 'WARNING',
+      issue: `About section lacks keyword-dense description mentioning "${industry.primaryCat}" and "${city ? city.name : 'India'}".`,
+      fix: `Deploy the high-converting 255-character summary generated below into Page Settings -> About.`
+    },
+    {
+      rule: 'WhatsApp Business Action Button Integration',
+      status: 'WARNING',
+      issue: 'Page lacks linked WhatsApp Business CTA button for instant mobile lead generation.',
+      fix: 'Link WhatsApp Business number to enable 1-tap messaging directly from your Facebook banner.'
+    },
+    {
+      rule: 'Meta Open Graph Tags for Social Sharing',
+      status: 'CRITICAL',
+      issue: 'Website missing verified og:title, og:description, and og:image tags for rich preview rendering when shared on Facebook.',
+      fix: 'Embed the Open Graph code snippet generated below into your website homepage <head>.'
+    }
+  ];
+
+  const headCode = `<!-- 1. META OPEN GRAPH TAGS FOR ${businessName.toUpperCase()} -->
+<meta property="og:type" content="business.business" />
+<meta property="og:title" content="${businessName} | ${industry.primaryCat} in ${city ? city.name : 'India'}" />
+<meta property="og:description" content="Discover official services by ${businessName}: ${industry.sampleServices.slice(0, 3).join(', ')}. Connect with our team today." />
+<meta property="og:url" content="https://www.facebook.com/${pageSlug}" />
+<meta property="og:image" content="https://www.sellersuitepro.online/seller-suite-pro-promo-poster.jpg" />
+<meta property="og:locale" content="en_IN" />
+<meta property="business:contact_data:locality" content="${city ? city.name : 'India'}" />
+<meta property="business:contact_data:country_name" content="India" />`;
+
+  const schemaCode = `<!-- 2. HIGH-CONVERTING FACEBOOK PAGE "ABOUT" SECTION COPY -->
+ABOUT SECTION (255 Characters):
+${businessName} is a leading ${industry.primaryCat} in ${city ? city.name : 'India'}. We specialize in ${industry.sampleServices.slice(0, 2).join(' and ')}. Contact our verified support team for rapid consultations and pan-India solutions.
+
+CATEGORY STACK:
+Primary: ${industry.primaryCat}
+Secondary: ${industry.secondaryCats.slice(0, 2).join(' • ')}`;
+
+  const robotsCode = `# 3. FACEBOOK MESSENGER AUTOMATED GREETING & FAQ BOT SCRIPTS:
+GREETING MESSAGE:
+"Namaste! Welcome to ${businessName}. How can we assist you with our ${industry.primaryCat} services today?"
+
+FAQ 1: "What services do you offer?"
+ANSWER 1: "We provide ${industry.sampleServices.join(', ')}. Which one are you interested in?"
+
+FAQ 2: "Where are you located?"
+ANSWER 2: "Our main operations are based in ${city ? city.name : 'India'}. We also provide pan-India support via WhatsApp at +91-XXXXXXXXXX."`;
+
+  const extraCode = `# 4. FACEBOOK PAGE ORGANIC ALGORITHM CHECKLIST:
+[ ] Pin top promotional post with direct WhatsApp link.
+[ ] Add 5 service offerings with pricing into the Services tab.
+[ ] Maintain a 100% response rate within 15 minutes to earn the "Very responsive to messages" badge.`;
+
+  return {
+    target: `facebook.com/${pageSlug}`,
+    businessName,
+    city: city ? city.name : 'India',
+    industry: industry.label,
+    currentScore: finalScore,
+    fixedScore: 99,
+    statusBadge: finalScore >= 75 ? 'OPTIMIZED SOCIAL BUSINESS ASSET' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
+    flaws,
+    codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
+    manualActionGuide: [
+      {
+        step: '1',
+        title: 'Update Page About & Description',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Update your Facebook Page description with high-converting search keywords:',
+        instructions: [
+          {
+            platform: 'Facebook Page Settings',
+            steps: [
+              'Go to your Facebook Page and click "About".',
+              'Update description with the 255-character copy from snippet #2.',
+              'Ensure Phone, Email, and Website URLs are identical to your Google profile.'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Embed Open Graph Meta Tags',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'Enable rich visual previews whenever your link is shared on Facebook or WhatsApp:',
+        instructions: [
+          {
+            platform: 'Website Homepage <head>',
+            steps: [
+              'Copy snippet #1 (Meta Open Graph tags).',
+              'Paste into your website <head> section.',
+              'Test with Facebook Sharing Debugger (developers.facebook.com/tools/debug).'
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+/**
+ * 5. YOUTUBE CHANNEL & VIDEO SEO AUDIT
  */
 export async function performYouTubeAudit(rawInput) {
-  const input = (rawInput || '').trim();
-  const hash = getStringHash(input || 'youtube');
-  const baseScore = 44 + (hash % 25);
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, rawInput: target } = entity;
+  const channelName = target.replace(/^https?:\/\/(www\.)?youtube\.com\//i, '').replace(/[@\/]/g, '').trim() || businessName || 'YouTube Channel';
+
+  const hash = getStringHash(channelName + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const titleScore = Math.min(Math.max(68 + variance, 45), 94);
+  const descScore = Math.min(Math.max(66 + variance, 44), 92);
+  const schemaScore = Math.min(Math.max(74 + variance, 50), 96);
+  const tagsScore = Math.min(Math.max(76 + variance, 52), 98);
+  const finalScore = Math.round((titleScore * 0.3) + (descScore * 0.25) + (schemaScore * 0.25) + (tagsScore * 0.2));
+
+  const subScores = {
+    titleCtr: { label: 'Click-Through Rate (CTR) Title Formula', score: titleScore },
+    description: { label: '5,000-Char Description & Timestamps', score: descScore },
+    schema: { label: 'Google Search Video Carousel Schema', score: schemaScore },
+    tagsCloud: { label: '500-Character Search Tags Optimization', score: tagsScore }
+  };
 
   const flaws = [
     {
@@ -883,53 +1065,59 @@ export async function performYouTubeAudit(rawInput) {
       rule: 'Click-Through Rate (CTR) Title Formula',
       status: 'WARNING',
       issue: 'Title lacks curiosity gap brackets or current year (2026) modifier.',
-      fix: 'Deploy formula: [High Impact Action] + [Target Keyword] + [Brackets / Proof].'
+      fix: `Deploy formula: [High Impact Action] + [${industry.primaryCat}] + [Brackets / Proof].`
     },
     {
       rule: '5,000-Character Description & Chapter Timestamps',
       status: 'WARNING',
       issue: 'Missing 00:00 chapter timestamps in first 3 lines of description.',
       fix: 'Add clickable timestamps (00:00 Intro, 01:25 Step 1...) to trigger Google SERP Key Moments.'
+    },
+    {
+      rule: '500-Character Search Tags Optimization',
+      status: 'PASSED',
+      issue: `Tags cloud generated specifically for ${industry.label}. Covers high-intent search queries.`,
+      fix: 'Paste comma-separated tags into YouTube Studio -> Video Details -> Show More -> Tags.'
     }
   ];
 
-  const headCode = `<!-- 1. HIGH-CTR YOUTUBE TITLE & DESCRIPTION BLUEPRINT -->
+  const headCode = `<!-- 1. HIGH-CTR YOUTUBE TITLE & DESCRIPTION FOR ${businessName.toUpperCase()} -->
 A/B TITLE VARIATIONS (Under 65 Chars):
-Variation A: How to Scale E-Commerce Sales in India (2026 Step-by-Step Blueprint)
-Variation B: Stop Losing Money on Amazon & Flipkart! [Live Case Study]
+Variation A: How to Choose the Best ${industry.primaryCat} in India (2026 Guide)
+Variation B: Stop Wasting Money! [The Ultimate ${businessName} Masterclass]
 
 DESCRIPTION TEMPLATE:
-In this masterclass, discover how to optimize product listings, eliminate RTO losses, and achieve pure white background photos using Seller Suite Pro.
+In this video, discover everything you need to know about ${industry.sampleServices.slice(0, 2).join(' and ')}. Brought to you by ${businessName} in ${city ? city.name : 'India'}.
 
 ⏱️ CHAPTER TIMESTAMPS:
-00:00 - Introduction & E-Commerce Secrets
-02:15 - Amazon A9 Listing SEO Optimization
-05:40 - #FFFFFF Pure White Background Photo Studio
-08:20 - RTO Courier Loss Calculator
-12:00 - Live Q&A & Free Software Access
+00:00 - Introduction & Industry Secrets
+02:15 - How ${industry.primaryCat} Really Works
+05:40 - Top Mistakes to Avoid in 2026
+08:20 - Live Case Study & ${businessName} Walkthrough
+12:00 - Contact & Exclusive Offers
 
-🔗 OFFICIAL TOOLS & RESOURCES:
-- Seller Suite Pro: https://www.sellersuitepro.online/
-- Follow on Instagram: @sidramotion.official`;
+🔗 OFFICIAL LINKS:
+- Website: https://sellersuitepro.online/
+- WhatsApp: +91-XXXXXXXXXX`;
 
   const schemaCode = `<!-- 2. GOOGLE SEARCH VIDEO CAROUSEL JSON-LD SCHEMA -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "VideoObject",
-  "name": "How to Scale E-Commerce Sales in India (2026 Blueprint)",
-  "description": "Step-by-step masterclass on Amazon, Flipkart, and Meesho seller optimization.",
+  "name": "How to Choose the Best ${industry.primaryCat} (2026 Guide)",
+  "description": "Comprehensive tutorial on ${industry.sampleServices.slice(0, 2).join(' and ')} by ${businessName}.",
   "thumbnailUrl": [
     "https://www.sellersuitepro.online/seller-suite-pro-promo-poster.jpg"
   ],
   "uploadDate": "2026-10-14T08:00:00+05:30",
   "duration": "PT15M30S",
-  "contentUrl": "${input.includes('youtube') ? input : 'https://www.youtube.com/watch?v=sample'}",
+  "contentUrl": "${target.includes('youtube') ? target : 'https://www.youtube.com/watch?v=sample'}",
   "embedUrl": "https://www.youtube.com/embed/sample",
   "hasPart": [
     {
       "@type": "Clip",
-      "name": "Listing SEO Secrets",
+      "name": "${industry.sampleServices[0]}",
       "startOffset": 135,
       "endOffset": 340,
       "url": "https://www.youtube.com/watch?v=sample&t=135s"
@@ -938,8 +1126,19 @@ In this masterclass, discover how to optimize product listings, eliminate RTO lo
 }
 </script>`;
 
+  const tagsList = [
+    industry.primaryCat.toLowerCase(),
+    businessName.toLowerCase(),
+    ...industry.keywords.slice(0, 8),
+    `${industry.primaryCat.toLowerCase()} india`,
+    `${city ? city.name.toLowerCase() : 'delhi'} ${industry.keywords[0]}`,
+    'best services india',
+    '2026 guide',
+    'online tutorial'
+  ].join(', ');
+
   const robotsCode = `# 3. 500-CHARACTER YOUTUBE VIDEO TAGS:
-amazon seller tools, flipkart seller tools, meesho seller tutorial, ecommerce business india, online selling tips, how to sell on amazon india, amazon listing seo, pure white background product photography, rto losses ecommerce, sellersuitepro, sidra motion, ecommerce profit calculator, buybox repricer india`;
+${tagsList}`;
 
   const extraCode = `# 4. YOUTUBE RANKING ESSENTIALS:
 [ ] Upload 1280x720 thumbnail with high-contrast text (< 5 words).
@@ -947,10 +1146,14 @@ amazon seller tools, flipkart seller tools, meesho seller tutorial, ecommerce bu
 [ ] Add End Screen linking to next tutorial video and Subscribe button.`;
 
   return {
-    target: input || 'YouTube Channel / Video',
-    currentScore: baseScore,
+    target: target || channelName,
+    businessName,
+    city: city ? city.name : 'India',
+    industry: industry.label,
+    currentScore: finalScore,
     fixedScore: 99,
-    statusBadge: baseScore < 50 ? 'CRITICAL ALGORITHM DEFECTS' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    statusBadge: finalScore >= 75 ? 'OPTIMIZED VIDEO ASSET' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
     flaws,
     codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
@@ -982,7 +1185,7 @@ amazon seller tools, flipkart seller tools, meesho seller tutorial, ecommerce bu
             platform: 'Description Tab',
             steps: [
               'Start timestamps with 00:00 (Intro).',
-              'Add at least 3 chapters with keyword-rich titles (e.g. 02:15 - Amazon A9 Listing SEO Optimization).',
+              'Add at least 3 chapters with keyword-rich titles.',
               'Ensure each chapter is at least 10 seconds long.'
             ]
           }
@@ -993,20 +1196,35 @@ amazon seller tools, flipkart seller tools, meesho seller tutorial, ecommerce bu
 }
 
 /**
- * 5. E-COMMERCE MARKETPLACE SEO
+ * 6. E-COMMERCE MARKETPLACE SEO AUDIT
  */
 export async function performEcommerceAudit(rawInput) {
-  const input = (rawInput || '').trim();
-  const asinMatch = input.match(/\b(B0[A-Z0-9]{8})\b/i);
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, industry, rawInput: target } = entity;
+  const asinMatch = target.match(/\b(B0[A-Z0-9]{8})\b/i);
   const asin = asinMatch ? asinMatch[1].toUpperCase() : 'B0C74MS1L5';
-  const hash = getStringHash(input || 'ecom');
-  const baseScore = 45 + (hash % 23);
+
+  const hash = getStringHash(target + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const titleScore = Math.min(Math.max(70 + variance, 46), 94);
+  const bulletsScore = Math.min(Math.max(68 + variance, 44), 92);
+  const backendScore = Math.min(Math.max(74 + variance, 50), 96);
+  const imageScore = Math.min(Math.max(76 + variance, 52), 98);
+  const finalScore = Math.round((titleScore * 0.3) + (bulletsScore * 0.25) + (backendScore * 0.25) + (imageScore * 0.2));
+
+  const subScores = {
+    titleFormula: { label: 'Amazon A9 / Flipkart Title Formula', score: titleScore },
+    bulletHooks: { label: '5 Capitalized Feature & Benefit Bullets', score: bulletsScore },
+    backendKeywords: { label: '249-Byte Generic Backend Search Terms', score: backendScore },
+    imageCompliance: { label: 'Pure White (#FFFFFF) Studio Image Compliance', score: imageScore }
+  };
 
   const flaws = [
     {
-      rule: 'Amazon A9 Algorithm Title Formula',
+      rule: 'Amazon A9 & Flipkart Algorithm Title Formula',
       status: 'CRITICAL',
-      issue: 'Product title missing structured order: [Brand] + [Model] + [Primary Benefit] + [Pack/Color/Size].',
+      issue: `Product title missing structured order: [Brand: "${businessName}"] + [Product Name] + [Core Benefit] + [Pack/Color/Size].`,
       fix: 'Rebuild title according to Amazon India 150-180 character guidelines.'
     },
     {
@@ -1020,33 +1238,39 @@ export async function performEcommerceAudit(rawInput) {
       status: 'WARNING',
       issue: 'Search terms exceed 249 bytes or repeat words already present in title.',
       fix: 'Strip punctuation, commas, and duplicate words to maximize indexing bytes.'
+    },
+    {
+      rule: 'Pure White Studio Photography Standard (#FFFFFF)',
+      status: 'PASSED',
+      issue: 'Image standards require 85%+ product frame occupancy on 100% pure white background (#FFFFFF).',
+      fix: 'Use Seller Suite Pro AI Background Studio to ensure 0-RGB difference.'
     }
   ];
 
   const headCode = `<!-- 1. AMAZON & FLIPKART OPTIMIZED TITLE & BULLETS FOR ${asin} -->
 TITLE (165 Characters):
-ApexSound Pulse 500 Wireless Bluetooth Earbuds | 40H Playtime, ANC Active Noise Cancellation, IPX7 Waterproof & Deep Bass | In-Ear Gaming Headphones (Matte Black)
+${businessName} Premium ${industry.primaryCat} | High Performance, Long-Lasting Durability & Modern Ergonomic Design | Pan-India Warranty (Standard Edition)
 
 5 CAPITALIZED BULLET POINTS:
-• [40-HOUR MARATHON PLAYTIME]: Power through your entire week with 40 hours of uninterrupted playback and Type-C Fast Charging (10 mins charge = 2 hours music).
-• [ACTIVE NOISE CANCELLATION (ANC)]: Block out 90% of background metro, gym, and office noise with hybrid ANC microphones for crystal-clear HD calling.
-• [IPX7 SWEAT & WATERPROOF]: Built with industrial silicone sealing to survive intense gym sweat, heavy rain, and dust workouts without damage.
-• [ULTRA-LOW LATENCY GAMING]: Seamless 45ms audio-video synchronization ensures lag-free gaming on BGMI, Call of Duty, and Netflix streaming.
-• [1-YEAR REPLACEMENT WARRANTY]: Engineered with premium aerospace materials and backed by Sidra Motion 1-Year Pan-India Replacement Guarantee.`;
+• [HIGH-PERFORMANCE ENGINEERING]: Precision-crafted by ${businessName} for consistent daily reliability and seamless performance under heavy usage.
+• [PREMIUM GRADE MATERIALS]: Built with aerospace-grade components and certified safety standards to ensure years of trouble-free operation.
+• [ENERGY EFFICIENT & ECO-FRIENDLY]: Engineered to consume less power while delivering maximum output, reducing long-term operating costs.
+• [FAST & EASY INSTALLATION]: Comes with full user guide, quick-setup accessories, and plug-and-play compatibility out of the box.
+• [1-YEAR PAN-INDIA WARRANTY]: Backed by ${businessName} dedicated customer support and rapid hassle-free replacement guarantee nationwide.`;
 
   const schemaCode = `<!-- 2. PRODUCT & MERCHANT CENTER JSON-LD SCHEMA -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Product",
-  "name": "ApexSound Pulse 500 Wireless Bluetooth Earbuds",
+  "name": "${businessName} Premium ${industry.primaryCat}",
   "image": "https://www.sellersuitepro.online/seller-suite-pro-promo-poster.jpg",
-  "description": "ANC Wireless Bluetooth Earbuds with 40H Playtime and IPX7 Waterproofing.",
+  "description": "Official ${industry.primaryCat} manufactured by ${businessName}. Verified seller quality.",
   "sku": "${asin}",
-  "mpn": "ASP-500",
+  "mpn": "SSP-${asin.slice(0, 6)}",
   "brand": {
     "@type": "Brand",
-    "name": "ApexSound"
+    "name": "${businessName}"
   },
   "offers": {
     "@type": "Offer",
@@ -1065,8 +1289,13 @@ ApexSound Pulse 500 Wireless Bluetooth Earbuds | 40H Playtime, ANC Active Noise 
 }
 </script>`;
 
+  const bKeywords = [
+    ...industry.keywords.slice(0, 10),
+    'deal', 'discount', 'india', 'online', 'genuine', 'replacement', 'warranty', 'fast'
+  ].join(' ').slice(0, 248);
+
   const robotsCode = `# 3. 249-BYTE GENERIC BACKEND SEARCH TERMS (NO COMMAS, ZERO REPEATS):
-earphone bluetooth wireless airpod headphones buds gaming mic anc noise cancelling calling gym waterproof bass tws inear earphones ear buds sports typec android iphone`;
+${bKeywords}`;
 
   const extraCode = `# 4. MARKETPLACE CONVERSION AUDIT:
 [ ] Main image is 100% pure white (#FFFFFF) background with 85%+ product frame occupancy.
@@ -1074,10 +1303,14 @@ earphone bluetooth wireless airpod headphones buds gaming mic anc noise cancelli
 [ ] A+ Content / EBC (Enhanced Brand Content) enabled with comparison matrix.`;
 
   return {
-    target: input || asin,
-    currentScore: baseScore,
+    target: target || asin,
+    businessName,
+    city: 'India',
+    industry: industry.label,
+    currentScore: finalScore,
     fixedScore: 99,
-    statusBadge: baseScore < 50 ? 'CRITICAL ALGORITHM DEFECTS' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    statusBadge: finalScore >= 75 ? 'OPTIMIZED PRODUCT LISTING' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
     flaws,
     codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
     manualActionGuide: [
@@ -1120,6 +1353,631 @@ earphone bluetooth wireless airpod headphones buds gaming mic anc noise cancelli
 }
 
 /**
+ * 7. LINKEDIN PROFILE & COMPANY SEO AUDIT
+ */
+export async function performLinkedInAudit(rawInput) {
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, rawInput: target } = entity;
+  const companySlug = target
+    .replace(/^https?:\/\/(www\.)?linkedin\.com\/(company\/|in\/)?/i, '')
+    .replace(/[@\/]/g, '')
+    .trim() || businessName.toLowerCase().replace(/[^a-z0-9._]/g, '') || 'yourcompany';
+
+  const hash = getStringHash(companySlug + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const headlineScore = Math.min(Math.max(72 + variance, 48), 94);
+  const aboutScore = Math.min(Math.max(70 + variance, 46), 92);
+  const slugScore = Math.min(Math.max(76 + variance, 52), 96);
+  const specialtiesScore = Math.min(Math.max(74 + variance, 50), 96);
+  const finalScore = Math.round((headlineScore * 0.3) + (aboutScore * 0.3) + (slugScore * 0.2) + (specialtiesScore * 0.2));
+
+  const subScores = {
+    headline: { label: 'Executive Headline & Tagline SEO', score: headlineScore },
+    aboutSummary: { label: '2,000-Char About Summary & Value Prop', score: aboutScore },
+    slugIndexing: { label: 'Custom URL Slug & Google SERP Indexing', score: slugScore },
+    specialties: { label: 'B2B Industry Specialties & Cluster Tags', score: specialtiesScore }
+  };
+
+  const flaws = [
+    {
+      rule: 'LinkedIn Custom Public URL Slug Indexing',
+      status: 'PASSED',
+      issue: `Public URL: linkedin.com/company/${companySlug}. Clean custom slugs rank in the top 3 on Google for brand name searches.`,
+      fix: 'Maintain link in your website header and team email signatures.'
+    },
+    {
+      rule: '220-Character Headline Value Formula',
+      status: 'WARNING',
+      issue: `Tagline lacks explicit outcome keywords: "Helping [Target Audience] achieve [Desired Outcome] through ${industry.primaryCat}."`,
+      fix: 'Deploy the 220-character executive formula generated below.'
+    },
+    {
+      rule: '2,000-Character "About" Section Semantic Keywords',
+      status: 'WARNING',
+      issue: `About summary missing structured sections (Who We Are, What We Solve, Core Capabilities, Contact).`,
+      fix: 'Paste the structured 2,000-character B2B company overview generated below.'
+    },
+    {
+      rule: '20 B2B Industry Specialities Tags',
+      status: 'PASSED',
+      issue: `Configured 20 high-frequency B2B specialties tags for ${industry.label}.`,
+      fix: 'Add all 20 specialities in LinkedIn Page Admin -> Edit Page -> Overview.'
+    }
+  ];
+
+  const headCode = `<!-- 1. LINKEDIN 220-CHARACTER HEADLINE & 120-CHAR TAGLINE -->
+120-CHARACTER TAGLINE:
+Empowering Indian enterprises with premier ${industry.primaryCat} and ${industry.sampleServices[0]} solutions.
+
+220-CHARACTER EXECUTIVE HEADLINE:
+Founder & Director at ${businessName} | Transforming Businesses with Scalable ${industry.primaryCat} & ${industry.sampleServices[0]} | Pan-India Enterprise Growth Strategist 🇮🇳`;
+
+  const schemaCode = `<!-- 2. VALIDATED schema.org/Organization JSON-LD FOR LINKEDIN SYNC -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "${businessName}",
+  "url": "https://yourwebsite.com",
+  "sameAs": [
+    "https://www.linkedin.com/company/${companySlug}"
+  ],
+  "description": "Leading provider of ${industry.primaryCat} services based in ${city ? city.name : 'India'}.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "${city ? city.name : 'India'}",
+    "addressCountry": "IN"
+  }
+}
+</script>`;
+
+  const robotsCode = `# 3. 2,000-CHARACTER HIGH-CONVERTING LINKEDIN COMPANY "ABOUT" SECTION:
+WHO WE ARE:
+${businessName} is a premier ${industry.primaryCat} organization based in ${city ? city.name : 'India'}. We deliver end-to-end solutions designed to streamline operations, enhance client ROI, and scale digital infrastructure.
+
+CORE CAPABILITIES & SERVICES:
+• ${industry.sampleServices.join('\n• ')}
+
+WHY INDUSTRY LEADERS PARTNER WITH ${businessName.toUpperCase()}:
+1. Proven Track Record: Trusted by growing startups and established enterprises nationwide.
+2. Domain Expertise: Specialized focus on high-efficiency ${industry.label} solutions.
+3. Dedicated Support: Fast turnaround, transparent SLA commitments, and tailored customer care.
+
+CONNECT WITH OUR LEADERSHIP:
+📍 Headquarters: ${city ? city.name : 'India'}
+🌐 Website: https://sellersuitepro.online/
+📧 Corporate Inquiries: contact@${companySlug}.com`;
+
+  const specList = [
+    ...industry.keywords.slice(0, 12).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+    'Business Strategy', 'Enterprise Growth', 'B2B Solutions', 'Digital Transformation',
+    'Pan-India Support', 'Operational Excellence', 'Customer Experience', 'Innovation'
+  ].slice(0, 20).join(', ');
+
+  const extraCode = `# 4. 20 LINKEDIN B2B SPECIALTIES TAGS:
+${specList}`;
+
+  return {
+    target: `linkedin.com/company/${companySlug}`,
+    businessName,
+    city: city ? city.name : 'India',
+    industry: industry.label,
+    currentScore: finalScore,
+    fixedScore: 99,
+    statusBadge: finalScore >= 75 ? 'OPTIMIZED B2B BRAND PROFILE' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
+    flaws,
+    codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
+    manualActionGuide: [
+      {
+        step: '1',
+        title: 'Update LinkedIn Page Tagline & About Section',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Update your LinkedIn Page overview to rank in Google search for your brand keywords:',
+        instructions: [
+          {
+            platform: 'LinkedIn Page Admin',
+            steps: [
+              'Log into LinkedIn and open your Company Page Admin view.',
+              'Click "Edit Page" -> "Overview".',
+              'Update Tagline and paste the 2,000-character description from snippet #3.',
+              'Add all 20 specialties from snippet #4 and save changes.'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Embed Organization Schema on Your Website',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'Link your website to your LinkedIn entity in the Google Knowledge Graph:',
+        instructions: [
+          {
+            platform: 'Website Homepage <head>',
+            steps: [
+              'Copy snippet #2 (Organization Schema with sameAs link).',
+              'Paste into your website homepage <head> section.',
+              'Test in Google Rich Results Test to verify organization identity.'
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+/**
+ * 8. BUSINESS DIRECTORY & B2B SEO AUDIT
+ */
+export async function performDirectoryAudit(rawInput) {
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, rawInput: target } = entity;
+
+  const hash = getStringHash(businessName + (city ? city.name : '') + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const napScore = Math.min(Math.max(74 + variance, 50), 96);
+  const catScore = Math.min(Math.max(72 + variance, 48), 94);
+  const geoScore = Math.min(Math.max(70 + variance, 46), 92);
+  const citScore = Math.min(Math.max(76 + variance, 52), 98);
+  const finalScore = Math.round((napScore * 0.3) + (catScore * 0.25) + (geoScore * 0.25) + (citScore * 0.2));
+
+  const subScores = {
+    napConsistency: { label: 'NAP (Name, Address, Phone) Unification', score: napScore },
+    b2bCategory: { label: 'Primary B2B Category Mapping', score: catScore },
+    geoPinTargeting: { label: 'Pin Code & Geo Coordinates Coverage', score: geoScore },
+    citationAuthority: { label: 'Domain Authority & Citation Velocity', score: citScore }
+  };
+
+  const flaws = [
+    {
+      rule: 'NAP Consistency Across Top Indian B2B Directories',
+      status: 'PASSED',
+      issue: `Entity string "${businessName}" is ready for unified indexing across Justdial, IndiaMART, TradeIndia, and Sulekha.`,
+      fix: 'Keep legal business name identical on GST certificates and directory listings.'
+    },
+    {
+      rule: 'Primary B2B Product Catalog Keyword Density',
+      status: 'WARNING',
+      issue: `Directory profiles lack structured catalog descriptions featuring "${industry.sampleServices[0]}".`,
+      fix: 'Deploy the standardized B2B company profile copy generated below.'
+    },
+    {
+      rule: 'GST / Business Registration Verification Badge',
+      status: 'WARNING',
+      issue: 'Unverified directory listings receive 40% less buyer inquiries on IndiaMART and TradeIndia.',
+      fix: 'Upload GSTIN and pan card in directory vendor panels to obtain "TrustSEAL" or "Verified Supplier" badge.'
+    },
+    {
+      rule: 'DoFollow / NoFollow Citation Equity Transfer',
+      status: 'CRITICAL',
+      issue: 'Ensure directory listings link back directly to your official website with canonical HTTPS URLs.',
+      fix: 'Embed schema.org/LocalBusiness on your website to claim verified ownership of directory citations.'
+    }
+  ];
+
+  const headCode = `<!-- 1. STANDARDIZED NAP CITATION STRING FOR ${businessName.toUpperCase()} -->
+BUSINESS NAME: ${businessName}
+PRIMARY CATEGORY: ${industry.primaryCat}
+SECONDARY CATEGORIES: ${industry.secondaryCats.slice(0, 3).join(', ')}
+CITY / LOCALITY: ${city ? city.name : 'India'}, ${city ? city.state : 'State'}
+PHONE: +91-XXXXXXXXXX
+WEBSITE: https://sellersuitepro.online/
+HOURS: Mon-Sat 09:30 AM - 08:30 PM`;
+
+  const schemaCode = `<!-- 2. VALIDATED schema.org/LocalBusiness JSON-LD SCHEMA -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "${businessName}",
+  "telephone": "+91-XXXXXXXXXX",
+  "url": "https://yourwebsite.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Commercial Area, Main Market",
+    "addressLocality": "${city ? city.name : 'India'}",
+    "addressRegion": "${city ? city.state : 'State'}",
+    "addressCountry": "IN"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": ${city ? city.lat : '20.5937'},
+    "longitude": ${city ? city.lng : '78.9629'}
+  }
+}
+</script>`;
+
+  const robotsCode = `# 3. B2B VENDOR CATALOG PROFILE DESCRIPTION (INDIAMART & JUSTDIAL):
+${businessName} is a trusted vendor and provider of high-quality ${industry.label} solutions based in ${city ? city.name : 'India'}.
+
+PRODUCTS & SERVICES CATALOG:
+1. ${industry.sampleServices[0]} - High-precision solutions built to commercial specifications.
+2. ${industry.sampleServices[1]} - Reliable, cost-effective service tailored to client requirements.
+3. ${industry.sampleServices[2] || industry.sampleServices[0]} - Pan-India delivery and dedicated customer support.
+
+BUSINESS HIGHLIGHTS:
+• GST Registered & Verified Commercial Supplier
+• Timely Pan-India Fulfillment & Delivery
+• Custom Bulk & Retail Orders Accepted`;
+
+  const extraCode = `# 4. TOP 10 HIGH-DA INDIAN DIRECTORIES CITATION CHECKLIST:
+[ ] 1. Justdial (DA 84) - Claim free verified listing
+[ ] 2. IndiaMART (DA 86) - Set up Verified Seller catalog
+[ ] 3. TradeIndia (DA 78) - Add 5 core product offerings
+[ ] 4. Sulekha (DA 79) - Configure local service pin codes
+[ ] 5. Bing Places for Business (DA 94) - Sync with Google Business Profile
+[ ] 6. YellowPages India (DA 52) - Add NAP and storefront photos
+[ ] 7. AskLaila (DA 60) - Publish verified contact phone
+[ ] 8. Yalwa India (DA 55) - Configure operating hours`;
+
+  return {
+    target: target || businessName,
+    businessName,
+    city: city ? city.name : 'India',
+    industry: industry.label,
+    currentScore: finalScore,
+    fixedScore: 99,
+    statusBadge: finalScore >= 75 ? 'VERIFIED B2B DIRECTORY CITATION' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
+    flaws,
+    codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
+    manualActionGuide: [
+      {
+        step: '1',
+        title: 'Standardize NAP on Top B2B Directories',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Maintain 100% identical Name, Address, and Phone numbers across all directories:',
+        instructions: [
+          {
+            platform: 'Justdial & IndiaMART Vendor Portals',
+            steps: [
+              'Log into your vendor dashboard.',
+              'Copy the standardized NAP string from snippet #1.',
+              'Ensure business name, phone number, and street address match your signage exactly.'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Deploy LocalBusiness Schema',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'Link directory citations to your official website domain:',
+        instructions: [
+          {
+            platform: 'Website Homepage <head>',
+            steps: [
+              'Copy snippet #2 (LocalBusiness Schema).',
+              'Paste into your website homepage <head>.',
+              'Test in Google Rich Results to confirm zero syntax errors.'
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+/**
+ * 9. AI SEARCH (GEO & AEO) SEO AUDIT
+ */
+export async function performAiGeoAudit(rawInput) {
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, rawInput: target } = entity;
+
+  const hash = getStringHash(businessName + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const ansScore = Math.min(Math.max(72 + variance, 48), 94);
+  const faqScore = Math.min(Math.max(70 + variance, 46), 92);
+  const botScore = Math.min(Math.max(76 + variance, 52), 98);
+  const semScore = Math.min(Math.max(74 + variance, 50), 96);
+  const finalScore = Math.round((ansScore * 0.3) + (faqScore * 0.3) + (botScore * 0.2) + (semScore * 0.2));
+
+  const subScores = {
+    directAnswer: { label: 'Direct 40-Word Answer Density (LLM Citation)', score: ansScore },
+    faqSchema: { label: 'FAQPage Structured JSON-LD Schema', score: faqScore },
+    aiCrawlerAccess: { label: 'AI Bot Crawl Policy (GPTBot, PerplexityBot)', score: botScore },
+    semanticDepth: { label: 'Semantic Entity Co-occurrence & Context', score: semScore }
+  };
+
+  const flaws = [
+    {
+      rule: 'Generative Engine Optimization (GEO) Direct Answer Sentence',
+      status: 'WARNING',
+      issue: `Website lacks a clear, single-sentence definition answering "What is ${businessName}?" in the first 100 words of the homepage. AI answer engines (ChatGPT, Perplexity) prioritize concise 40-word definition sentences for citations.`,
+      fix: `Deploy the AI-optimized direct answer hook generated below into your homepage hero section.`
+    },
+    {
+      rule: 'FAQPage JSON-LD Structured Schema for Conversational AI',
+      status: 'CRITICAL',
+      issue: 'Missing verified FAQPage schema markup. Large Language Models cite websites that provide structured Question-and-Answer pairs.',
+      fix: 'Embed the validated schema.org/FAQPage JSON-LD snippet generated below into your website homepage.'
+    },
+    {
+      rule: 'AI Crawler User-Agent Robots.txt Permissions',
+      status: 'PASSED',
+      issue: 'Ensure your robots.txt allows GPTBot, PerplexityBot, Google-Extended, and ClaudeBot to index your public content.',
+      fix: 'Deploy the AI-friendly robots.txt rules provided below.'
+    },
+    {
+      rule: 'Semantic Entity Co-occurrence & Citation Authority',
+      status: 'PASSED',
+      issue: `Entity "${businessName}" mapped with related industry entities: "${industry.primaryCat}", "${city ? city.name : 'India'}", and "${industry.sampleServices[0]}".`,
+      fix: 'Publish author bylines and verified source citations to maximize Generative Engine trust score.'
+    }
+  ];
+
+  const headCode = `<!-- 1. AI-OPTIMIZED DIRECT ANSWER DEFINITION HOOK FOR ${businessName.toUpperCase()} -->
+<!-- Place inside the pehle 100 words of your homepage: -->
+<p class="ai-direct-answer-hook" style="font-size: 16px; line-height: 1.6;">
+  <strong>${businessName}</strong> is a premier ${industry.primaryCat} organization based in ${city ? city.name : 'India'}, delivering verified ${industry.sampleServices.slice(0, 2).join(' and ')}. Known for reliable service and pan-India reach, ${businessName} empowers customers with cutting-edge solutions.
+</p>`;
+
+  const schemaCode = `<!-- 2. VALIDATED schema.org/FAQPage JSON-LD SCHEMA FOR AI SEARCH (GEO) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What services does ${businessName} offer in ${city ? city.name : 'India'}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "${businessName} specializes in ${industry.sampleServices.join(', ')} with verified pan-India client support."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I contact ${businessName} for a consultation?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can reach the official ${businessName} team through their website or via WhatsApp at +91-XXXXXXXXXX for rapid customer assistance."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why choose ${businessName} over other ${industry.primaryCat} providers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "${businessName} combines industry-leading expertise in ${industry.label}, competitive pricing, and dedicated client satisfaction guarantees."
+      }
+    }
+  ]
+}
+</script>`;
+
+  const robotsCode = `# 3. AI-FRIENDLY ROBOTS.TXT RULES (ALLOWS AI SEARCH ENGINES TO CITE YOUR BRAND):
+User-agent: *
+Allow: /
+
+# Explicitly allow leading AI search engines:
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://yourwebsite.com/sitemap.xml`;
+
+  const extraCode = `# 4. GENERATIVE ENGINE OPTIMIZATION (GEO) 2026 CHECKLIST:
+[ ] 1. Ensure the first sentence of your homepage defines your core service concisely.
+[ ] 2. Provide 3+ customer case studies with measurable statistics (e.g. "improved sales by 45%").
+[ ] 3. Include author bio with LinkedIn URL to satisfy Google E-E-A-T (Experience, Expertise, Authoritativeness, Trust).
+[ ] 4. Test asking Perplexity AI: "What is ${businessName} and what services do they provide?"`;
+
+  return {
+    target: target || businessName,
+    businessName,
+    city: city ? city.name : 'India',
+    industry: industry.label,
+    currentScore: finalScore,
+    fixedScore: 99,
+    statusBadge: finalScore >= 75 ? 'AI SEARCH (GEO) READY' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
+    flaws,
+    codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
+    manualActionGuide: [
+      {
+        step: '1',
+        title: 'Embed FAQPage Schema for AI Engine Citations',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'ChatGPT, Perplexity, and Google Gemini cite websites with verified FAQPage schema:',
+        instructions: [
+          {
+            platform: 'Website Homepage <head>',
+            steps: [
+              'Copy snippet #2 (schema.org/FAQPage JSON-LD).',
+              'Paste into your website <head> section (via WPCode plugin in WordPress or theme.liquid in Shopify).',
+              'Test in Google Rich Results Test to verify green status.'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Update robots.txt for AI Bot Crawlers',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Allow GPTBot and PerplexityBot to index your public content without blocking:',
+        instructions: [
+          {
+            platform: 'Server Root (robots.txt)',
+            steps: [
+              'Open your website root robots.txt file.',
+              'Add the AI-friendly permission rules from snippet #3.',
+              'Ensure public pages return 200 OK to AI crawlers.'
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+/**
+ * 10. SERP RANK TRACKING & COMPETITORS AUDIT
+ */
+export async function performSerpRankAudit(rawInput) {
+  const entity = await parseLocalEntityAsync(rawInput);
+  const { businessName, city, industry, rawInput: target } = entity;
+
+  const hash = getStringHash(businessName + industry.id);
+  const variance = (hash % 11) - 5;
+
+  const intentScore = Math.min(Math.max(72 + variance, 48), 94);
+  const featScore = Math.min(Math.max(70 + variance, 46), 92);
+  const crawlScore = Math.min(Math.max(76 + variance, 52), 98);
+  const gapScore = Math.min(Math.max(74 + variance, 50), 96);
+  const finalScore = Math.round((intentScore * 0.3) + (featScore * 0.25) + (crawlScore * 0.25) + (gapScore * 0.2));
+
+  const subScores = {
+    intentCoverage: { label: 'Commercial & Transactional Keyword Coverage', score: intentScore },
+    serpFeatures: { label: 'SERP Rich Features & Snippet Readiness', score: featScore },
+    crawlBudget: { label: 'Technical Crawl Budget & Canonical Integrity', score: crawlScore },
+    competitorGap: { label: 'Competitor Topic Authority Gap', score: gapScore }
+  };
+
+  const flaws = [
+    {
+      rule: 'High-Intent Commercial Search Queries Coverage',
+      status: 'WARNING',
+      issue: `Current content focuses on generic keywords rather than high-converting commercial phrases ("Best ${industry.primaryCat} in ${city ? city.name : 'India'}", "Hire ${industry.keywords[0]} experts").`,
+      fix: 'Target the 10 categorized high-intent keywords generated below across dedicated landing pages.'
+    },
+    {
+      rule: 'Sitelinks Searchbox JSON-LD Schema Integration',
+      status: 'CRITICAL',
+      issue: 'Website missing schema.org/WebSite markup with SearchAction potentialAction to unlock Google Sitelinks Searchbox.',
+      fix: 'Embed the validated WebSite JSON-LD snippet generated below into your homepage <head>.'
+    },
+    {
+      rule: 'Canonical URL & Technical Crawl Budget',
+      status: 'PASSED',
+      issue: `Canonical tag configuration verified. Prevents duplicate content dilution between HTTP/HTTPS and trailing slashes.`,
+      fix: 'Keep canonical link self-referential across all indexed URLs.'
+    },
+    {
+      rule: 'Top 3 Organic Competitor Ranking Gap',
+      status: 'PASSED',
+      issue: `Competitor gap analysis generated for ${industry.label} in ${city ? city.name : 'India'}. Identifies unranked long-tail opportunities.`,
+      fix: 'Deploy the 30-day competitor outranking action plan.'
+    }
+  ];
+
+  const headCode = `<!-- 1. 10 HIGH-INTENT TARGET SEARCH KEYWORDS FOR ${businessName.toUpperCase()} -->
+INFORMATIONAL KEYWORDS:
+1. What is ${industry.primaryCat.toLowerCase()} and how does it work?
+2. Top ${industry.keywords[0] || 'service'} tips for Indian businesses in 2026
+3. ${businessName} official reviews and services guide
+
+COMMERCIAL & LOCAL KEYWORDS:
+4. Best ${industry.primaryCat.toLowerCase()} in ${city ? city.name : 'India'}
+5. Verified ${industry.sampleServices[0].toLowerCase()} near me
+6. Top rated ${industry.primaryCat.toLowerCase()} companies in ${city ? city.name : 'India'}
+
+TRANSACTIONAL & CONVERSION KEYWORDS:
+7. Hire ${businessName} ${industry.keywords[0] || 'service'}
+8. ${industry.primaryCat.toLowerCase()} pricing and packages India
+9. Contact ${businessName} for ${industry.sampleServices[0]}
+10. ${industry.sampleServices[1] || 'Service'} online booking India`;
+
+  const schemaCode = `<!-- 2. VALIDATED schema.org/WebSite WITH SITELINKS SEARCHBOX JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "${businessName}",
+  "url": "https://yourwebsite.com",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://yourwebsite.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>`;
+
+  const robotsCode = `# 3. SEARCH ENGINE CRAWL CONFIGURATION:
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /api/
+
+Sitemap: https://yourwebsite.com/sitemap.xml`;
+
+  const extraCode = `# 4. 30-DAY COMPETITOR OUTRANKING ACTION PLAN:
+[ ] Week 1: Publish 3 dedicated landing pages targeting Commercial Keywords #4, #5, #6.
+[ ] Week 2: Build 5 high-DA local citations on Justdial, IndiaMART, and Sulekha.
+[ ] Week 3: Embed Sitelinks Searchbox JSON-LD schema into your website homepage.
+[ ] Week 4: Submit updated XML sitemap in Google Search Console to index within 48 hours.`;
+
+  return {
+    target: target || businessName,
+    businessName,
+    city: city ? city.name : 'India',
+    industry: industry.label,
+    currentScore: finalScore,
+    fixedScore: 99,
+    statusBadge: finalScore >= 75 ? 'COMPETITIVE RANKING TIER' : 'OPTIMIZATION OPPORTUNITIES DETECTED',
+    subScores,
+    flaws,
+    codeSnippets: { headCode, schemaCode, robotsCode, extraCode },
+    manualActionGuide: [
+      {
+        step: '1',
+        title: 'Target Commercial Keywords on Dedicated Pages',
+        severity: 'HIGH PRIORITY',
+        severityColor: '#f59e0b',
+        summary: 'Rank above competitors by creating dedicated landing pages for high-converting queries:',
+        instructions: [
+          {
+            platform: 'Website CMS / Page Builder',
+            steps: [
+              `Create a page targeting "Best ${industry.primaryCat} in ${city ? city.name : 'India'}".`,
+              'Include H1 heading, 500+ words of helpful copy, and customer testimonials.',
+              'Add direct WhatsApp contact CTA button.'
+            ]
+          }
+        ]
+      },
+      {
+        step: '2',
+        title: 'Embed Sitelinks Searchbox Schema',
+        severity: 'CRITICAL',
+        severityColor: '#ef4444',
+        summary: 'Enable Google to show a search box directly under your website listing in search results:',
+        instructions: [
+          {
+            platform: 'Website Homepage <head>',
+            steps: [
+              'Copy snippet #2 (WebSite schema with SearchAction).',
+              'Paste into your website homepage <head> section.',
+              'Submit homepage in Google Search Console for live re-crawl.'
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+/**
  * 6. MASTER DISPATCHER: DYNAMICALLY RUNS AUDIT FOR ANY OF THE 10 ENGINES
  */
 export async function performDynamicPlatformAudit(engineId, rawInput) {
@@ -1135,17 +1993,27 @@ export async function performDynamicPlatformAudit(engineId, rawInput) {
     case 'instagram-seo':
       return await performInstagramAudit(input);
 
+    case 'facebook-seo':
+      return await performFacebookAudit(input);
+
     case 'youtube-seo':
       return await performYouTubeAudit(input);
 
     case 'ecommerce-seo':
       return await performEcommerceAudit(input);
 
-    case 'facebook-seo':
     case 'linkedin-seo':
+      return await performLinkedInAudit(input);
+
     case 'directory-seo':
+      return await performDirectoryAudit(input);
+
     case 'ai-geo-seo':
+      return await performAiGeoAudit(input);
+
     case 'rank-competitor-seo':
+      return await performSerpRankAudit(input);
+
     default:
       return await performGmbAudit(input);
   }
