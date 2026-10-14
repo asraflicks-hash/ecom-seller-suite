@@ -80,6 +80,7 @@ import AdBanner from './AdBanner.jsx';
 import SeoContentDirectory from './SeoContentDirectory.jsx';
 import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
 import MobileFolderMenu from './MobileFolderMenu.jsx';
+import { TopFreeIndiaTickerBanner, FreeIndiaCelebrationModal } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
   getOrAssignCustomerId, 
@@ -163,6 +164,22 @@ export default function App() {
   const [showSyncMonitor, setShowSyncMonitor] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
   const docsFolderRef = useRef(null);
+
+  // 100% Free For All Indians Animated Celebration Modal State
+  const [showFreeIndiaPopup, setShowFreeIndiaPopup] = useState(() => {
+    try {
+      return sessionStorage.getItem('sidra_free_india_popup_closed') !== 'true';
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const handleCloseFreeIndiaPopup = () => {
+    setShowFreeIndiaPopup(false);
+    try {
+      sessionStorage.setItem('sidra_free_india_popup_closed', 'true');
+    } catch (e) {}
+  };
 
   // Desktop vs Mobile View Mode State
   const [viewMode, setViewMode] = useState(() => {
@@ -301,6 +318,12 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'radial-gradient(circle at 50% 0%, #173359 0%, #0c182e 45%, #070d19 100%)' }}>
+      {/* 🇮🇳 SAB SE TOP PE: 100% FREE FOR ALL INDIANS ANIMATED TICKER BAR (Desktop & Mobile) */}
+      <TopFreeIndiaTickerBanner 
+        onOpenDetails={() => setShowFreeIndiaPopup(true)} 
+        viewMode={viewMode} 
+      />
+
       {/* Top Glass Header */}
       <header style={{
         background: 'rgba(11, 23, 44, 0.88)',
@@ -1702,7 +1725,16 @@ export default function App() {
           const el = document.getElementById('seller-growth-hub');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }}
+        onOpenFreeCelebration={() => {
+          setShowMobileFolderMenu(false);
+          setShowFreeIndiaPopup(true);
+        }}
       />
+
+      {/* 🇮🇳 100% FREE FOR ALL INDIANS ANIMATED POPUP */}
+      {showFreeIndiaPopup && (
+        <FreeIndiaCelebrationModal onClose={handleCloseFreeIndiaPopup} />
+      )}
 
       {/* Floating Mobile Bottom Navigation Dock */}
       {viewMode === 'mobile' && (

@@ -551,3 +551,77 @@ nav button[data-active="true"] {
   animation: kinaraGlowActiveTab 2.2s ease-in-out infinite !important;
 }
 
+/* =========================================================================
+   100% FREE FOR ALL INDIANS TOP BANNER & CELEBRATION POPUP ANIMATIONS
+   ========================================================================= */
+
+@keyframes tirangaFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes topPopupSlide {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50px) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, 10px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes tirangaPulseBadge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(255, 153, 51, 0.5), 0 0 20px rgba(37, 211, 102, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 153, 51, 0.8), 0 0 30px rgba(37, 211, 102, 0.7);
+  }
+}
+
+@keyframes shimmerFreeText {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.tiranga-animated-border {
+  background: linear-gradient(90deg, #ff9933, #ffffff, #138808, #ff9933);
+  background-size: 300% 300%;
+  animation: tirangaFlow 4s ease infinite;
+}
+
+.tiranga-glow-badge {
+  animation: tirangaPulseBadge 2.5s infinite ease-in-out;
+}
+
+.free-shimmer-text {
+  background: linear-gradient(90deg, #ff9933 0%, #ffffff 30%, #10b981 70%, #ff9933 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmerFreeText 3.5s linear infinite;
+}
+
+.animated-top-popup-container {
+  animation: topPopupSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
