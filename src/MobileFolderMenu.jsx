@@ -39,7 +39,7 @@ export default function MobileFolderMenu({
   onOpenAbout,
   onOpenContact,
   onOpenServicesHub,
-  onOpenFreeCelebration
+  onOpenPromoPoster
 }) {
   if (!isOpen) return null;
 
@@ -463,6 +463,39 @@ export default function MobileFolderMenu({
                 <span style={{ fontSize: '12px', fontWeight: '800' }}>User Manual</span>
               </div>
               <span style={{ fontSize: '10px', color: '#94a3b8' }}>Guides & Tutorials</span>
+            </button>
+
+            {/* 7. Promotional Poster & Share Kit */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenPromoPoster) onOpenPromoPoster();
+                onClose();
+              }}
+              style={{
+                padding: '12px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, rgba(255, 153, 51, 0.16) 0%, rgba(37, 211, 102, 0.16) 100%)',
+                border: '1.5px solid #ff9933',
+                color: '#ffb74d',
+                textAlign: 'left',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                gridColumn: 'span 2'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '15px' }}>📢</span>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#ffffff' }}>Official Promo Poster</span>
+                </div>
+                <span style={{ fontSize: '9px', background: '#ff9933', color: '#000', padding: '1px 6px', borderRadius: '8px', fontWeight: '900' }}>
+                  HD DOWNLOAD
+                </span>
+              </div>
+              <span style={{ fontSize: '10px', color: '#cbd5e1' }}>Save HD Poster image & 1-tap WhatsApp message</span>
             </button>
           </div>
         </div>
