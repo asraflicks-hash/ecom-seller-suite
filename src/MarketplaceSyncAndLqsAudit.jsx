@@ -305,6 +305,8 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
   const isFlipkart = lower.includes('flipkart.') || lower.includes('fkrt.it') || /^fsn/i.test(input) || lower.includes('/p/itm');
   const isMeesho = lower.includes('meesho.') || /^mees/i.test(input);
 
+  const hasUrlStructure = input.startsWith('http') || input.includes('www.') || input.includes('.com') || input.includes('.in') || input.includes('.co') || input.includes('/');
+
   const platNorm = (selectedPlatform || 'Amazon').toLowerCase();
 
   if (platNorm === 'amazon') {
@@ -324,7 +326,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
         suggestedPlatform: 'Flipkart'
       };
     }
-    if (input.startsWith('http') && !isAmazon) {
+    if (hasUrlStructure && !isAmazon) {
       return {
         isValid: false,
         message: '⚠️ Invalid URL: Please enter a valid Amazon product URL or ASIN.',
@@ -352,7 +354,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
         suggestedPlatform: 'Meesho'
       };
     }
-    if (input.startsWith('http') && !isFlipkart) {
+    if (hasUrlStructure && !isFlipkart) {
       return {
         isValid: false,
         message: '⚠️ Invalid URL: Please enter a valid Flipkart product URL or FSN.',
@@ -380,7 +382,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
         suggestedPlatform: 'Flipkart'
       };
     }
-    if (input.startsWith('http') && !isMeesho) {
+    if (hasUrlStructure && !isMeesho) {
       return {
         isValid: false,
         message: '⚠️ Invalid URL: Please enter a valid Meesho supplier product link.',
