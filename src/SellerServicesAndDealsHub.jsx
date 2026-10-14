@@ -32,6 +32,9 @@ export default function SellerServicesAndDealsHub() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [selectedServiceForQr, setSelectedServiceForQr] = useState(null);
 
+  // Set to true only when user explicitly asks to re-enable PhonePe QR & Chai fund
+  const ENABLE_UPI_SUPPORT = false;
+
   const PAYEE_NAME = 'ANWAR HAIDER';
 
   const sendWhatsAppBooking = (serviceName, price) => {
@@ -296,27 +299,29 @@ Please share the onboarding details, required product info, and payment process!
             <span>🏷️ Logistics & Equipment Deals</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('support')}
-            style={{
-              padding: '10px 22px',
-              borderRadius: '12px',
-              border: activeTab === 'support' ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.12)',
-              background: activeTab === 'support' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)' : 'rgba(15, 23, 42, 0.65)',
-              color: activeTab === 'support' ? '#fbbf24' : '#cbd5e1',
-              fontSize: '13px',
-              fontWeight: '800',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s'
-            }}
-          >
-            <Coffee size={16} />
-            <span>☕ Support Free Platform (Chai Fund)</span>
-          </button>
+          {ENABLE_UPI_SUPPORT && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('support')}
+              style={{
+                padding: '10px 22px',
+                borderRadius: '12px',
+                border: activeTab === 'support' ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.12)',
+                background: activeTab === 'support' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)' : 'rgba(15, 23, 42, 0.65)',
+                color: activeTab === 'support' ? '#fbbf24' : '#cbd5e1',
+                fontSize: '13px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Coffee size={16} />
+              <span>☕ Support Free Platform (Chai Fund)</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -488,57 +493,86 @@ Please share the onboarding details, required product info, and payment process!
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
-                  <button
-                    type="button"
-                    onClick={() => sendWhatsAppBooking(service.title, service.price)}
-                    style={{
-                      padding: '11px 12px',
-                      borderRadius: '10px',
-                      background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
-                      color: '#ffffff',
-                      border: 'none',
-                      fontSize: '12px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      boxShadow: '0 4px 15px rgba(37, 211, 102, 0.25)',
-                      transition: 'all 0.2s',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    <MessageSquare size={14} />
-                    <span>WhatsApp Order</span>
-                  </button>
+                {ENABLE_UPI_SUPPORT ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => sendWhatsAppBooking(service.title, service.price)}
+                      style={{
+                        padding: '11px 12px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '12px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 15px rgba(37, 211, 102, 0.25)',
+                        transition: 'all 0.2s',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <MessageSquare size={14} />
+                      <span>WhatsApp Order</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => openQrForService(service)}
-                    style={{
-                      padding: '11px 10px',
-                      borderRadius: '10px',
-                      background: 'linear-gradient(135deg, #5f259f 0%, #7c3aed 100%)',
-                      color: '#ffffff',
-                      border: 'none',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '5px',
-                      boxShadow: '0 4px 15px rgba(95, 37, 159, 0.3)',
-                      transition: 'all 0.2s',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    <QrCode size={13} />
-                    <span>Pay via QR</span>
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => openQrForService(service)}
+                      style={{
+                        padding: '11px 10px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #5f259f 0%, #7c3aed 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px',
+                        boxShadow: '0 4px 15px rgba(95, 37, 159, 0.3)',
+                        transition: 'all 0.2s',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <QrCode size={13} />
+                      <span>Pay via QR</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => sendWhatsAppBooking(service.title, service.price)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <MessageSquare size={16} />
+                      <span>Order on Official WhatsApp</span>
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -652,7 +686,7 @@ Please share the onboarding details, required product info, and payment process!
       )}
 
       {/* 3. SUPPORT FREE PLATFORM (CHAI FUND) SECTION */}
-      {activeTab === 'support' && (
+      {ENABLE_UPI_SUPPORT && activeTab === 'support' && (
         <div style={{
           maxWidth: '680px',
           margin: '0 auto',
@@ -763,7 +797,7 @@ Please share the onboarding details, required product info, and payment process!
       )}
 
       {/* 4. MODAL: FULL-SCREEN SCAN & PAY VIA PHONEPE QR */}
-      {showQrModal && (
+      {ENABLE_UPI_SUPPORT && showQrModal && (
         <div style={{
           position: 'fixed',
           top: 0,
