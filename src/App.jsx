@@ -61,6 +61,7 @@ import {
   HardDrive,
   Cpu,
   Smartphone,
+  Monitor,
   Send,
   Briefcase
 } from 'lucide-react';
@@ -76,6 +77,7 @@ import CommunityUpdatesModal, { HeaderCommunityButton } from './CommunityUpdates
 import AdBanner from './AdBanner.jsx';
 import SeoContentDirectory from './SeoContentDirectory.jsx';
 import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
+import MobileFolderMenu from './MobileFolderMenu.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
   getOrAssignCustomerId, 
@@ -159,6 +161,22 @@ export default function App() {
   const [showSyncMonitor, setShowSyncMonitor] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
   const docsFolderRef = useRef(null);
+
+  // Desktop vs Mobile View Mode State
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidra_view_mode');
+      if (saved === 'desktop' || saved === 'mobile') return saved;
+      return window.innerWidth <= 840 ? 'mobile' : 'desktop';
+    }
+    return 'desktop';
+  });
+  const [showMobileFolderMenu, setShowMobileFolderMenu] = useState(false);
+
+  const handleSetViewMode = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('sidra_view_mode', mode);
+  };
 
   const getModuleName = (tabId) => {
     switch (tabId) {
@@ -272,7 +290,7 @@ export default function App() {
         background: 'rgba(11, 23, 44, 0.88)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(0, 210, 255, 0.25)',
-        padding: '14px 28px',
+        padding: viewMode === 'mobile' ? '10px 14px' : '14px 28px',
         position: 'sticky',
         top: 0,
         zIndex: 50,
@@ -280,25 +298,26 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '16px'
+        gap: viewMode === 'mobile' ? '10px' : '16px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: viewMode === 'mobile' ? '10px' : '14px' }}>
           {/* Official Sidra Motion Logo with Animated Yellow Aura */}
           <div style={{
             position: 'relative',
-            width: '48px',
-            height: '48px',
+            width: viewMode === 'mobile' ? '38px' : '48px',
+            height: viewMode === 'mobile' ? '38px' : '48px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            flexShrink: 0
           }}>
             <img 
               src="/sidra-logo.png" 
               alt="Sidra Motion Logo" 
               className="gold-glow-animated"
               style={{
-                width: '48px',
-                height: '48px',
+                width: viewMode === 'mobile' ? '38px' : '48px',
+                height: viewMode === 'mobile' ? '38px' : '48px',
                 borderRadius: '50%',
                 objectFit: 'cover',
                 border: '2px solid #eab308',
@@ -311,8 +330,8 @@ export default function App() {
               position: 'absolute',
               top: '-2px',
               right: '-2px',
-              width: '10px',
-              height: '10px',
+              width: '9px',
+              height: '9px',
               borderRadius: '50%',
               background: '#25d366',
               boxShadow: '0 0 8px #25d366'
@@ -320,9 +339,9 @@ export default function App() {
           </div>
 
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <h1 style={{ 
-                fontSize: '20px', 
+                fontSize: viewMode === 'mobile' ? '16px' : '20px', 
                 fontWeight: '800', 
                 letterSpacing: '-0.5px',
                 color: '#ffffff',
@@ -333,7 +352,7 @@ export default function App() {
               <span style={{
                 background: 'rgba(0, 210, 255, 0.15)',
                 color: '#00d2ff',
-                fontSize: '11px',
+                fontSize: viewMode === 'mobile' ? '9px' : '11px',
                 fontWeight: '700',
                 padding: '2px 8px',
                 borderRadius: '20px',
@@ -341,171 +360,236 @@ export default function App() {
               }}>
                 SELLER SUITE PRO 2026
               </span>
-              <a
-                href="https://sellersuitepro.online"
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: 'rgba(37, 211, 102, 0.12)',
-                  color: '#25d366',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  padding: '2px 8px',
-                  borderRadius: '20px',
-                  border: '1px solid rgba(37, 211, 102, 0.4)',
-                  letterSpacing: '0.2px'
-                }}
-                title="Official Live Web Domain"
-              >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 6px #25d366' }} />
-                sellersuitepro.online
-              </a>
+              {viewMode === 'desktop' && (
+                <a
+                  href="https://sellersuitepro.online"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    background: 'rgba(37, 211, 102, 0.12)',
+                    color: '#25d366',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    padding: '2px 8px',
+                    borderRadius: '20px',
+                    border: '1px solid rgba(37, 211, 102, 0.4)',
+                    letterSpacing: '0.2px'
+                  }}
+                  title="Official Live Web Domain"
+                >
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 6px #25d366' }} />
+                  sellersuitepro.online
+                </a>
+              )}
             </div>
-            <p style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.5px' }}>
-              VISUALS THAT MATTER • OFFICIAL CLOUD PORTAL: sellersuitepro.online
-            </p>
+            {viewMode === 'desktop' && (
+              <p style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.5px' }}>
+                VISUALS THAT MATTER • OFFICIAL CLOUD PORTAL: sellersuitepro.online
+              </p>
+            )}
           </div>
         </div>
 
         {/* Center / Mid-Header: Supported Marketplaces & Expansion Roadmap */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          background: 'rgba(15, 23, 42, 0.65)',
-          border: '1px solid rgba(0, 210, 255, 0.25)',
-          borderRadius: '24px',
-          padding: '6px 14px',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 4px 18px rgba(0, 0, 0, 0.4)',
-          flexWrap: 'wrap'
-        }}>
-          {/* Status Dot & Label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              background: '#25d366',
-              boxShadow: '0 0 8px #25d366',
-              display: 'inline-block'
-            }} />
-            <span style={{
-              fontSize: '11px',
-              fontWeight: '800',
-              color: '#e2e8f0',
-              letterSpacing: '0.3px',
-              textTransform: 'uppercase'
-            }}>
-              Live Multi-Channel:
-            </span>
-          </div>
+        {viewMode === 'desktop' && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: 'rgba(15, 23, 42, 0.65)',
+            border: '1px solid rgba(0, 210, 255, 0.25)',
+            borderRadius: '24px',
+            padding: '6px 14px',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 18px rgba(0, 0, 0, 0.4)',
+            flexWrap: 'wrap'
+          }}>
+            {/* Status Dot & Label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: '#25d366',
+                boxShadow: '0 0 8px #25d366',
+                display: 'inline-block'
+              }} />
+              <span style={{
+                fontSize: '11px',
+                fontWeight: '800',
+                color: '#e2e8f0',
+                letterSpacing: '0.3px',
+                textTransform: 'uppercase'
+              }}>
+                Live Multi-Channel:
+              </span>
+            </div>
 
-          {/* Amazon Badge */}
-          <div 
-            className="kinara-glow-dynamic"
-            style={{
-              '--glow-color': '#ff9900',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: 'rgba(255, 153, 0, 0.12)',
-              border: '1px solid rgba(255, 153, 0, 0.45)',
-              borderRadius: '14px',
-              padding: '3px 8px',
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#ffb74d'
-            }} 
-            title="Amazon India & Global Listing Sync Active"
-          >
-            <AmazonLogo size={15} />
-            <span>Amazon</span>
-          </div>
+            {/* Amazon Badge */}
+            <div 
+              className="kinara-glow-dynamic"
+              style={{
+                '--glow-color': '#ff9900',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: 'rgba(255, 153, 0, 0.12)',
+                border: '1px solid rgba(255, 153, 0, 0.45)',
+                borderRadius: '14px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: '700',
+                color: '#ffb74d'
+              }} 
+              title="Amazon India & Global Listing Sync Active"
+            >
+              <AmazonLogo size={15} />
+              <span>Amazon</span>
+            </div>
 
-          {/* Flipkart Badge */}
-          <div 
-            className="kinara-glow-dynamic"
-            style={{
-              '--glow-color': '#2874f0',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: 'rgba(40, 116, 240, 0.15)',
-              border: '1px solid rgba(40, 116, 240, 0.45)',
-              borderRadius: '14px',
-              padding: '3px 8px',
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#60a5fa'
-            }} 
-            title="Flipkart Marketplace Sync Active"
-          >
-            <FlipkartLogo size={15} />
-            <span>Flipkart</span>
-          </div>
+            {/* Flipkart Badge */}
+            <div 
+              className="kinara-glow-dynamic"
+              style={{
+                '--glow-color': '#2874f0',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: 'rgba(40, 116, 240, 0.15)',
+                border: '1px solid rgba(40, 116, 240, 0.45)',
+                borderRadius: '14px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: '700',
+                color: '#60a5fa'
+              }} 
+              title="Flipkart Marketplace Sync Active"
+            >
+              <FlipkartLogo size={15} />
+              <span>Flipkart</span>
+            </div>
 
-          {/* Meesho Badge */}
-          <div 
-            className="kinara-glow-dynamic"
-            style={{
-              '--glow-color': '#d946ef',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: 'rgba(244, 51, 151, 0.14)',
-              border: '1px solid rgba(244, 51, 151, 0.45)',
-              borderRadius: '14px',
-              padding: '3px 8px',
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#f472b6'
-            }} 
-            title="Meesho Supplier Hub Sync Active"
-          >
-            <MeeshoLogo size={15} />
-            <span>Meesho</span>
-          </div>
+            {/* Meesho Badge */}
+            <div 
+              className="kinara-glow-dynamic"
+              style={{
+                '--glow-color': '#d946ef',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: 'rgba(244, 51, 151, 0.14)',
+                border: '1px solid rgba(244, 51, 151, 0.45)',
+                borderRadius: '14px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: '700',
+                color: '#f472b6'
+              }} 
+              title="Meesho Supplier Hub Sync Active"
+            >
+              <MeeshoLogo size={15} />
+              <span>Meesho</span>
+            </div>
 
-          {/* Subtle Divider */}
-          <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)' }} />
+            {/* Subtle Divider */}
+            <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.15)' }} />
 
-          {/* Upcoming Marketplaces Badge */}
-          <div 
-            className="coming-soon-glow-edge"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '7px',
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(15, 23, 42, 0.7) 100%)',
-              border: '1.5px solid #ffffff',
-              borderRadius: '20px',
-              padding: '6px 14px',
-              fontSize: '12px',
-              fontWeight: '800',
-              color: '#ffffff',
-              letterSpacing: '0.3px',
-              cursor: 'default',
-              backdropFilter: 'blur(12px)',
-              transition: 'all 0.25s ease'
-            }} 
-            title="Upcoming channel integrations currently in development"
-          >
-            <Sparkles size={14} color="#ffffff" style={{ filter: 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.8))' }} />
-            <span style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.6)' }}>
-              + Blinkit, Zepto, Myntra & More Coming Soon 🚀
-            </span>
+            {/* Upcoming Marketplaces Badge */}
+            <div 
+              className="coming-soon-glow-edge"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(15, 23, 42, 0.7) 100%)',
+                border: '1.5px solid #ffffff',
+                borderRadius: '20px',
+                padding: '6px 14px',
+                fontSize: '12px',
+                fontWeight: '800',
+                color: '#ffffff',
+                letterSpacing: '0.3px',
+                cursor: 'default',
+                backdropFilter: 'blur(12px)',
+                transition: 'all 0.25s ease'
+              }} 
+              title="Upcoming channel integrations currently in development"
+            >
+              <Sparkles size={14} color="#ffffff" style={{ filter: 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.8))' }} />
+              <span style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.6)' }}>
+                + Blinkit, Zepto, Myntra & More Coming Soon 🚀
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Real-time Status Pills, Navigation & Auth Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {/* RGB Listing Score Shortcut Button */}
-          <button
+        {viewMode === 'desktop' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {/* Desktop vs Mobile Toggle Switcher */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'rgba(15, 23, 42, 0.9)',
+              border: '1.5px solid rgba(0, 210, 255, 0.45)',
+              borderRadius: '22px',
+              padding: '3px',
+              gap: '2px',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.4)'
+            }}>
+              <button
+                type="button"
+                onClick={() => handleSetViewMode('desktop')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px 12px',
+                  borderRadius: '18px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #00d2ff 0%, #0077ff 100%)',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 0 12px rgba(0, 210, 255, 0.5)'
+                }}
+                title="Current View: Full Desktop Multi-Pill Layout"
+              >
+                <Monitor size={12} color="#ffffff" />
+                <span>Desktop</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetViewMode('mobile')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px 10px',
+                  borderRadius: '18px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#94a3b8',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Switch to Mobile Folder View"
+              >
+                <Smartphone size={12} color="#94a3b8" />
+                <span>Mobile</span>
+              </button>
+            </div>
+
+            {/* RGB Listing Score Shortcut Button */}
+            <button
             onClick={() => setActiveTab('listing-audit')}
             className="kinara-glow-dynamic"
             style={{
@@ -917,13 +1001,102 @@ export default function App() {
             >
               <User size={12} color="#00d2ff" /> Seller Profile
             </button>
+            </div>
           </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Desktop vs Mobile Toggle Switcher (in Mobile Mode) */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'rgba(15, 23, 42, 0.9)',
+              border: '1.5px solid rgba(168, 85, 247, 0.45)',
+              borderRadius: '22px',
+              padding: '3px',
+              gap: '2px',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.4)'
+            }}>
+              <button
+                type="button"
+                onClick={() => handleSetViewMode('desktop')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px 10px',
+                  borderRadius: '18px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#94a3b8',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Switch to Desktop View"
+              >
+                <Monitor size={12} color="#94a3b8" />
+                <span>Desktop</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetViewMode('mobile')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px 12px',
+                  borderRadius: '18px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 0 12px rgba(168, 85, 247, 0.5)'
+                }}
+                title="Current View: Mobile Folder Mode"
+              >
+                <Smartphone size={12} color="#ffffff" />
+                <span>Mobile</span>
+              </button>
+            </div>
 
-        </div>
+            {/* Glowing Mobile Folder Menu Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setShowMobileFolderMenu(true)}
+              className="kinara-glow-dynamic"
+              style={{
+                '--glow-color': '#00d2ff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '7px',
+                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.28) 0%, rgba(168, 85, 247, 0.28) 100%)',
+                border: '1.5px solid #00d2ff',
+                color: '#ffffff',
+                padding: '7px 14px',
+                borderRadius: '18px',
+                fontSize: '12px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                boxShadow: '0 0 18px rgba(0, 210, 255, 0.45)',
+                transition: 'all 0.2s',
+                letterSpacing: '0.3px'
+              }}
+              title="Open Mobile Suite Folder Menu (All 8 Tools & Controls)"
+            >
+              <FolderOpen size={15} color="#00d2ff" />
+              <span>📂 Suite Menu (8) ⚡</span>
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Main Suite Content - DIRECT OPEN (Zero sign-in barrier) */}
-      <nav style={{
+      {viewMode === 'desktop' ? (
+        <nav style={{
             background: 'rgba(8, 17, 33, 0.75)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             padding: '10px 24px',
@@ -985,12 +1158,77 @@ export default function App() {
               );
             })}
           </nav>
+        ) : (
+          <div style={{
+            background: 'linear-gradient(180deg, rgba(11, 23, 44, 0.98) 0%, rgba(8, 17, 33, 0.98) 100%)',
+            borderBottom: '1px solid rgba(0, 210, 255, 0.25)',
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <span style={{
+                fontSize: '9px',
+                fontWeight: '800',
+                color: '#94a3b8',
+                background: 'rgba(255, 255, 255, 0.06)',
+                padding: '3px 7px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                flexShrink: 0
+              }}>
+                ACTIVE TOOL
+              </span>
+              <span style={{
+                fontSize: '13px',
+                fontWeight: '800',
+                color: '#00d2ff',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {getModuleName(activeTab)}
+              </span>
+            </div>
 
-          {/* Top Leaderboard High-Viewability Ad Unit (728x90 / Responsive) */}
-          <AdBanner position="top-leaderboard" />
+            <button
+              type="button"
+              onClick={() => setShowMobileFolderMenu(true)}
+              className="kinara-glow-dynamic"
+              style={{
+                '--glow-color': '#00d2ff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%)',
+                border: '1.5px solid #00d2ff',
+                color: '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '16px',
+                fontSize: '11px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                flexShrink: 0,
+                boxShadow: '0 0 12px rgba(0, 210, 255, 0.3)',
+                transition: 'all 0.2s'
+              }}
+            >
+              <FolderOpen size={14} color="#00d2ff" />
+              <span>Switch Tool (8) ▾</span>
+            </button>
+          </div>
+        )}
 
-          {/* Main Content Area - 100% FREE AND UNLOCKED SUITE */}
-          <main style={{ flex: 1, padding: '28px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+        {/* Top Leaderboard High-Viewability Ad Unit (728x90 / Responsive) */}
+        <AdBanner position="top-leaderboard" />
+
+        {/* Main Content Area - 100% FREE AND UNLOCKED SUITE */}
+        <main style={{ flex: 1, padding: viewMode === 'mobile' ? '16px 12px' : '28px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
             {activeTab === 'listing-audit' && (
               <MarketplaceSyncAndLqsAudit 
                 copyToClipboard={copyToClipboard} 
@@ -1161,6 +1399,51 @@ export default function App() {
           setActiveTab(tab);
         }}
         isAdmin={false}
+      />
+
+      {/* Mobile Folder Menu Command Center Drawer */}
+      <MobileFolderMenu 
+        isOpen={showMobileFolderMenu}
+        onClose={() => setShowMobileFolderMenu(false)}
+        activeTab={activeTab}
+        onSelectTab={(tabId) => {
+          setActiveTab(tabId);
+          setShowMobileFolderMenu(false);
+        }}
+        currentCustomerId={currentCustomerId}
+        onOpenSyncMonitor={() => {
+          setShowMobileFolderMenu(false);
+          setShowSyncMonitor(true);
+        }}
+        onOpenCommunity={() => {
+          setShowMobileFolderMenu(false);
+          setShowCommunityModal(true);
+        }}
+        onOpenProfile={() => {
+          setShowMobileFolderMenu(false);
+          setShowAccountModal(true);
+        }}
+        onOpenUserManual={() => {
+          setShowMobileFolderMenu(false);
+          setShowUserManualModal(true);
+        }}
+        onOpenTerms={() => {
+          setShowMobileFolderMenu(false);
+          setShowTermsModal(true);
+        }}
+        onOpenAbout={() => {
+          setShowMobileFolderMenu(false);
+          setShowAboutModal(true);
+        }}
+        onOpenContact={() => {
+          setShowMobileFolderMenu(false);
+          setShowContactSupportModal(true);
+        }}
+        onOpenServicesHub={() => {
+          setShowMobileFolderMenu(false);
+          const el = document.getElementById('seller-growth-hub');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
       />
 
       {/* Footer / Copyright (100% Public Customer View - Zero Owner Leaks) */}
