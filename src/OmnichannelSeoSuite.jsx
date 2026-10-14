@@ -1793,6 +1793,45 @@ export default function OmnichannelSeoSuite({
                         </div>
                       )}
 
+                      {/* Multi-Pillar Sub-Score Breakdown (AISEOGIC / Google Benchmark) */}
+                      {currentAudit.subScores && (
+                        <div 
+                          className="glass-card kinara-glow-dynamic"
+                          style={{
+                            '--glow-color': '#6366f1',
+                            background: 'rgba(15, 23, 42, 0.6)',
+                            border: '1px solid rgba(99, 102, 241, 0.35)',
+                            borderRadius: '12px',
+                            padding: '14px 18px',
+                            marginBottom: '18px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: '800', color: '#818cf8', letterSpacing: '0.5px' }}>
+                              📊 MULTI-PILLAR LOCAL SEO BREAKDOWN (AISEOGIC & GOOGLE BENCHMARK):
+                            </span>
+                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                              Entity: <strong style={{ color: '#fff' }}>{currentAudit.businessName || currentAudit.brandName || currentAudit.target}</strong> {currentAudit.city ? `(${currentAudit.city})` : ''} • <span style={{ color: '#00d2ff' }}>{currentAudit.industry}</span>
+                            </span>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                            {Object.entries(currentAudit.subScores).map(([key, val]) => (
+                              <div key={key} style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
+                                  <span style={{ color: '#cbd5e1', fontWeight: '700' }}>{val.label}</span>
+                                  <span style={{ color: val.score >= 80 ? '#25d366' : val.score >= 60 ? '#fbbf24' : '#f43f5e', fontWeight: '800' }}>
+                                    {val.score}/100
+                                  </span>
+                                </div>
+                                <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                                  <div style={{ width: `${val.score}%`, height: '100%', background: val.score >= 80 ? '#25d366' : val.score >= 60 ? '#fbbf24' : '#f43f5e', transition: 'width 0.6s ease' }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* List of Detected Algorithmic Diagnostics */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <span style={{ fontSize: '11px', fontWeight: '800', color: '#cbd5e1', letterSpacing: '0.5px' }}>
