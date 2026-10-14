@@ -301,7 +301,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'radial-gradient(circle at 50% 0%, #173359 0%, #0c182e 45%, #070d19 100%)' }}>
+    <div style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', overflowX: 'hidden', display: 'flex', flexDirection: 'column', background: 'radial-gradient(circle at 50% 0%, #173359 0%, #0c182e 45%, #070d19 100%)' }}>
       {/* Top Glass Header (Sticky Container) */}
       <header style={{
         background: 'rgba(11, 23, 44, 0.94)',
@@ -1379,12 +1379,7 @@ export default function App() {
             </div>
 
             {/* Row 3: 4 Decorated Cyber Quick-Pill Widgets (RGB Score, Live Sync Alerts, Community, Agency Deals) */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '6px',
-              paddingTop: '2px'
-            }}>
+            <div className="responsive-header-pills">
               {/* Tile 1: RGB Listing Score */}
               <button
                 type="button"
@@ -1496,7 +1491,7 @@ export default function App() {
         <AdBanner position="top-leaderboard" />
 
         {/* Main Content Area - 100% FREE AND UNLOCKED SUITE */}
-        <main style={{ flex: 1, padding: viewMode === 'mobile' ? '16px 12px' : '28px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+        <main style={{ flex: 1, padding: viewMode === 'mobile' ? '16px 10px' : '28px', maxWidth: '1440px', margin: '0 auto', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
             {activeTab === 'listing-audit' && (
               <MarketplaceSyncAndLqsAudit 
                 copyToClipboard={copyToClipboard} 
@@ -2030,7 +2025,10 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      maxWidth: '100%',
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.85)',
       backdropFilter: 'blur(12px)',
@@ -2511,7 +2509,10 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
             position: 'fixed',
             top: 0,
             left: 0,
-            width: '100vw',
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            maxWidth: '100%',
             height: '100vh',
             background: 'rgba(0, 0, 0, 0.88)',
             backdropFilter: 'blur(12px)',
@@ -2677,7 +2678,10 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
             position: 'fixed',
             top: 0,
             left: 0,
-            width: '100vw',
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            maxWidth: '100%',
             height: '100vh',
             background: 'rgba(0, 0, 0, 0.88)',
             backdropFilter: 'blur(12px)',
@@ -2914,7 +2918,10 @@ function UserManualModal({ onClose }) {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      maxWidth: '100%',
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.85)',
       backdropFilter: 'blur(10px)',
@@ -3158,7 +3165,10 @@ function TermsComplianceModal({ onClose }) {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      maxWidth: '100%',
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.85)',
       backdropFilter: 'blur(10px)',
@@ -3235,7 +3245,10 @@ function AboutSuiteModal({ onClose }) {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      maxWidth: '100%',
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.85)',
       backdropFilter: 'blur(10px)',
@@ -3338,7 +3351,10 @@ function ContactSupportModal({
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      maxWidth: '100%',
       height: '100vh',
       background: 'rgba(0, 0, 0, 0.85)',
       backdropFilter: 'blur(12px)',
@@ -3736,7 +3752,7 @@ SUPPORT: contact@sidramotion.com
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 420px) 1fr', gap: '24px' }}>
+    <div className="responsive-workspace-grid">
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.15)', color: '#00d2ff' }}>
@@ -5449,7 +5465,7 @@ function ImageComplianceStudio({ isPreviewMode = false, onRequireKey }) {
       </div>
 
       {/* 2. MAIN WORKSPACE: LEFT CONTROLS VS RIGHT REAL-TIME CANVAS */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(330px, 450px) 1fr', gap: '24px' }}>
+      <div className="responsive-workspace-grid">
         {/* LEFT PANEL: UPLOAD & ENGINE TOOLS */}
         <div className="glass-panel" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Module Title */}
@@ -6495,11 +6511,7 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
           </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          gap: '20px',
-          alignItems: 'center',
+        <div className="responsive-catalog-grid" style={{
           background: 'rgba(15, 31, 56, 0.45)',
           padding: '20px',
           borderRadius: '14px',
@@ -6739,7 +6751,7 @@ function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 420px) 1fr', gap: '24px' }}>
+    <div className="responsive-workspace-grid">
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.15)', color: '#00d2ff' }}>
@@ -6980,7 +6992,7 @@ function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
           </div>
         ) : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+            <div className="responsive-stat-grid-3">
               <div className="glass-card" style={{ padding: '16px' }}>
                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>Your Selling Price</span>
                 <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff', marginTop: '4px' }}>₹{myNum || 0}</div>
@@ -7693,7 +7705,7 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
       </div>
 
       {/* MAIN TWO-COLUMN WORKSPACE */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(330px, 440px) 1fr', gap: '24px' }}>
+      <div className="responsive-workspace-grid">
         {/* LEFT COLUMN: URL/ASIN INPUT & REVIEWS CONTROLS */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -8173,7 +8185,7 @@ SUPPORT CONTACT: contact@sidramotion.com
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 420px) 1fr', gap: '24px' }}>
+    <div className="responsive-workspace-grid">
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(0, 210, 255, 0.15)', color: '#00d2ff' }}>
@@ -8330,7 +8342,7 @@ SUPPORT CONTACT: contact@sidramotion.com
           </div>
         ) : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+            <div className="responsive-stat-grid-3">
               <div className="glass-card" style={{ padding: '16px' }}>
                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>Gross Delivered Profit</span>
                 <div style={{ fontSize: '24px', fontWeight: '800', color: '#25d366', marginTop: '4px' }}>

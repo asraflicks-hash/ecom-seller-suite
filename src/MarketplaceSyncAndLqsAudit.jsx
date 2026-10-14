@@ -1154,7 +1154,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
       </div>
 
       {/* 2. DUAL INPUT & LIVE RGB SCORE GAUGE WORKSPACE */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 460px) 1fr', gap: '24px' }}>
+      <div className="responsive-workspace-grid">
         {/* LEFT COLUMN: SYNC ASIN / CUSTOM DATA INPUT */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '10px' }}>
@@ -1722,7 +1722,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
               </div>
 
               {/* RGB Cyberpunk Center Score Ring & Breakdown */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 240px) 1fr', gap: '24px', alignItems: 'center' }}>
+              <div className="responsive-sub-grid">
                 {/* SVG Animated Circular Progress Meter */}
                 <div style={{
                   position: 'relative',
@@ -2366,7 +2366,10 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          maxWidth: '100%',
           height: '100vh',
           background: 'rgba(0, 0, 0, 0.85)',
           backdropFilter: 'blur(8px)',

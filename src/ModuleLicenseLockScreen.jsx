@@ -439,7 +439,10 @@ export default function ModuleLicenseLockScreen({
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '100vw',
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        maxWidth: '100%',
         height: '100vh',
         background: 'rgba(0, 0, 0, 0.85)',
         backdropFilter: 'blur(12px)',
@@ -603,7 +606,7 @@ export function ModulePreviewLockBanner({
 
       {/* Quick Key Entry Bar + WhatsApp button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
-        <form onSubmit={handleKeyVerification} style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '280px', maxWidth: '520px' }}>
+        <form onSubmit={handleKeyVerification} style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '200px', maxWidth: '520px' }}>
           <input
             type="text"
             value={keyInput}

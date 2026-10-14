@@ -1477,7 +1477,7 @@ export default function OmnichannelSeoSuite({
       {/* MODE 1: DEDICATED PLATFORM ENGINES (WEBSITE & GMB FIRST, INSTA, FB, ETC.) */}
       {/* ============================================================= */}
       {activeMode === 'audit-engine' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(330px, 400px) 1fr', gap: '24px' }}>
+        <div className="responsive-workspace-grid">
           {/* LEFT COLUMN: THE 10 DEDICATED PLATFORM CARDS (EXPLICIT USER ORDER) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
@@ -1683,7 +1683,7 @@ export default function OmnichannelSeoSuite({
                     placeholder={activeEngine.placeholder}
                     style={{
                       flex: 1,
-                      minWidth: '280px',
+                      minWidth: '180px',
                       padding: '12px 14px',
                       borderRadius: '10px',
                       background: 'rgba(0,0,0,0.5)',

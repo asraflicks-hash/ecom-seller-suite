@@ -16,10 +16,15 @@
   --glow-green: 0 0 25px rgba(37, 211, 102, 0.35);
 }
 
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  -webkit-text-size-adjust: 100%;
+}
+
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 body {
@@ -27,8 +32,29 @@ body {
   background: radial-gradient(circle at 50% 0%, #173359 0%, #0c182e 45%, #070d19 100%);
   color: var(--text-main);
   min-height: 100vh;
-  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  position: relative;
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  min-height: 100vh;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+pre, code, table {
+  max-width: 100%;
+  overflow-x: auto;
+  word-break: break-word;
 }
 
 /* Glassmorphism Classes with Animated Glowing Edges (Kinara Glow) */
@@ -624,4 +650,132 @@ nav button[data-active="true"] {
 .animated-top-popup-container {
   animation: topPopupSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ==========================================================================
+   RESPONSIVE WORKSPACE GRIDS & MOBILE ZERO-OVERFLOW SYSTEM
+   ========================================================================== */
+
+/* Universal Responsive Workspace Grid (replaces inline 2-col grids) */
+.responsive-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) 1fr;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.responsive-sub-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) 1fr;
+  gap: 24px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.responsive-catalog-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 20px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.responsive-stat-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.responsive-header-pills {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding-top: 2px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Ensure all child items inside responsive grids never force grid blowout */
+.responsive-workspace-grid > *,
+.responsive-sub-grid > *,
+.responsive-catalog-grid > *,
+.responsive-stat-grid-3 > *,
+.responsive-header-pills > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Break 2-column workspaces down to 1-column on Tablets and Mobile (< 1024px) */
+@media (max-width: 1024px) {
+  .responsive-workspace-grid {
+    grid-template-columns: 100% !important;
+    gap: 16px !important;
+  }
+}
+
+/* Mobile optimizations (< 768px) */
+@media (max-width: 768px) {
+  .responsive-sub-grid,
+  .responsive-catalog-grid {
+    grid-template-columns: 100% !important;
+    gap: 14px !important;
+  }
+
+  .responsive-stat-grid-3 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .responsive-header-pills {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  /* Compact glass containers for small screens */
+  .glass-panel {
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .glass-card {
+    padding: 14px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Prevent oversized buttons and form elements from breaking container */
+  input, select, textarea {
+    font-size: 13px !important;
+    max-width: 100% !important;
+  }
+
+  button {
+    max-width: 100% !important;
+  }
+
+  /* Ensure text breaks cleanly without horizontal overflow */
+  p, span, h1, h2, h3, h4, h5, h6, div {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+}
+
+/* Ultra-compact screen adjustments (< 480px) */
+@media (max-width: 480px) {
+  .glass-panel {
+    padding: 12px 8px !important;
+  }
+  .glass-card {
+    padding: 10px 8px !important;
+  }
+}
+
 

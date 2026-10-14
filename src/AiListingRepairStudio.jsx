@@ -830,7 +830,7 @@ ${output.description}`;
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(330px, 440px) 1fr', gap: '24px' }}>
+    <div className="responsive-workspace-grid">
       {/* LEFT PANEL: URL IMPORTER & AUDIT CONTROLS */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Module Header */}
