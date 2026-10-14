@@ -63,7 +63,9 @@ import {
   Smartphone,
   Monitor,
   Send,
-  Briefcase
+  Briefcase,
+  Users,
+  Bell
 } from 'lucide-react';
 import OwnerPortal from './OwnerPortal.jsx';
 import ClaimTrialModal from './ClaimTrialModal.jsx';
@@ -189,6 +191,20 @@ export default function App() {
       case 'listing-audit': return '7. Sync & RGB Listing Score';
       case 'omnichannel-seo': return '8. 360° Omnichannel SEO & Marketing Suite';
       default: return 'Suite Module';
+    }
+  };
+
+  const getActiveToolMeta = (tabId) => {
+    switch (tabId) {
+      case 'listing-ai': return { icon: Sparkles, color: '#00d2ff', tag: 'Smart A9 Repair' };
+      case 'image-studio': return { icon: ImageIcon, color: '#38bdf8', tag: '#FFFFFF White BG' };
+      case 'catalog-convert': return { icon: ArrowRightLeft, color: '#f97316', tag: 'Az ⇄ Fk ⇄ Ms' };
+      case 'buybox-repricer': return { icon: Zap, color: '#f59e0b', tag: 'Profit Guard' };
+      case 'review-analyzer': return { icon: TrendingUp, color: '#f43f5e', tag: 'Crush Rivals' };
+      case 'rto-calculator': return { icon: DollarSign, color: '#10b981', tag: 'Stop Courier Loss' };
+      case 'listing-audit': return { icon: Gauge, color: '#25d366', tag: 'RGB Live Audit' };
+      case 'omnichannel-seo': return { icon: Globe, color: '#a855f7', tag: '76 Marketing Types' };
+      default: return { icon: Sparkles, color: '#00d2ff', tag: 'Suite Tool' };
     }
   };
 
@@ -341,25 +357,46 @@ export default function App() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <h1 style={{ 
-                fontSize: viewMode === 'mobile' ? '16px' : '20px', 
-                fontWeight: '800', 
+                fontSize: viewMode === 'mobile' ? '17px' : '20px', 
+                fontWeight: '900', 
                 letterSpacing: '-0.5px',
-                color: '#ffffff',
-                fontFamily: "'Space Grotesk', sans-serif"
+                background: 'linear-gradient(135deg, #ffffff 0%, #00d2ff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontFamily: "'Space Grotesk', sans-serif",
+                margin: 0
               }}>
                 SIDRA MOTION
               </h1>
               <span style={{
-                background: 'rgba(0, 210, 255, 0.15)',
+                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.22) 0%, rgba(168, 85, 247, 0.22) 100%)',
                 color: '#00d2ff',
                 fontSize: viewMode === 'mobile' ? '9px' : '11px',
-                fontWeight: '700',
+                fontWeight: '800',
                 padding: '2px 8px',
                 borderRadius: '20px',
-                border: '1px solid rgba(0, 210, 255, 0.4)'
+                border: '1px solid rgba(0, 210, 255, 0.45)',
+                boxShadow: '0 0 10px rgba(0, 210, 255, 0.25)'
               }}>
                 SELLER SUITE PRO 2026
               </span>
+              {viewMode === 'mobile' && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'rgba(15, 23, 42, 0.85)',
+                  border: '1px solid rgba(37, 211, 102, 0.4)',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '9px',
+                  fontWeight: '800',
+                  boxShadow: '0 0 8px rgba(37, 211, 102, 0.2)'
+                }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 6px #25d366' }} />
+                  <span style={{ color: '#ffb74d' }}>Amazon</span> • <span style={{ color: '#60a5fa' }}>Flipkart</span> • <span style={{ color: '#f472b6' }}>Meesho</span>
+                </div>
+              )}
               {viewMode === 'desktop' && (
                 <a
                   href="https://sellersuitepro.online"
@@ -1160,67 +1197,288 @@ export default function App() {
           </nav>
         ) : (
           <div style={{
-            background: 'linear-gradient(180deg, rgba(11, 23, 44, 0.98) 0%, rgba(8, 17, 33, 0.98) 100%)',
+            background: 'linear-gradient(180deg, rgba(11, 23, 44, 0.98) 0%, rgba(7, 15, 30, 0.98) 100%)',
             borderBottom: '1px solid rgba(0, 210, 255, 0.25)',
-            padding: '10px 16px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
             gap: '10px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)'
+            padding: '12px 14px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <span style={{
-                fontSize: '9px',
-                fontWeight: '800',
-                color: '#94a3b8',
-                background: 'rgba(255, 255, 255, 0.06)',
-                padding: '3px 7px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                flexShrink: 0
-              }}>
-                ACTIVE TOOL
-              </span>
-              <span style={{
-                fontSize: '13px',
-                fontWeight: '800',
-                color: '#00d2ff',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
-                {getModuleName(activeTab)}
-              </span>
+            {/* Row 1: Active Tool Hero Showcase & Menu Button */}
+            {(() => {
+              const activeMeta = getActiveToolMeta(activeTab);
+              const ActiveIcon = activeMeta.icon;
+              return (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  background: 'rgba(15, 23, 42, 0.75)',
+                  border: `1.5px solid ${activeMeta.color}45`,
+                  borderRadius: '16px',
+                  padding: '10px 14px',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: `0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px ${activeMeta.color}20`
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <div style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '12px',
+                      background: `linear-gradient(135deg, ${activeMeta.color}35 0%, rgba(15, 23, 42, 0.9) 100%)`,
+                      border: `1.5px solid ${activeMeta.color}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: activeMeta.color,
+                      boxShadow: `0 0 14px ${activeMeta.color}40`,
+                      flexShrink: 0
+                    }}>
+                      <ActiveIcon size={20} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{
+                          fontSize: '9px',
+                          fontWeight: '800',
+                          color: '#25d366',
+                          background: 'rgba(37, 211, 102, 0.15)',
+                          border: '1px solid rgba(37, 211, 102, 0.4)',
+                          padding: '1px 6px',
+                          borderRadius: '8px',
+                          letterSpacing: '0.4px',
+                          textTransform: 'uppercase'
+                        }}>
+                          ⚡ ACTIVE TOOL
+                        </span>
+                        <span style={{ fontSize: '9px', color: '#94a3b8' }}>{activeMeta.tag}</span>
+                      </div>
+                      <div style={{
+                        fontSize: '13px',
+                        fontWeight: '800',
+                        color: '#ffffff',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        marginTop: '2px',
+                        fontFamily: "'Space Grotesk', sans-serif"
+                      }}>
+                        {getModuleName(activeTab)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileFolderMenu(true)}
+                    className="kinara-glow-dynamic"
+                    style={{
+                      '--glow-color': '#00d2ff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.28) 0%, rgba(168, 85, 247, 0.28) 100%)',
+                      border: '1.5px solid #00d2ff',
+                      color: '#ffffff',
+                      padding: '8px 14px',
+                      borderRadius: '14px',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      boxShadow: '0 0 16px rgba(0, 210, 255, 0.35)',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title="Open Suite Folder Menu with all 8 modules and shortcuts"
+                  >
+                    <FolderOpen size={14} color="#00d2ff" />
+                    <span>Menu (8) ▾</span>
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* Row 2: Swipeable Horizontal Tool Switcher Chips */}
+            <div style={{
+              display: 'flex',
+              gap: '7px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}>
+              {[
+                { id: 'listing-ai', label: '1. AI Listing', icon: Sparkles, color: '#00d2ff', tag: 'Smart' },
+                { id: 'image-studio', label: '2. White BG', icon: ImageIcon, color: '#38bdf8', tag: '#FFF' },
+                { id: 'catalog-convert', label: '3. Converter', icon: ArrowRightLeft, color: '#f97316', tag: 'Az⇄Fk⇄Ms' },
+                { id: 'buybox-repricer', label: '4. Repricer', icon: Zap, color: '#f59e0b', tag: 'Profit' },
+                { id: 'review-analyzer', label: '5. Gap Mining', icon: TrendingUp, color: '#f43f5e', tag: 'Rivals' },
+                { id: 'rto-calculator', label: '6. RTO Calc', icon: DollarSign, color: '#10b981', tag: 'Stop Loss' },
+                { id: 'listing-audit', label: '7. RGB Audit', icon: Gauge, color: '#25d366', tag: 'Score' },
+                { id: 'omnichannel-seo', label: '8. 360° SEO', icon: Globe, color: '#a855f7', tag: 'Omni' },
+              ].map(chip => {
+                const Icon = chip.icon;
+                const isActive = activeTab === chip.id;
+                return (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setActiveTab(chip.id)}
+                    className="kinara-glow-dynamic"
+                    style={{
+                      '--glow-color': chip.color,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '6px 11px',
+                      borderRadius: '12px',
+                      border: `1px solid ${isActive ? chip.color : 'rgba(255, 255, 255, 0.12)'}`,
+                      background: isActive 
+                        ? `linear-gradient(135deg, ${chip.color}35 0%, rgba(15, 23, 42, 0.95) 100%)` 
+                        : 'rgba(15, 23, 42, 0.65)',
+                      color: isActive ? chip.color : '#cbd5e1',
+                      fontSize: '11px',
+                      fontWeight: isActive ? '800' : '600',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      boxShadow: isActive ? `0 0 12px ${chip.color}40` : 'none',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <Icon size={12} color={chip.color} />
+                    <span>{chip.label}</span>
+                    <span style={{
+                      fontSize: '8px',
+                      fontWeight: '800',
+                      padding: '1px 4px',
+                      borderRadius: '6px',
+                      background: isActive ? `${chip.color}30` : 'rgba(255, 255, 255, 0.08)',
+                      color: isActive ? '#ffffff' : '#94a3b8',
+                      border: `1px solid ${chip.color}40`
+                    }}>
+                      {chip.tag}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowMobileFolderMenu(true)}
-              className="kinara-glow-dynamic"
-              style={{
-                '--glow-color': '#00d2ff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%)',
-                border: '1.5px solid #00d2ff',
-                color: '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '16px',
-                fontSize: '11px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                flexShrink: 0,
-                boxShadow: '0 0 12px rgba(0, 210, 255, 0.3)',
-                transition: 'all 0.2s'
-              }}
-            >
-              <FolderOpen size={14} color="#00d2ff" />
-              <span>Switch Tool (8) ▾</span>
-            </button>
+            {/* Row 3: 4 Decorated Cyber Quick-Pill Widgets (RGB Score, Live Sync Alerts, Community, Agency Deals) */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '6px',
+              paddingTop: '2px'
+            }}>
+              {/* Tile 1: RGB Listing Score */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('listing-audit')}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                  borderRadius: '10px',
+                  padding: '7px 6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#c084fc' }}>
+                  <Gauge size={12} />
+                  <span style={{ fontSize: '10px', fontWeight: '800' }}>RGB Audit</span>
+                </div>
+                <span style={{ fontSize: '8px', color: '#94a3b8' }}>A9 Engine</span>
+              </button>
+
+              {/* Tile 2: Sync & Alerts Monitor */}
+              <button
+                type="button"
+                onClick={() => setShowSyncMonitor(true)}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                  border: '1px solid rgba(244, 63, 94, 0.4)',
+                  borderRadius: '10px',
+                  padding: '7px 6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f43f5e' }}>
+                  <Bell size={12} />
+                  <span style={{ fontSize: '10px', fontWeight: '800' }}>Alerts</span>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 6px #f43f5e' }} />
+                </div>
+                <span style={{ fontSize: '8px', color: '#94a3b8' }}>3 Channels</span>
+              </button>
+
+              {/* Tile 3: Join Community */}
+              <button
+                type="button"
+                onClick={() => setShowCommunityModal(true)}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                  border: '1px solid rgba(37, 211, 102, 0.4)',
+                  borderRadius: '10px',
+                  padding: '7px 6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#25d366' }}>
+                  <Users size={12} />
+                  <span style={{ fontSize: '10px', fontWeight: '800' }}>Community</span>
+                </div>
+                <span style={{ fontSize: '8px', color: '#94a3b8' }}>WhatsApp Feed</span>
+              </button>
+
+              {/* Tile 4: Agency Deals & Services */}
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('seller-growth-hub');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                  border: '1px solid rgba(0, 210, 255, 0.4)',
+                  borderRadius: '10px',
+                  padding: '7px 6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#38bdf8' }}>
+                  <Briefcase size={12} />
+                  <span style={{ fontSize: '10px', fontWeight: '800' }}>Agency</span>
+                </div>
+                <span style={{ fontSize: '8px', color: '#94a3b8' }}>Growth Hub</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -1445,6 +1703,120 @@ export default function App() {
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }}
       />
+
+      {/* Floating Mobile Bottom Navigation Dock */}
+      {viewMode === 'mobile' && (
+        <div style={{
+          position: 'fixed',
+          bottom: '68px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 45,
+          background: 'rgba(11, 23, 44, 0.94)',
+          backdropFilter: 'blur(20px)',
+          border: '1.5px solid rgba(0, 210, 255, 0.45)',
+          borderRadius: '30px',
+          padding: '6px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 12px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 210, 255, 0.3)',
+          maxWidth: '92vw'
+        }}>
+          {/* 1. Open Folder Menu Button */}
+          <button
+            type="button"
+            onClick={() => setShowMobileFolderMenu(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'linear-gradient(135deg, #00d2ff 0%, #0077ff 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '7px 14px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 0 12px rgba(0, 210, 255, 0.5)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <FolderOpen size={14} />
+            <span>📂 Suite Menu</span>
+          </button>
+
+          {/* 2. Fast Jump: RGB Audit */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('listing-audit')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: activeTab === 'listing-audit' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.08)',
+              border: activeTab === 'listing-audit' ? '1px solid #c084fc' : '1px solid rgba(255, 255, 255, 0.12)',
+              color: activeTab === 'listing-audit' ? '#c084fc' : '#cbd5e1',
+              padding: '6px 10px',
+              borderRadius: '16px',
+              fontSize: '11px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Gauge size={13} color="#c084fc" />
+            <span>Audit</span>
+          </button>
+
+          {/* 3. Sync Alerts */}
+          <button
+            type="button"
+            onClick={() => setShowSyncMonitor(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'rgba(244, 63, 94, 0.15)',
+              border: '1px solid rgba(244, 63, 94, 0.35)',
+              color: '#f43f5e',
+              padding: '6px 10px',
+              borderRadius: '16px',
+              fontSize: '11px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Bell size={13} color="#f43f5e" />
+            <span>Alerts</span>
+          </button>
+
+          {/* 4. Seller Profile */}
+          <button
+            type="button"
+            onClick={() => setShowAccountModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#94a3b8',
+              padding: '6px 10px',
+              borderRadius: '16px',
+              fontSize: '11px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <User size={13} color="#00d2ff" />
+            <span>Profile</span>
+          </button>
+        </div>
+      )}
 
       {/* Footer / Copyright (100% Public Customer View - Zero Owner Leaks) */}
       <footer style={{
