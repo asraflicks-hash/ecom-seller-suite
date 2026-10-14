@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { performWebsiteSeoAudit } from './seoAuditEngine.js';
-import { performDynamicPlatformAudit, validatePlatformInput, POPULAR_SEO_AI_SYNC_TOOLS } from './platformSeoEngine.js';
+import { performDynamicPlatformAudit, validatePlatformInput } from './platformSeoEngine.js';
 import { 
   Globe, 
   Search, 
+  Clock, 
   Share2, 
   Code, 
   FileCode, 
@@ -2414,91 +2415,92 @@ export default function OmnichannelSeoSuite({
               </div>
             )}
 
-            {/* 3. POPULAR AI & INDUSTRY SEO SOFTWARE SYNC HUB */}
-            <div className="glass-panel" style={{ padding: '24px', marginTop: '22px', border: '1px solid rgba(0, 210, 255, 0.35)', background: 'rgba(12, 24, 46, 0.85)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px', marginBottom: '18px' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '18px' }}>⚡</span>
-                    <h3 style={{ fontSize: '17px', fontWeight: '800', color: '#fff', margin: 0 }}>
-                      Sync With Popular AI &amp; SEO Software (Live 1-Click Verification)
-                    </h3>
-                    <span style={{ fontSize: '10px', background: 'rgba(37, 211, 102, 0.2)', color: '#25d366', padding: '2px 8px', borderRadius: '12px', fontWeight: '800', border: '1px solid rgba(37, 211, 102, 0.4)' }}>
-                      LIVE SYNC CONNECTED
-                    </span>
+            {/* 3. ENTERPRISE AI & DEEP SEARCH SYNC ENGINE (COMING SOON) */}
+            <div className="glass-panel" style={{ 
+              padding: '24px', 
+              marginTop: '22px', 
+              border: '1px solid rgba(0, 210, 255, 0.25)', 
+              background: 'linear-gradient(135deg, rgba(12, 24, 46, 0.9) 0%, rgba(15, 31, 56, 0.6) 100%)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ 
+                    padding: '8px', 
+                    borderRadius: '10px', 
+                    background: 'rgba(245, 158, 11, 0.15)', 
+                    color: '#f59e0b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Zap size={20} />
                   </div>
-                  <p style={{ fontSize: '12px', color: '#94a3b8', margin: '6px 0 0' }}>
-                    Cross-verify <strong style={{ color: '#00d2ff' }}>"{customInput || activeEngine.name}"</strong> across the world's top official Google tools, enterprise SEO platforms, and generative AI search models.
-                  </p>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                        Enterprise AI &amp; Deep Search Engine Sync
+                      </h3>
+                      <span style={{ 
+                        fontSize: '10px', 
+                        background: 'rgba(245, 158, 11, 0.18)', 
+                        color: '#fbbf24', 
+                        padding: '2px 10px', 
+                        borderRadius: '12px', 
+                        fontWeight: '800', 
+                        border: '1px solid rgba(245, 158, 11, 0.45)',
+                        letterSpacing: '0.5px'
+                      }}>
+                        ⏳ COMING SOON
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0' }}>
+                      Automated direct crawler sync and real-time algorithmic ranking verification pipeline.
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
-                {POPULAR_SEO_AI_SYNC_TOOLS.map(tool => (
-                  <div
-                    key={tool.id}
-                    className="glass-card"
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.45)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '14px',
-                      padding: '16px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: '12px'
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{
-                          fontSize: '10px',
-                          fontWeight: '800',
-                          color: tool.badgeColor,
-                          background: `${tool.badgeColor}20`,
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          border: `1px solid ${tool.badgeColor}40`
-                        }}>
-                          {tool.badge}
-                        </span>
-                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>{tool.provider}</span>
-                      </div>
-
-                      <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', margin: '0 0 6px 0' }}>
-                        {tool.name}
-                      </h4>
-                      <p style={{ fontSize: '11px', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>
-                        {tool.desc}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => window.open(tool.getSyncUrl(customInput || activeEngine.sampleInput), '_blank', 'noopener,noreferrer')}
-                      style={{
-                        background: `linear-gradient(135deg, ${tool.badgeColor} 0%, #0072ff 100%)`,
-                        color: '#fff',
-                        border: 'none',
-                        padding: '9px 14px',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        fontWeight: '800',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        width: '100%',
-                        boxShadow: `0 4px 15px ${tool.badgeColor}30`,
-                        transition: 'opacity 0.2s'
-                      }}
-                    >
-                      <span>Run Live Analysis on {tool.name.split(' ')[0]}</span>
-                      <ExternalLink size={13} />
-                    </button>
-                  </div>
-                ))}
+              {/* High-tech Coming Soon Status Card */}
+              <div style={{
+                background: 'rgba(0, 0, 0, 0.45)',
+                border: '1px dashed rgba(0, 210, 255, 0.3)',
+                borderRadius: '14px',
+                padding: '28px 20px',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
+              }}>
+                <div style={{ 
+                  width: '48px', 
+                  height: '48px', 
+                  borderRadius: '50%', 
+                  background: 'rgba(0, 210, 255, 0.12)', 
+                  border: '1px solid rgba(0, 210, 255, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#00d2ff',
+                  boxShadow: '0 0 20px rgba(0, 210, 255, 0.25)'
+                }}>
+                  <Clock size={24} />
+                </div>
+                <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>
+                  Live API Engine Integration in Progress
+                </h4>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, maxWidth: '520px', lineHeight: '1.6' }}>
+                  Direct automated cross-verification with global search algorithms and multi-model AI engines is currently undergoing private testing. All sync connectors will be unlocked in the upcoming platform release.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Release Status:</span>
+                  <span style={{ fontSize: '11px', color: '#25d366', fontWeight: '800', background: 'rgba(37, 211, 102, 0.15)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(37, 211, 102, 0.3)' }}>
+                    Beta Stage 2 (Upcoming)
+                  </span>
+                </div>
               </div>
             </div>
           </div>
