@@ -32,7 +32,8 @@ import {
   Info,
   Edit3,
   ChevronDown,
-  X
+  X,
+  Printer
 } from 'lucide-react';
 import {
   SOCIAL_PLATFORMS,
@@ -42,6 +43,8 @@ import {
   scoreReelHook,
   inspectHashtags
 } from './socialMediaAuditEngine.js';
+import SocialAuditPdfModal from './SocialAuditPdfModal.jsx';
+import { openPrintableSocialAuditReport } from './socialAuditPdfGenerator.js';
 
 export default function SocialMediaAuditStudio({
   copyToClipboard,
@@ -84,6 +87,9 @@ export default function SocialMediaAuditStudio({
 
   // Auto-Repair coming soon simulation state
   const [autoRepairProgress, setAutoRepairProgress] = useState(null);
+
+  // Colorful PDF Report Export state
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   // Scan steps for authentic progress display
   const SCAN_STEPS = [
@@ -229,19 +235,20 @@ export default function SocialMediaAuditStudio({
     }
   };
 
+  const handleOpenPdfReport = () => {
+    if (!auditData) return;
+    setIsPdfModalOpen(true);
+  };
+
+  const handleDirectPrintPdf = () => {
+    if (!auditData) return;
+    openPrintableSocialAuditReport(auditData, selectedGhostIds);
+  };
+
   const exportPurgeList = () => {
     if (!auditData) return;
-    const itemsToExport = auditData.ghostFollowersList.filter(g => selectedGhostIds.has(g.id));
-    const content = `SELLER SUITE PRO - SOCIAL MEDIA GHOST PURGE LIST\nTarget Account: ${auditData.handle} (${auditData.platform.toUpperCase()})\nExport Date: ${new Date().toLocaleDateString()}\nTotal Accounts to Block/Remove: ${itemsToExport.length}\n\n` +
-      itemsToExport.map(g => `${g.username} | Reason: ${g.reason} | Inactive: ${g.daysInactive} days | Penalty: ${g.reachPenalty}`).join('\n');
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ghost_purge_list_${auditData.handle.replace('@', '')}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+    // Open high-definition colorful PDF audit report modal
+    setIsPdfModalOpen(true);
   };
 
   const runAutoRepairSim = () => {
@@ -956,14 +963,65 @@ export default function SocialMediaAuditStudio({
               </div>
             )}
 
-            {/* Live Numbers Fine-Tuning Drawer */}
-            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+            {/* Action Bar: PDF Report & Live Customizer */}
+            <div style={{
+              marginTop: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={handleOpenPdfReport}
+                  style={{
+                    background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 14px rgba(236, 72, 153, 0.4)'
+                  }}
+                >
+                  <Printer size={14} />
+                  <span>📑 Download Colorful PDF Audit Report</span>
+                </button>
+
+                <button
+                  onClick={handleDirectPrintPdf}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: '#cbd5e1',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                  title="Direct Print or Save as PDF"
+                >
+                  <Download size={13} />
+                  <span>Direct Print / PDF</span>
+                </button>
+              </div>
+
               <button
                 onClick={() => setShowLiveCustomizer(!showLiveCustomizer)}
                 style={{
                   fontSize: '11px',
                   fontWeight: '700',
-                  padding: '5px 12px',
+                  padding: '7px 12px',
                   borderRadius: '8px',
                   background: 'rgba(255, 255, 255, 0.08)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -1082,20 +1140,42 @@ export default function SocialMediaAuditStudio({
                 </div>
               </div>
 
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '5px 12px',
-                borderRadius: '20px',
-                background: 'rgba(99, 102, 241, 0.18)',
-                border: '1px solid rgba(99, 102, 241, 0.45)',
-                color: '#a5b4fc',
-                fontSize: '11px',
-                fontWeight: '800'
-              }}>
-                <span>🛠️ 1-Click Auto-Repair Engine:</span>
-                <span style={{ color: '#f472b6' }}>⏳ Coming Soon</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={handleOpenPdfReport}
+                  style={{
+                    background: 'rgba(236, 72, 153, 0.2)',
+                    border: '1.5px solid #ec4899',
+                    color: '#f472b6',
+                    padding: '5px 12px',
+                    borderRadius: '20px',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <Printer size={13} />
+                  <span>📑 Export PDF Report</span>
+                </button>
+
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  borderRadius: '20px',
+                  background: 'rgba(99, 102, 241, 0.18)',
+                  border: '1px solid rgba(99, 102, 241, 0.45)',
+                  color: '#a5b4fc',
+                  fontSize: '11px',
+                  fontWeight: '800'
+                }}>
+                  <span>🛠️ 1-Click Auto-Repair Engine:</span>
+                  <span style={{ color: '#f472b6' }}>⏳ Coming Soon</span>
+                </div>
               </div>
             </div>
 
@@ -1323,7 +1403,7 @@ export default function SocialMediaAuditStudio({
                       style={{
                         fontSize: '11px',
                         fontWeight: '800',
-                        padding: '6px 12px',
+                        padding: '6px 14px',
                         borderRadius: '8px',
                         background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
                         border: 'none',
@@ -1331,11 +1411,13 @@ export default function SocialMediaAuditStudio({
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px'
+                        gap: '6px',
+                        boxShadow: '0 4px 12px rgba(236, 72, 153, 0.4)'
                       }}
+                      title="Download Full Colorful PDF Audit & Purge Report"
                     >
-                      <Download size={14} />
-                      Export Purge List ({selectedGhostIds.size})
+                      <Printer size={14} />
+                      📑 Export Colorful PDF Report ({selectedGhostIds.size || auditData.ghostFollowersList.length})
                     </button>
                     <div style={{
                       fontSize: '11px',
@@ -2342,6 +2424,14 @@ export default function SocialMediaAuditStudio({
           )}
         </>
       )}
+
+      {/* Interactive On-Screen Colorful PDF Report Preview Modal */}
+      <SocialAuditPdfModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        auditData={auditData}
+        selectedGhostIds={selectedGhostIds}
+      />
     </div>
   );
 }
