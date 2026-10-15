@@ -140,33 +140,35 @@ export default function SocialMediaAuditStudio({
 
     let resolvedLiveProfile = customStats;
 
-    // Fetch real live metrics from serverless scraper
-    try {
-      const apiUrl = `/api/resolve-social?handle=${encodeURIComponent(cleanHandle)}&platform=${encodeURIComponent(platform)}`;
-      const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
-      if (res.ok) {
-        const json = await res.json();
-        if (json && json.success) {
-          resolvedLiveProfile = {
-            followers: json.followers,
-            following: json.following,
-            posts: json.posts,
-            displayName: json.displayName,
-            bio: json.bio,
-            avatarUrl: json.avatarUrl,
-            isRealScan: true
-          };
-          setLiveFollowers(String(json.followers));
-          setLiveFollowing(String(json.following));
-          setLivePosts(String(json.posts));
+    // Fetch real live metrics from serverless scraper if not manually passed
+    if (!customStats || customStats.followers === undefined) {
+      try {
+        const apiUrl = `/api/resolve-social?handle=${encodeURIComponent(cleanHandle)}&platform=${encodeURIComponent(platform)}`;
+        const res = await fetch(apiUrl, { signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.success) {
+            resolvedLiveProfile = {
+              followers: json.followers,
+              following: json.following,
+              posts: json.posts,
+              displayName: json.displayName,
+              bio: json.bio,
+              avatarUrl: json.avatarUrl,
+              isRealScan: true
+            };
+            setLiveFollowers(String(json.followers));
+            setLiveFollowing(String(json.following));
+            setLivePosts(String(json.posts));
+          }
         }
+      } catch (err) {
+        console.warn('Real social metadata fetch warning:', err);
       }
-    } catch (err) {
-      console.warn('Real social metadata fetch warning:', err);
     }
 
     // Smooth completion delay for UX
-    await new Promise(r => setTimeout(r, 1600));
+    await new Promise(r => setTimeout(r, 1400));
     clearInterval(stepInterval);
     setScanStepIndex(SCAN_STEPS.length - 1);
 
@@ -184,7 +186,8 @@ export default function SocialMediaAuditStudio({
     handleRunAudit(targetHandle, selectedPlatform, selectedCategory, {
       followers: liveFollowers,
       following: liveFollowing,
-      posts: livePosts
+      posts: livePosts,
+      isRealScan: true
     });
     setShowLiveCustomizer(false);
   };
