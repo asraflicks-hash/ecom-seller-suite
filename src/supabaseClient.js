@@ -169,6 +169,189 @@ export async function signOutUser() {
 }
 
 /**
+ * Sign In with Google OAuth
+ */
+export async function signInWithGoogle() {
+  const client = getSupabase();
+  if (!client) {
+    return mockSignIn('google.seller@gmail.com', 'google_verified_auth');
+  }
+
+  const { data, error } = await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
+    }
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Update Current User Password (for Reset Password flow)
+ */
+export async function updateUserPassword(newPassword) {
+  const client = getSupabase();
+  if (!client) {
+    return { success: true };
+  }
+
+  const { data, error } = await client.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Save Seller Profile to Supabase PostgreSQL Database (profiles table)
+ */
+export async function saveProfileToDatabase(profile) {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const session = await getCurrentSession();
+    if (!session?.user) return null;
+
+    const payload = {
+      id: session.user.id,
+      email: session.user.email,
+      full_name: profile.name || session.user.user_metadata?.full_name || '',
+      phone: profile.phone || session.user.user_metadata?.phone || '',
+      city: profile.city || '',
+      store_name: profile.storeName || session.user.user_metadata?.store_name || '',
+      brand_name: profile.brandName || '',
+      platform: profile.platform || 'Amazon & Flipkart',
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await client
+      .from('profiles')
+      .upsert(payload, { onConflict: 'id' });
+
+    if (error) {
+      console.warn('Supabase profiles upsert notice:', error.message);
+    }
+    return data;
+  } catch (err) {
+    console.warn('saveProfileToDatabase error:', err);
+    return null;
+  }
+}
+
+/**
+ * Save Social Media Audit to Supabase PostgreSQL (social_audits table)
+ */
+export async function saveAuditToDatabase(audit) {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const session = await getCurrentSession();
+    const userId = session?.user?.id || null;
+
+    const payload = {
+      user_id: userId,
+      platform: audit.platform,
+      handle: audit.handle,
+      display_name: audit.displayName,
+      followers: audit.followers,
+      health_score: audit.healthScore,
+      ghost_count: audit.ghostCount,
+      is_real_scan: Boolean(audit.isRealScan),
+      created_at: new Date().toISOString()
+    };
+
+    const { data, error } = await client
+      .from('social_audits')
+      .insert([payload]);
+
+    if (error) {
+      console.warn('Supabase social_audits insert notice:', error.message);
+    }
+    return data;
+  } catch (err) {
+    console.warn('saveAuditToDatabase error:', err);
+    return null;
+  }
+}
+
+/**
+ * Copy-pasteable SQL Schema for Supabase SQL Editor
+ */
+export const SUPABASE_SQL_SCHEMA = `-- 1. Profiles Table (Automatically synced with Auth)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  email TEXT,
+  full_name TEXT,
+  phone TEXT,
+  city TEXT,
+  store_name TEXT,
+  brand_name TEXT,
+  platform TEXT DEFAULT 'Amazon & Flipkart',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Social Audits Log Table
+CREATE TABLE IF NOT EXISTS public.social_audits (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  platform TEXT NOT NULL,
+  handle TEXT NOT NULL,
+  display_name TEXT,
+  followers BIGINT,
+  health_score INT,
+  ghost_count BIGINT,
+  is_real_scan BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Enable Row Level Security (RLS)
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.social_audits ENABLE ROW LEVEL SECURITY;
+
+-- 4. RLS Policies: Allow users to view & edit their own data
+CREATE POLICY "Users can manage their own profile" 
+  ON public.profiles FOR ALL 
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can manage their own audits" 
+  ON public.social_audits FOR ALL 
+  USING (auth.uid() = user_id OR user_id IS NULL);
+
+-- 5. Auto-create profile on signup trigger
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, phone)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'phone'
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+`;
+
+/**
  * Send Password Reset Email
  */
 export async function resetPasswordForEmail(email) {

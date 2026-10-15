@@ -90,7 +90,8 @@ import {
   isSupabaseConfigured, 
   getCurrentSession, 
   onAuthChange, 
-  signOutUser 
+  signOutUser,
+  saveProfileToDatabase
 } from './supabaseClient.js';
 import { TopFreeIndiaTickerBanner } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
@@ -2270,6 +2271,16 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout,
       email: sellerEmail.trim(), 
       city: sellerCity.trim(),
       brand: brandName.trim() || storeName.trim() 
+    });
+
+    saveProfileToDatabase({
+      name: sellerName.trim() || brandName.trim() || storeName.trim(),
+      phone: sellerPhone.trim(),
+      email: sellerEmail.trim(),
+      city: sellerCity.trim(),
+      storeName: storeName.trim(),
+      brandName: brandName.trim(),
+      platform
     });
 
     setSaveMessage(`✓ Profile successfully verified and permanently locked to Customer ID: ${customerId}!`);

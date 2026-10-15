@@ -46,6 +46,7 @@ import {
 } from './socialMediaAuditEngine.js';
 import SocialAuditPdfModal from './SocialAuditPdfModal.jsx';
 import { openPrintableSocialAuditReport } from './socialAuditPdfGenerator.js';
+import { saveAuditToDatabase } from './supabaseClient.js';
 
 export const DAILY_AUDIT_LIMIT = 10;
 
@@ -228,6 +229,7 @@ export default function SocialMediaAuditStudio({
 
     const results = generateSocialAudit(cleanHandle, cat, platform, resolvedLiveProfile);
     setAuditData(results);
+    saveAuditToDatabase(results);
     setIsScanning(false);
 
     // Increment daily usage count for new scans (Bypassed for owner/admin)
