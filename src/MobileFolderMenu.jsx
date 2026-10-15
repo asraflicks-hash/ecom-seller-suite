@@ -22,7 +22,8 @@ import {
   ShieldCheck, 
   Bell, 
   ExternalLink,
-  Share2
+  Share2,
+  Wrench
 } from 'lucide-react';
 import { AmazonLogo, FlipkartLogo, MeeshoLogo } from './MarketplaceLogos.jsx';
 
@@ -40,7 +41,8 @@ export default function MobileFolderMenu({
   onOpenAbout,
   onOpenContact,
   onOpenServicesHub,
-  onOpenFreeCelebration
+  onOpenFreeCelebration,
+  onOpenDevMode
 }) {
   if (!isOpen) return null;
 
@@ -467,6 +469,35 @@ export default function MobileFolderMenu({
               </div>
               <span style={{ fontSize: '10px', color: '#94a3b8' }}>Guides & Tutorials</span>
             </button>
+
+            {/* 7. Developer Mode Active Notice */}
+            {onOpenDevMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenDevMode();
+                  onClose();
+                }}
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.45)',
+                  color: '#fbbf24',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Wrench size={15} color="#f59e0b" />
+                  <span style={{ fontSize: '12px', fontWeight: '800' }}>Dev Mode Notice</span>
+                </div>
+                <span style={{ fontSize: '10px', color: '#94a3b8' }}>Active Maintenance</span>
+              </button>
+            )}
           </div>
         </div>
 

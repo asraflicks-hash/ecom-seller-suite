@@ -81,6 +81,7 @@ import SeoContentDirectory from './SeoContentDirectory.jsx';
 import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
 import MobileFolderMenu from './MobileFolderMenu.jsx';
 import SocialMediaAuditStudio from './SocialMediaAuditStudio.jsx';
+import DeveloperModeAlertModal, { HeaderDevModeIndicator } from './DeveloperModeAlertModal.jsx';
 import { TopFreeIndiaTickerBanner } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
@@ -164,6 +165,23 @@ export default function App() {
   const [showLockModal, setShowLockModal] = useState(false);
   const [showSyncMonitor, setShowSyncMonitor] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
+  
+  // Platform Developer Mode Alert State (Session-persisted, active notice across entire site)
+  const [showDevModeModal, setShowDevModeModal] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('sidra_dismissed_dev_notice') !== 'true';
+    }
+    return true;
+  });
+
+  const handleCloseDevModeModal = () => {
+    setShowDevModeModal(false);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('sidra_dismissed_dev_notice', 'true');
+      } catch (e) {}
+    }
+  };
   const docsFolderRef = useRef(null);
 
   // Desktop vs Mobile View Mode State
@@ -294,12 +312,18 @@ export default function App() {
   // If URL points to /admin or /owner, render Standalone Owner Command Center
   if (isAdminRoute) {
     return (
-      <OwnerPortal 
-        onNavigateToPublic={() => {
-          window.history.pushState({}, '', '/');
-          setIsAdminRoute(false);
-        }}
-      />
+      <>
+        <DeveloperModeAlertModal 
+          isOpen={showDevModeModal} 
+          onClose={handleCloseDevModeModal} 
+        />
+        <OwnerPortal 
+          onNavigateToPublic={() => {
+            window.history.pushState({}, '', '/');
+            setIsAdminRoute(false);
+          }}
+        />
+      </>
     );
   }
 
@@ -682,6 +706,9 @@ export default function App() {
             <span>{currentCustomerId}</span>
           </div>
 
+          {/* Platform Developer Mode Active Indicator & Alert Opener */}
+          <HeaderDevModeIndicator onOpen={() => setShowDevModeModal(true)} />
+
           {/* Amazon, Flipkart & Meesho Live Sync & Flaw Alert Center Button */}
           <HeaderSyncAlertButton onClick={() => setShowSyncMonitor(true)} />
 
@@ -1054,6 +1081,9 @@ export default function App() {
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Platform Developer Mode Indicator (Mobile Header) */}
+            <HeaderDevModeIndicator onOpen={() => setShowDevModeModal(true)} />
+
             {/* Desktop vs Mobile Toggle Switcher (in Mobile Mode) */}
             <div style={{
               display: 'inline-flex',
@@ -1677,6 +1707,12 @@ export default function App() {
         isAdmin={false}
       />
 
+      {/* Platform Developer Mode & Continuous Maintenance Alert Modal */}
+      <DeveloperModeAlertModal 
+        isOpen={showDevModeModal} 
+        onClose={handleCloseDevModeModal} 
+      />
+
       {/* Mobile Folder Menu Command Center Drawer */}
       <MobileFolderMenu 
         isOpen={showMobileFolderMenu}
@@ -1714,6 +1750,10 @@ export default function App() {
         onOpenContact={() => {
           setShowMobileFolderMenu(false);
           setShowContactSupportModal(true);
+        }}
+        onOpenDevMode={() => {
+          setShowMobileFolderMenu(false);
+          setShowDevModeModal(true);
         }}
         onOpenServicesHub={() => {
           setShowMobileFolderMenu(false);
