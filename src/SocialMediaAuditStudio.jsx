@@ -46,12 +46,34 @@ import {
 import SocialAuditPdfModal from './SocialAuditPdfModal.jsx';
 import { openPrintableSocialAuditReport } from './socialAuditPdfGenerator.js';
 
+export const DAILY_AUDIT_LIMIT = 2;
+
+const getTodayKey = () => new Date().toISOString().split('T')[0];
+
+const getStoredScanUsage = () => {
+  try {
+    const raw = localStorage.getItem('ssp_social_audit_usage');
+    if (!raw) return { date: getTodayKey(), count: 0 };
+    const parsed = JSON.parse(raw);
+    if (parsed.date !== getTodayKey()) {
+      return { date: getTodayKey(), count: 0 };
+    }
+    return parsed;
+  } catch (e) {
+    return { date: getTodayKey(), count: 0 };
+  }
+};
+
 export default function SocialMediaAuditStudio({
   copyToClipboard,
   copiedKey,
   userProfile,
   isAdmin: initialIsAdmin = false
 }) {
+  // Daily Quota Tracking (Strictly 2 free scans per day per visitor)
+  const [scansUsedToday, setScansUsedToday] = useState(() => getStoredScanUsage().count);
+  const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
+
   // Input & scan states (Empty by default - Zero demo profile leaks)
   const [targetHandle, setTargetHandle] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('instagram');
@@ -135,6 +157,16 @@ export default function SocialMediaAuditStudio({
       alert('Please enter an account username or link to audit.');
       return;
     }
+
+    // Check daily scan quota (Unless admin or fine-tuning custom stats on existing profile)
+    if (!customStats && !initialIsAdmin) {
+      const usage = getStoredScanUsage();
+      if (usage.count >= DAILY_AUDIT_LIMIT) {
+        setIsQuotaModalOpen(true);
+        return;
+      }
+    }
+
     setAuditData(null); // Clear previous audit data immediately so old profiles never leak
     setIsScanning(true);
     setScanStepIndex(0);
@@ -190,6 +222,17 @@ export default function SocialMediaAuditStudio({
     const results = generateSocialAudit(cleanHandle, cat, platform, resolvedLiveProfile);
     setAuditData(results);
     setIsScanning(false);
+
+    // Increment daily usage count for new scans
+    if (!customStats && !initialIsAdmin) {
+      const usage = getStoredScanUsage();
+      const updated = { date: getTodayKey(), count: usage.count + 1 };
+      try {
+        localStorage.setItem('ssp_social_audit_usage', JSON.stringify(updated));
+      } catch (e) {}
+      setScansUsedToday(updated.count);
+    }
+
     if (results.ghostFollowersList && results.ghostFollowersList.length > 0) {
       setSelectedGhostIds(new Set(results.ghostFollowersList.slice(0, 5).map(g => g.id)));
     } else {
@@ -425,6 +468,65 @@ export default function SocialMediaAuditStudio({
         padding: '16px 20px',
         marginBottom: '20px'
       }}>
+        {/* Header Bar with Public Intelligence & Daily Quota Indicator */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '14px',
+          flexWrap: 'wrap',
+          gap: '8px',
+          paddingBottom: '12px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+        }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span>🔍 PUBLIC PROFILE AUDITOR</span>
+            <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '500' }}>
+              • Public Metadata Only (Zero Passwords / No Login Required)
+            </span>
+          </div>
+
+          <div
+            onClick={() => scansUsedToday >= DAILY_AUDIT_LIMIT && setIsQuotaModalOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: scansUsedToday >= DAILY_AUDIT_LIMIT
+                ? 'rgba(239, 68, 68, 0.2)'
+                : scansUsedToday === 1
+                  ? 'rgba(245, 158, 11, 0.2)'
+                  : 'rgba(16, 185, 129, 0.15)',
+              border: `1.5px solid ${
+                scansUsedToday >= DAILY_AUDIT_LIMIT
+                  ? '#ef4444'
+                  : scansUsedToday === 1
+                    ? '#f59e0b'
+                    : '#10b981'
+              }`,
+              color: scansUsedToday >= DAILY_AUDIT_LIMIT
+                ? '#fca5a5'
+                : scansUsedToday === 1
+                  ? '#fbbf24'
+                  : '#86efac',
+              fontSize: '11px',
+              fontWeight: '800',
+              cursor: scansUsedToday >= DAILY_AUDIT_LIMIT ? 'pointer' : 'default'
+            }}
+          >
+            <span>⚡ Daily Free Quota:</span>
+            <span>
+              {initialIsAdmin
+                ? 'UNLIMITED (ADMIN)'
+                : DAILY_AUDIT_LIMIT - scansUsedToday > 0
+                  ? `${DAILY_AUDIT_LIMIT - scansUsedToday} of ${DAILY_AUDIT_LIMIT} Scans Remaining Today`
+                  : `0/${DAILY_AUDIT_LIMIT} Used (Daily Limit Reached)`}
+            </span>
+          </div>
+        </div>
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -644,7 +746,9 @@ export default function SocialMediaAuditStudio({
                 borderRadius: '10px',
                 background: isScanning
                   ? 'rgba(236, 72, 153, 0.5)'
-                  : 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+                  : scansUsedToday >= DAILY_AUDIT_LIMIT && !initialIsAdmin
+                    ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)'
+                    : 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
                 border: 'none',
                 color: '#ffffff',
                 fontSize: '13px',
@@ -654,12 +758,28 @@ export default function SocialMediaAuditStudio({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 15px rgba(236, 72, 153, 0.4)',
+                boxShadow: scansUsedToday >= DAILY_AUDIT_LIMIT && !initialIsAdmin
+                  ? '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 15px rgba(236, 72, 153, 0.4)',
                 transition: 'all 0.2s'
               }}
             >
-              <RefreshCw size={16} className={isScanning ? 'spin' : ''} />
-              {isScanning ? 'Scanning Profile...' : 'AI Scan & Deep Audit'}
+              {isScanning ? (
+                <>
+                  <RefreshCw size={16} className="spin" />
+                  <span>Scanning Profile...</span>
+                </>
+              ) : scansUsedToday >= DAILY_AUDIT_LIMIT && !initialIsAdmin ? (
+                <>
+                  <Lock size={16} />
+                  <span>Daily Limit Reached (2/2)</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={16} />
+                  <span>AI Scan &amp; Deep Audit</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -2423,6 +2543,159 @@ export default function SocialMediaAuditStudio({
             </div>
           )}
         </>
+      )}
+
+      {/* Daily Scan Quota Reached Modal */}
+      {isQuotaModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(2, 6, 23, 0.88)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div style={{
+            maxWidth: '480px',
+            width: '100%',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
+            border: '2px solid rgba(239, 68, 68, 0.5)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setIsQuotaModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={16} />
+            </button>
+
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.2)',
+              border: '2px solid #ef4444',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px auto',
+              fontSize: '28px'
+            }}>
+              🔒
+            </div>
+
+            <div style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: 'rgba(239, 68, 68, 0.2)',
+              border: '1px solid #ef4444',
+              color: '#fca5a5',
+              fontSize: '11px',
+              fontWeight: '800',
+              marginBottom: '10px'
+            }}>
+              DAILY AUDIT LIMIT REACHED (2/2 USED)
+            </div>
+
+            <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#ffffff', margin: '0 0 10px 0' }}>
+              Daily Free Profile Scans Exhausted
+            </h3>
+
+            <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', margin: '0 0 20px 0' }}>
+              To prevent automated scraping, protect public profile bandwidth, and ensure fair usage, free users are allocated <strong>2 deep profile audits per day</strong>. Your free quota resets tonight at 12:00 AM midnight.
+            </p>
+
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '14px',
+              marginBottom: '20px',
+              textAlign: 'left',
+              fontSize: '12px'
+            }}>
+              <div style={{ color: '#38bdf8', fontWeight: '800', marginBottom: '4px' }}>
+                💡 Need Unlimited Agency Audits?
+              </div>
+              <div style={{ color: '#94a3b8', lineHeight: '1.5' }}>
+                If you are an agency, social media marketer, or seller needing unlimited competitor &amp; profile scans, connect with Sidra Motion Support.
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <a
+                href="https://wa.me/916306348371?text=Hello%20Sidra%20Motion%20Team,%20I%20am%20using%20Seller%20Suite%20Pro%20and%20need%20unlimited%20social%20media%20audits."
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                  color: '#ffffff',
+                  fontWeight: '800',
+                  fontSize: '13px',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 15px rgba(37, 211, 102, 0.4)',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <span>💬 Request Unlimited Access on WhatsApp</span>
+              </a>
+
+              {auditData && (
+                <button
+                  onClick={() => {
+                    setIsQuotaModalOpen(false);
+                    setIsPdfModalOpen(true);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '11px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#ffffff',
+                    fontWeight: '700',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📑 View / Print Previous PDF Report
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Interactive On-Screen Colorful PDF Report Preview Modal */}
