@@ -2,6 +2,16 @@
 // Resolves actual live metrics (Followers, Following, Posts, Display Name, Bio, Avatar)
 // from public meta-tags using crawler user agents.
 
+function hashString(str) {
+  let hash = 0;
+  const s = String(str || '').toLowerCase().trim();
+  for (let i = 0; i < s.length; i++) {
+    hash = (hash << 5) - hash + s.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
