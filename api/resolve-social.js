@@ -41,15 +41,13 @@ export default async function handler(req, res) {
   try {
     if (platform === 'instagram') {
       const profileData = await scrapeInstagram(cleanHandle);
-      if (profileData && profileData.isFound) {
-        return res.status(200).json({
-          success: true,
-          platform: 'instagram',
-          handle: cleanHandle,
-          ...profileData,
-          isRealScan: true
-        });
-      }
+      return res.status(200).json({
+        success: true,
+        platform: 'instagram',
+        handle: cleanHandle,
+        ...profileData,
+        isRealScan: true
+      });
     } else if (platform === 'youtube') {
       const profileData = await scrapeYouTube(cleanHandle);
       if (profileData && profileData.isFound) {
@@ -111,17 +109,18 @@ async function scrapeInstagram(handle) {
       if (!response.ok && response.status !== 200) continue;
 
       const html = await response.text();
-      const parsed = parseInstagramHtml(html, handle);
-      if (parsed && parsed.isFound) {
+      const parsed = parseInstagramHtml(html, handle, ua);
+      if (parsed && parsed.isFound && (parsed.followers > 0 || parsed.posts > 0)) {
         return parsed;
       }
+      // If parsed had 0 followers and 0 posts, keep trying other user agents!
+      lastAttempt = parsed;
     } catch (e) {
-      // Try next user agent
       continue;
     }
   }
 
-  return null;
+  return lastAttempt || null;
 }
 
 function parseInstagramHtml(html, handle) {
@@ -197,7 +196,8 @@ function parseInstagramHtml(html, handle) {
     posts,
     displayName: displayName || handle,
     bio: bio || '',
-    avatarUrl: ogImage || ''
+    avatarUrl: ogImage || '',
+    debug: { rawMeta, ogTitle, htmlSnippet: html.slice(0, 300) }
   };
 }
 
