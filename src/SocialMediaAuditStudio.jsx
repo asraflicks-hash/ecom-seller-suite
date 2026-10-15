@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Share2,
   AlertTriangle,
@@ -30,7 +30,9 @@ import {
   Compass,
   ArrowRight,
   Info,
-  Edit3
+  Edit3,
+  ChevronDown,
+  X
 } from 'lucide-react';
 import {
   SOCIAL_PLATFORMS,
@@ -47,34 +49,24 @@ export default function SocialMediaAuditStudio({
   userProfile,
   isAdmin: initialIsAdmin = false
 }) {
-  // Access Gate: Public gets pure "Coming Soon", Owner/Admin gets 100% full access
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(() => {
-    if (initialIsAdmin) return true;
-    if (typeof window !== 'undefined') {
-      const path = window.location.pathname || '';
-      const hash = window.location.hash || '';
-      const search = window.location.search || '';
-      if (path.includes('/admin') || path.includes('/owner')) return true;
-      if (hash.includes('admin') || hash.includes('owner')) return true;
-      if (search.includes('admin=true') || search.includes('owner=true')) return true;
-      if (sessionStorage.getItem('sidra_owner_session_unlocked') === 'true') return true;
-    }
-    return false;
-  });
-
-  // Input & scan states
-  const [targetHandle, setTargetHandle] = useState('sidramotion');
+  // Input & scan states (Empty by default - Zero demo profile leaks)
+  const [targetHandle, setTargetHandle] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('instagram');
-  const [selectedCategory, setSelectedCategory] = useState('software_company');
+  const [selectedCategory, setSelectedCategory] = useState('digital_creator_influencer');
   const [isScanning, setIsScanning] = useState(false);
   const [scanStepIndex, setScanStepIndex] = useState(0);
   const [auditData, setAuditData] = useState(null);
 
+  // Category Search Combobox state
+  const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  const [isCategorySearchOpen, setIsCategorySearchOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
+
   // Live Manual Metrics Customizer (Optional for 100% exact live alignment)
   const [showLiveCustomizer, setShowLiveCustomizer] = useState(false);
-  const [liveFollowers, setLiveFollowers] = useState('4');
-  const [liveFollowing, setLiveFollowing] = useState('19');
-  const [livePosts, setLivePosts] = useState('6');
+  const [liveFollowers, setLiveFollowers] = useState('');
+  const [liveFollowing, setLiveFollowing] = useState('');
+  const [livePosts, setLivePosts] = useState('');
 
   // Active Sub-Tool tab (1 to 10)
   const [activeSubTool, setActiveSubTool] = useState('ghost_purge');
@@ -102,17 +94,30 @@ export default function SocialMediaAuditStudio({
     'Calculating Dead Follower ratio & Algorithmic reach health...'
   ];
 
-  // Run initial scan on mount
+  // Close category dropdown on outside click
   useEffect(() => {
-    handleRunAudit('sidramotion', 'instagram', 'software_company', {
-      followers: liveFollowers,
-      following: liveFollowing,
-      posts: livePosts
-    });
-    handleInspectHashtags('#webdevelopment #customsaas #softwarecompany #reactdev #techstartup');
-    handleScoreHook('Stop buying expensive software until you see this custom build!');
+    function handleClickOutside(event) {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setIsCategorySearchOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Filtered categories based on live search input
+  const selectedCategoryObj = INDUSTRY_CATEGORIES.find(c => c.id === selectedCategory) || INDUSTRY_CATEGORIES[0];
+  const filteredCategories = INDUSTRY_CATEGORIES.filter(c => {
+    if (!categorySearchQuery.trim()) return true;
+    const q = categorySearchQuery.toLowerCase();
+    return c.name.toLowerCase().includes(q) || (c.group && c.group.toLowerCase().includes(q));
+  });
+
+  // Run initial helper tools on mount (DO NOT run any default profile scan on mount!)
+  useEffect(() => {
+    handleInspectHashtags('#marketing #business #ecommerce #growth #viralreels');
+    handleScoreHook('Stop buying expensive software until you see this custom build!');
+  }, []);
 
   const handleRunAudit = async (
     handleToAudit = targetHandle,
@@ -120,7 +125,11 @@ export default function SocialMediaAuditStudio({
     cat = selectedCategory,
     customStats = null
   ) => {
-    if (!handleToAudit.trim()) return;
+    if (!handleToAudit || !handleToAudit.trim()) {
+      alert('Please enter an account username or link to audit.');
+      return;
+    }
+    setAuditData(null); // Clear previous audit data immediately so old profiles never leak
     setIsScanning(true);
     setScanStepIndex(0);
 
@@ -223,7 +232,7 @@ export default function SocialMediaAuditStudio({
   const exportPurgeList = () => {
     if (!auditData) return;
     const itemsToExport = auditData.ghostFollowersList.filter(g => selectedGhostIds.has(g.id));
-    const content = `SIDRA MOTION SOCIAL MEDIA GHOST PURGE LIST\nTarget Account: ${auditData.handle} (${auditData.platform.toUpperCase()})\nExport Date: ${new Date().toLocaleDateString()}\nTotal Accounts to Block/Remove: ${itemsToExport.length}\n\n` +
+    const content = `SELLER SUITE PRO - SOCIAL MEDIA GHOST PURGE LIST\nTarget Account: ${auditData.handle} (${auditData.platform.toUpperCase()})\nExport Date: ${new Date().toLocaleDateString()}\nTotal Accounts to Block/Remove: ${itemsToExport.length}\n\n` +
       itemsToExport.map(g => `${g.username} | Reason: ${g.reason} | Inactive: ${g.daysInactive} days | Penalty: ${g.reachPenalty}`).join('\n');
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -345,7 +354,63 @@ export default function SocialMediaAuditStudio({
         </div>
       </div>
 
-      {/* Control Bar: Platform + Category + Handle + Scan Button */}
+      {/* Top Animated Developer Calibration & Patience Notice (English) */}
+      <div style={{
+        marginBottom: '20px',
+        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(239, 68, 68, 0.1) 50%, rgba(15, 23, 42, 0.95) 100%)',
+        border: '1.5px solid rgba(245, 158, 11, 0.55)',
+        borderRadius: '16px',
+        padding: '16px 20px',
+        boxShadow: '0 0 25px rgba(245, 158, 11, 0.2), 0 8px 32px rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '14px',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{
+          width: '42px',
+          height: '42px',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(239, 68, 68, 0.25) 100%)',
+          border: '1.5px solid rgba(245, 158, 11, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          boxShadow: '0 0 15px rgba(245, 158, 11, 0.3)'
+        }}>
+          <AlertTriangle size={22} color="#f59e0b" />
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: '900',
+              padding: '2px 9px',
+              borderRadius: '12px',
+              background: 'rgba(245, 158, 11, 0.22)',
+              border: '1px solid rgba(245, 158, 11, 0.5)',
+              color: '#fbbf24',
+              letterSpacing: '0.5px'
+            }}>
+              ⚠️ ACTIVE CALIBRATION NOTICE
+            </span>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+              • Meta 2026 Graph &amp; Policy Pipeline
+            </span>
+          </div>
+
+          <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '800', color: '#ffffff' }}>
+            Social Media AI Doctor is Currently Under Active Development
+          </h4>
+          <p style={{ margin: 0, fontSize: '12px', color: '#cbd5e1', lineHeight: '1.55' }}>
+            This module is undergoing continuous real-time engineering calibration. For <strong>100% precision audit results</strong>, please bear with us and exercise patience as live social media rate limits, public meta-tag endpoints, and algorithmic shadowban models are dynamically tuned.
+          </p>
+        </div>
+      </div>
+
+      {/* Control Bar: Platform + Searchable Category + Handle + Scan Button */}
       <div style={{
         background: 'rgba(15, 23, 42, 0.85)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -386,35 +451,152 @@ export default function SocialMediaAuditStudio({
             </select>
           </div>
 
-          {/* Category Selector (Now Includes Software Company & IT SaaS) */}
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#94a3b8', marginBottom: '6px', textTransform: 'uppercase' }}>
-              2. Industry Category
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+          {/* Searchable Category Selector */}
+          <div style={{ position: 'relative' }} ref={categoryDropdownRef}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>
+                2. Category (Searchable)
+              </label>
+              <span style={{ fontSize: '10px', color: '#a855f7', fontWeight: '700' }}>
+                {filteredCategories.length} Categories
+              </span>
+            </div>
+
+            {/* Selected category trigger button */}
+            <div
+              onClick={() => setIsCategorySearchOpen(prev => !prev)}
               style={{
                 width: '100%',
-                padding: '10px 14px',
+                padding: '9px 12px',
                 background: '#0a0f1d',
-                border: '1.5px solid rgba(139, 92, 246, 0.4)',
+                border: '1.5px solid rgba(168, 85, 247, 0.45)',
                 borderRadius: '10px',
                 color: '#ffffff',
                 fontSize: '13px',
-                fontWeight: '600'
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxSizing: 'border-box',
+                gap: '8px'
               }}
             >
-              {Array.from(new Set(INDUSTRY_CATEGORIES.map(c => c.group || 'All Categories'))).map(groupName => (
-                <optgroup key={groupName} label={groupName} style={{ background: '#0a0f1d', color: '#38bdf8', fontWeight: '800' }}>
-                  {INDUSTRY_CATEGORIES.filter(c => (c.group || 'All Categories') === groupName).map(c => (
-                    <option key={c.id} value={c.id} style={{ background: '#070d19', color: '#ffffff', fontWeight: '500' }}>
-                      {c.name}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selectedCategoryObj?.name || 'Select Category'}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, color: '#a855f7' }}>
+                <Search size={14} />
+                <ChevronDown size={14} style={{ transform: isCategorySearchOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </div>
+            </div>
+
+            {/* Dropdown with live search filter */}
+            {isCategorySearchOpen && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 6px)',
+                left: 0,
+                right: 0,
+                background: '#0a0f1d',
+                border: '1.5px solid rgba(168, 85, 247, 0.6)',
+                borderRadius: '12px',
+                padding: '8px',
+                zIndex: 1000,
+                boxShadow: '0 12px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(168, 85, 247, 0.25)',
+                boxSizing: 'border-box'
+              }}>
+                {/* Search Input Box */}
+                <div style={{ position: 'relative', marginBottom: '8px' }}>
+                  <Search size={14} color="#a855f7" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input
+                    type="text"
+                    value={categorySearchQuery}
+                    onChange={(e) => setCategorySearchQuery(e.target.value)}
+                    placeholder="Search category (e.g. Software, Creator, Fashion, Doctor...)"
+                    autoFocus
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px 8px 30px',
+                      background: '#070d19',
+                      border: '1px solid rgba(168, 85, 247, 0.4)',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontSize: '12px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {categorySearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setCategorySearchQuery('')}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        padding: '2px'
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filtered Category Items List */}
+                <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+                  {filteredCategories.length === 0 ? (
+                    <div style={{ padding: '12px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>
+                      No matching category found for "{categorySearchQuery}".
+                    </div>
+                  ) : (
+                    filteredCategories.map(cat => {
+                      const isSelected = selectedCategory === cat.id;
+                      return (
+                        <div
+                          key={cat.id}
+                          onClick={() => {
+                            setSelectedCategory(cat.id);
+                            setIsCategorySearchOpen(false);
+                            setCategorySearchQuery('');
+                          }}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            background: isSelected ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
+                            color: isSelected ? '#c084fc' : '#e2e8f0',
+                            fontSize: '12px',
+                            fontWeight: isSelected ? '800' : '500',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '8px',
+                            transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <div>
+                            <div>{cat.name}</div>
+                            <div style={{ fontSize: '10px', color: '#64748b' }}>{cat.group}</div>
+                          </div>
+                          {isSelected && <Check size={14} color="#c084fc" />}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Handle or Profile URL Input */}
@@ -427,7 +609,7 @@ export default function SocialMediaAuditStudio({
                 type="text"
                 value={targetHandle}
                 onChange={(e) => setTargetHandle(e.target.value)}
-                placeholder="e.g. @sidramotion or instagram.com/sidramotion"
+                placeholder="e.g. @username or instagram.com/profile"
                 onKeyDown={(e) => e.key === 'Enter' && handleRunAudit()}
                 style={{
                   width: '100%',
@@ -511,6 +693,105 @@ export default function SocialMediaAuditStudio({
         )}
       </div>
 
+      {/* Ready to Scan / Welcome Empty State */}
+      {!auditData && !isScanning && (
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(16px)',
+          border: '1.5px dashed rgba(255, 255, 255, 0.15)',
+          borderRadius: '20px',
+          padding: '44px 20px',
+          textAlign: 'center',
+          marginTop: '10px',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            width: '68px',
+            height: '68px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)',
+            border: '2px solid rgba(236, 72, 153, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px auto',
+            fontSize: '30px'
+          }}>
+            🎯
+          </div>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#ffffff', margin: '0 0 10px 0' }}>
+            Ready to Run Full Deep Audit
+          </h2>
+          <p style={{ maxWidth: '620px', margin: '0 auto 28px auto', fontSize: '14px', color: '#94a3b8', lineHeight: '1.6' }}>
+            Enter any public social media username or profile URL above and click <strong style={{ color: '#ec4899' }}>Run Deep AI Audit</strong>. Receive an instant breakdown of ghost followers, bio flaws, shadowban flags, and algorithm growth bottlenecks.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px',
+            maxWidth: '850px',
+            margin: '0 auto',
+            textAlign: 'left'
+          }}>
+            <div style={{
+              background: 'rgba(2, 6, 23, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '16px'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>🔍</div>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: '#f8fafc', marginBottom: '4px' }}>Deep Profile Diagnosis</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5' }}>
+                Detects engagement anomalies, true follower-to-like ratios, and high-conversion bio opportunities.
+              </div>
+            </div>
+
+            <div style={{
+              background: 'rgba(2, 6, 23, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '16px'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>🛡️</div>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: '#f8fafc', marginBottom: '4px' }}>Ghost &amp; Shadowban Radar</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5' }}>
+                Scans for dormant bot followers, engagement pod spam, and risky keywords causing reach demotion.
+              </div>
+            </div>
+
+            <div style={{
+              background: 'rgba(2, 6, 23, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '16px'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>📈</div>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: '#f8fafc', marginBottom: '4px' }}>Viral Content Blueprint</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5' }}>
+                Generates industry-specific reel scripts, viral hooks, and algorithm posting schedules.
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            marginTop: '28px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 14px',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            borderRadius: '20px',
+            fontSize: '11px',
+            fontWeight: '700',
+            color: '#34d399'
+          }}>
+            🔒 100% Privacy Guaranteed • No Passwords Required • Direct Public API Scanner
+          </div>
+        </div>
+      )}
+
       {auditData && (
         <>
           {/* Profile Overview Card & Real Vital Metrics */}
@@ -537,7 +818,7 @@ export default function SocialMediaAuditStudio({
                   alt={auditData.handle}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = '/sidra-logo.png';
+                    e.target.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(auditData.handle || 'user')}`;
                   }}
                   style={{
                     width: '68px',
@@ -1075,7 +1356,7 @@ export default function SocialMediaAuditStudio({
                 )}
               </div>
 
-              {/* Zero Ghost Followers Clean State (like on @sidramotion) */}
+              {/* Zero Ghost Followers Clean State */}
               {auditData.ghostFollowersList.length === 0 ? (
                 <div style={{
                   padding: '24px',

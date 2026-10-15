@@ -1,5 +1,5 @@
 // =========================================================================================
-//  SIDRA MOTION SOCIAL MEDIA AI DOCTOR & AUDIT ENGINE
+//  SELLER SUITE PRO - SOCIAL MEDIA AI DOCTOR & AUDIT ENGINE
 //  Deep Account Health, Ghost Follower Detection, Meta 2026 Community Standards & Comment Moderation
 // =========================================================================================
 
@@ -143,7 +143,7 @@ export function parseSocialInput(input) {
   cleaned = cleaned.split('?')[0].split('/')[0].split(' ')[0].trim();
 
   return {
-    handle: cleaned || 'sidramotion',
+    handle: cleaned || '',
     platform: detectedPlatform,
     extractedStats
   };
@@ -163,173 +163,26 @@ export const KNOWN_BANNED_HASHTAGS = [
   { tag: '#freefollowers', status: 'BANNED', risk: 'CRITICAL', reason: 'Blacklisted credential-stealing bot network tag.' }
 ];
 
-// Generate comprehensive profile audit
-export function generateSocialAudit(rawInput, categoryId = 'software_company', selectedPlatform = 'instagram', manualStats = null) {
-  const { handle, platform } = parseSocialInput(rawInput);
+// Generate comprehensive profile audit (100% dynamic - Zero hardcoded demo accounts)
+export function generateSocialAudit(rawInput, categoryId = 'digital_creator_influencer', selectedPlatform = 'instagram', manualStats = null) {
+  const { handle, platform, extractedStats } = parseSocialInput(rawInput);
+  if (!handle || !handle.trim()) return null;
+
   const activePlatform = selectedPlatform || platform;
-  const isSidraMotion = handle.toLowerCase() === 'sidramotion';
-  const resolvedCategory = isSidraMotion ? 'software_company' : categoryId;
-  const category = INDUSTRY_CATEGORIES.find(c => c.id === resolvedCategory) || INDUSTRY_CATEGORIES[0];
+  const category = INDUSTRY_CATEGORIES.find(c => c.id === categoryId) || INDUSTRY_CATEGORIES[0];
   const seed = hashString(handle + activePlatform);
 
-  // Exact real data for @sidramotion from user's live Instagram business account
-  if (isSidraMotion) {
-    const followers = manualStats?.followers !== undefined ? Number(manualStats.followers) : 4;
-    const following = manualStats?.following !== undefined ? Number(manualStats.following) : 20;
-    const posts = manualStats?.posts !== undefined ? Number(manualStats.posts) : 6;
-    const benchmark = category.benchmarkEng;
-
-    return {
-      handle: '@sidramotion',
-      displayName: 'Sidra Motion | Web Development & UI/UX',
-      platform: activePlatform,
-      categoryName: 'Software company',
-      avatarUrl: '/sidra-logo.png',
-      isVerifiedSeed: true,
-      isRealScan: true,
-      bioDetails: {
-        text: '🚀 Building Scalable Websites & Mobile Apps\n💻 Full-Stack Dev | Modern UI/UX | Custom SaaS\n📈 Helping startups & brands scale PAN-India\n📍 226003 • Lucknow',
-        link: 'https://sidramotion.com'
-      },
-      metrics: {
-        followers,
-        following,
-        posts,
-        engagementRate: 25.0,
-        benchmarkRate: benchmark,
-        engagementStatus: 'PRISTINE INITIAL SEED AUDIENCE',
-        ghostFollowerCount: 0,
-        ghostPercentage: 0.0,
-        activeFollowers: followers,
-        reachBoostPotential: '100% Clean Audience (0 Bots Detected)'
-      },
-      health: {
-        score: 98,
-        status: 'PRISTINE CLEAN ACCOUNT - ZERO BOTS',
-        color: '#10b981'
-      },
-      ghostFollowersList: [],
-      scannedPosts: [
-        {
-          id: 'post-1',
-          type: 'Carousel Post',
-          title: 'Custom Web & Mobile App Development Stack',
-          caption: 'Building high-performance React, Node & Cloud architectures for fast-growing startups. Seamless UI/UX crafted with purpose.',
-          issues: [],
-          reachStatus: '100% COMPLIANT - HEALTHY BUSINESS POST',
-          actionNeeded: 'None (Safe)',
-          thumbnailBg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)'
-        },
-        {
-          id: 'post-2',
-          type: 'Product Reel',
-          title: 'Seller Suite Pro E-Commerce Automation Tool',
-          caption: 'Automating multi-marketplace workflows for Indian Amazon, Flipkart & Meesho sellers. 100% Free operating suite by Sidra Motion.',
-          issues: [],
-          reachStatus: '100% COMPLIANT - HIGH VIRAL POTENTIAL',
-          actionNeeded: 'None (Safe)',
-          thumbnailBg: 'linear-gradient(135deg, #0284c7 0%, #082f49 100%)'
-        },
-        {
-          id: 'post-3',
-          type: 'UI/UX Showcase',
-          title: 'Modern Dashboard & Clean Design Systems',
-          caption: 'Transforming complex workflows into intuitive user experiences. Scalable component systems built for conversion.',
-          issues: [],
-          reachStatus: '100% COMPLIANT',
-          actionNeeded: 'None (Safe)',
-          thumbnailBg: 'linear-gradient(135deg, #7c3aed 0%, #2e1065 100%)'
-        },
-        {
-          id: 'post-4',
-          type: 'Tech Reel',
-          title: 'Full-Stack SaaS Architecture Behind the Scenes',
-          caption: 'Engineering resilient cloud backends, secure license authentication and real-time database sync for enterprise web apps.',
-          issues: [],
-          reachStatus: '100% COMPLIANT',
-          actionNeeded: 'None (Safe)',
-          thumbnailBg: 'linear-gradient(135deg, #d97706 0%, #451a03 100%)'
-        },
-        {
-          id: 'post-5',
-          type: 'Brand Story',
-          title: 'Sidra Motion: Motion With Purpose',
-          caption: 'Empowering Indian brands and entrepreneurs with world-class digital products and scalable software solutions.',
-          issues: [],
-          reachStatus: '100% COMPLIANT',
-          actionNeeded: 'None (Safe)',
-          thumbnailBg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)'
-        },
-        {
-          id: 'post-6',
-          type: 'HQ Post',
-          title: 'Sidra Motion Tech Hub - PIN 226003 Lucknow',
-          caption: 'Headquartered in Lucknow, delivering cutting-edge software engineering and custom digital solutions worldwide.',
-          issues: [],
-          reachStatus: '100% COMPLIANT',
-          actionNeeded: 'None (Safe)',
-          thumbnailBg: 'linear-gradient(135deg, #2563eb 0%, #1e1b4b 100%)'
-        }
-      ],
-      spamComments: [],
-      postingSlots: {
-        weekdayBest: ['11:30 AM - 1:00 PM (Tech Founders Lunch)', '6:30 PM - 8:30 PM (Business Decision Makers)'],
-        weekendBest: ['2:00 PM - 4:30 PM (Weekend Tech Reading)', '7:30 PM - 9:30 PM'],
-        worstTimesToAvoid: ['1:00 AM - 7:00 AM (Zero Business Traffic)'],
-        goldenWindowMinutes: 30,
-        goldenWindowExplanation: 'Meta tests your software walkthroughs with active professional accounts in the first 30 minutes. High saves and shares trigger Explore feed distribution!'
-      },
-      hookSuggestions: [
-        { type: 'Client Problem Hook', hook: 'Most businesses waste ₹2 Lakhs on slow websites before discovering this...', retentionBoost: '+64% 3s retention' },
-        { type: 'Tech Architecture Hook', hook: 'Watch how we built a full multi-marketplace seller tool in under 14 days...', retentionBoost: '+72% 3s retention' },
-        { type: 'UI/UX Before vs After', hook: 'Never launch a mobile app until you fix these 3 fatal checkout mistakes...', retentionBoost: '+58% 3s retention' },
-        { type: 'B2B Founder Secret', hook: 'If you want high-ticket clients from Instagram, do NOT post generic quotes...', retentionBoost: '+66% 3s retention' }
-      ],
-      bioAudit: {
-        hasLink: true,
-        linkDomain: 'sidramotion.com',
-        mobileSpeedScore: '98 / 100',
-        bounceRisk: 'LOW (Direct custom domain with fast SSL loading)',
-        issues: [
-          'Direct link to sidramotion.com is clean and professional!',
-          'Pro Tip: Add direct WhatsApp business chat link (wa.me/...) in bio for instant client leads'
-        ],
-        recommendedBio: `🚀 Building Scalable Websites & Mobile Apps\n💻 Full-Stack Dev | Modern UI/UX | Custom SaaS\n📈 Helping startups & brands scale PAN-India\n📍 226003 • Lucknow\n👇 Build Your Custom Web/App Today:\nsidramotion.com`,
-        recommendedDirectLink: 'https://sidramotion.com?utm_source=instagram&utm_medium=bio'
-      },
-      competitorAnalysis: {
-        topCompetitorCategory: 'Software Company, IT & Tech SaaS',
-        estimatedCompetitorEng: '3.8%',
-        viralContentFormats: [
-          'Behind-the-scenes timelapse of coding custom apps (3.6x reach)',
-          'Live software product walkthroughs (Seller Suite Pro) solving real pain points (4.2x reach)',
-          'Client website speed optimization before vs after results (2.9x reach)'
-        ],
-        trendingAudioNiche: 'Minimal Tech Synthwave & Indie Lo-Fi (Meta Commercial Library)'
-      }
-    };
-  }
-
-  // Exact real stats: prioritize live scraped metadata, pasted stats, or grounded accounts
-  const isZShuja = handle.toLowerCase() === 'zshuja_313';
-  const effectiveStats = manualStats || extractedStats || (isZShuja ? {
-    followers: 9662,
-    following: 3089,
-    posts: 92,
-    displayName: 'Syed Shuja | Videographer',
-    bio: '🎥 Reels • Photography • Event Films\n🎬 Creating visuals for brands & events\n📩 DM for bookings & collaborations\n📍 Lucknow',
-    avatarUrl: 'https://scontent-iad6-1.cdninstagram.com/v/t51.82787-19/848014620_18117468839102187_8228930380348397930_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=107&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=H2-M3tTV75oQ7kNvwEx1sQ5&_nc_oc=Ado6FcQdFaFJv2Z0DuL88X_68T-YCZMsxy5C2UGHhrdTB2Si9y8VftQgBw-eXWzL20U&_nc_zt=24&_nc_ht=scontent-iad6-1.cdninstagram.com&_nc_gid=VnYbTarCBcU-fjtiaUkUeA&_nc_ss=7c689&oh=00_AQPpXf-XesBXnL_KkIOJKZmEol_wf0Jk1VWCYpN672zESw&oe=6AD654DB',
-    isRealScan: true
-  } : null);
+  // Prioritize live scraped metadata from serverless API or user-entered stats
+  const effectiveStats = manualStats || extractedStats;
 
   const hasLiveStats = effectiveStats && (effectiveStats.followers !== undefined || effectiveStats.isRealScan);
-  const baseFollowers = hasLiveStats ? Number(effectiveStats.followers || 0) : (isSidraMotion ? 4 : 0);
-  const following = hasLiveStats ? Number(effectiveStats.following || 0) : (isSidraMotion ? 20 : 0);
-  const totalPosts = hasLiveStats ? Number(effectiveStats.posts || 0) : (isSidraMotion ? 6 : 0);
-  const realDisplayName = effectiveStats?.displayName || (isSidraMotion ? 'Sidra Motion | Web Development & UI/UX' : (isZShuja ? 'Syed Shuja | Videographer' : handle));
-  const realBio = effectiveStats?.bio || (isSidraMotion ? '🚀 Building Scalable Websites & Mobile Apps\n💻 Full-Stack Dev | Modern UI/UX | Custom SaaS\n📈 Helping startups & brands scale PAN-India\n📍 226003 • Lucknow' : (isZShuja ? '🎥 Reels • Photography • Event Films\n🎬 Creating visuals for brands & events\n📩 DM for bookings & collaborations\n📍 Lucknow' : ''));
-  const realAvatar = effectiveStats?.avatarUrl || (isSidraMotion ? '/sidra-logo.png' : `https://api.dicebear.com/7.x/identicon/svg?seed=${handle}&backgroundColor=0f172a`);
-  const isRealScan = Boolean(effectiveStats?.isRealScan || isSidraMotion || isZShuja);
+  const baseFollowers = hasLiveStats ? Number(effectiveStats.followers || 0) : 0;
+  const following = hasLiveStats ? Number(effectiveStats.following || 0) : 0;
+  const totalPosts = hasLiveStats ? Number(effectiveStats.posts || 0) : 0;
+  const realDisplayName = effectiveStats?.displayName || `@${handle}`;
+  const realBio = effectiveStats?.bio || '';
+  const realAvatar = effectiveStats?.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(handle)}&backgroundColor=0f172a`;
+  const isRealScan = Boolean(effectiveStats?.isRealScan);
 
   // Engagement calculation
   const benchmark = category.benchmarkEng;
