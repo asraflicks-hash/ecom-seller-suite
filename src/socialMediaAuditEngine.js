@@ -188,8 +188,8 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
   const realDisplayName = effectiveStats?.displayName || `@${handle}`;
   const realBio = effectiveStats?.bio || '';
   const realAvatar = effectiveStats?.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(handle)}&backgroundColor=0f172a`;
-  const isRealScan = Boolean(effectiveStats?.isRealScan);
-  const isEstimated = Boolean(!hasLiveStats || effectiveStats?.isEstimated);
+  const isRealScan = Boolean(effectiveStats?.isRealScan && !effectiveStats?.isEstimated);
+  const isEstimated = Boolean(effectiveStats?.isEstimated || !effectiveStats?.isRealScan);
 
   // Engagement calculation
   const benchmark = category.benchmarkEng;

@@ -207,7 +207,8 @@ export default function SocialMediaAuditStudio({
               displayName: json.displayName,
               bio: json.bio,
               avatarUrl: json.avatarUrl,
-              isRealScan: true
+              isRealScan: Boolean(json.isRealScan && !json.isEstimated),
+              isEstimated: Boolean(json.isEstimated)
             };
             setLiveFollowers(String(json.followers));
             setLiveFollowing(String(json.following));

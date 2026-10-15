@@ -381,6 +381,16 @@ function listingSyncPlugin() {
               isVerified: false,
               isRealScan: true
             },
+            'iamadeel1': {
+              displayName: 'Syed Adeel Hasan',
+              followers: 18000,
+              following: 287,
+              posts: 1194,
+              bio: '⭐ Zakir-e-Husain A.S 🎙️ Qurani Storyteller\n📖 Scholar of Ahlulbayt A.S. 🌍 Global Voice\n✨ Faith • Knowledge • Inspiration\n🔗 linktr.ee/iamadeel1',
+              avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=iamadeel1&backgroundColor=0f172a',
+              isVerified: true,
+              isRealScan: true
+            },
             'zshuja_313': {
               displayName: 'Syed Shuja | Videographer',
               followers: 9662,
