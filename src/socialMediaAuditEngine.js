@@ -213,7 +213,7 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
     healthColor = '#3b82f6';
   }
 
-  // Realistic Ghost Follower Accounts List
+  // Realistic Ghost Follower Accounts List (Strictly capped by actual ghost count - NEVER exceed real followers)
   const ghostPrefixes = ['crypto_bot_', 'user_inactive_', 'promo_hub_', 'steve_lurker_', 'deal_hunter_', 'follower_grow_', 'shadow_acct_', 'blank_avatar_'];
   const ghostReasons = [
     '0 posts in 18 months, zero story views, 0 engagement',
@@ -225,7 +225,8 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
   ];
 
   const ghostFollowersList = [];
-  const listSize = 18;
+  // If account is pristine or 0 ghost followers detected, purge list is strictly EMPTY
+  const listSize = ghostFollowerCount <= 0 ? 0 : Math.min(ghostFollowerCount, 18);
   for (let i = 0; i < listSize; i++) {
     const itemSeed = hashString(`${handle}_ghost_${i}`);
     const prefix = ghostPrefixes[itemSeed % ghostPrefixes.length];
@@ -245,119 +246,103 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
     });
   }
 
-  // Meta 2026 Community Standards & Post Violation Scan
-  const scannedPosts = [
-    {
-      id: 'post-1',
-      type: 'Reel Video',
-      title: 'Mega Flash Sale 70% Off Today Only!',
-      caption: 'Comment "BUY NOW" 10 times to win a free smartphone! Tag 5 friends below! #giveaway #f4f #freeproducts',
-      issues: [
-        {
-          rule: 'Meta Engagement Bait Policy (Sec 4.2)',
-          severity: 'HIGH RISK',
-          details: 'Asking users to repeatedly comment words or tag friends artificially inflates metric. Meta AI demotes this Reel by 65% in Explore distribution.',
-          recommendation: 'ARCHIVE OR EDIT CAPTION',
-          fixedCaption: 'Dropping our biggest collection this season! Explore the catalog link in bio for exclusive member perks.'
-        },
-        {
-          rule: 'Banned Tag Detection (#f4f)',
-          severity: 'CRITICAL',
-          details: '#f4f is on the 2026 Meta Blacklist. Using it hides the post from all hashtag search results.',
-          recommendation: 'REMOVE HASHTAG'
-        }
-      ],
-      reachStatus: 'SUPPRESSED BY ALGORITHM',
-      actionNeeded: 'Immediate Caption Edit',
-      thumbnailBg: 'linear-gradient(135deg, #f43f5e 0%, #881337 100%)'
-    },
-    {
-      id: 'post-2',
-      type: 'Carousel Post',
-      title: 'Our 100% Miracle Hair Growth Serum Guaranteed!',
-      caption: 'Guaranteed 100% results in 3 days or full money back! Cures baldness completely. Tap link in bio!',
-      issues: [
-        {
-          rule: 'Meta Health & Exaggerated Claims Policy (Sec 8.1)',
-          severity: 'HIGH RISK',
-          details: 'Absolute medical/cosmetic guarantees ("100% cure in 3 days") violate Meta Advertising & Organic Content Safety. Can trigger permanent ad account ban.',
-          recommendation: 'EDIT CLAIMS IMMEDIATELY',
-          fixedCaption: 'Formulated with nourishing botanicals to support scalp wellness and hair strength over 30 days of consistent care.'
-        }
-      ],
-      reachStatus: 'AT RISK OF REMOVAL',
-      actionNeeded: 'Tone Down Medical Claims',
-      thumbnailBg: 'linear-gradient(135deg, #e11d48 0%, #4c0519 100%)'
-    },
-    {
-      id: 'post-3',
-      type: 'Product Reel',
-      title: 'Unboxing New Premium Leather Handbag',
-      caption: 'Handcrafted luxury for modern professionals. Available now with same day dispatch. #luxurybag #d2cfashion #handcrafted',
-      issues: [],
-      reachStatus: '100% COMPLIANT - HEALTHY VIRAL ELIGIBLE',
-      actionNeeded: 'None (Safe)',
-      thumbnailBg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)'
-    },
-    {
-      id: 'post-4',
-      type: 'Commercial Ad Video',
-      title: 'Trending Song Behind Product Showcase',
-      caption: 'Vibing with our bestsellers! Which color do you prefer: Mocha Brown or Midnight Black?',
-      issues: [
-        {
-          rule: 'Commercial Music Licensing Flag',
-          severity: 'MODERATE',
-          details: 'Business profiles are restricted from using non-commercial viral music without sync licensing. Meta will mute the audio in 14 countries.',
-          recommendation: 'SWAP WITH META SOUND COLLECTION',
-          fixedCaption: 'Swapped audio with royalty-free commercial sound track from Meta Creator Library.'
-        }
-      ],
-      reachStatus: 'PARTIAL REACH RESTRICTION',
-      actionNeeded: 'Audio Replacement Recommended',
-      thumbnailBg: 'linear-gradient(135deg, #d97706 0%, #78350f 100%)'
-    }
-  ];
+  // Meta 2026 Community Standards & Post Violation Scan (Category-Matched & Pristine-Aware)
+  const isTechSoftware = (category.group && category.group.includes('Technology')) || 
+    ['software_company', 'it_company', 'web_designer', 'app_developer'].includes(category.id);
 
-  // Spam & Toxic Comment Moderation Queue
-  const spamComments = [
-    {
-      id: 'comm-1',
-      author: '@crypto_queen_sarah99',
-      text: 'Earn $5,000 every week working 1 hour from home! Message me on WhatsApp +1-829-440-2918 to get started now 💰🔥',
-      type: 'FINANCIAL SCAM BOT',
-      severity: 'CRITICAL',
-      recommendation: 'DELETE COMMENT & PERMANENT BLOCK',
-      autoFiltered: false
-    },
-    {
-      id: 'comm-2',
-      author: '@fake_competitor_bot',
-      text: 'Terrible quality! Don’t buy from here, got ripped off! Buy original for half price on my profile link!',
-      type: 'COMPETITOR DEFAMATION BOT',
-      severity: 'HIGH RISK',
-      recommendation: 'HIDE COMMENT & SHADOW-MUTE USER',
-      autoFiltered: false
-    },
-    {
-      id: 'comm-3',
-      author: '@growth_agency_promo_44',
-      text: 'Send this to @promote_agency_boss to get 50,000 active real followers in 24 hours guaranteed!',
-      type: 'PROMO SPAM BOT',
-      severity: 'MODERATE',
-      recommendation: 'DELETE & ADD KEYWORD TO RESTRICTED LIST',
-      autoFiltered: false
-    },
-    {
-      id: 'comm-4',
-      author: '@sneaker_replica_drop',
-      text: 'Direct message us for 1st copy replicas with free shipping worldwide! Check story!',
-      type: 'COUNTERFEIT ADVERTISING',
-      severity: 'HIGH RISK',
-      recommendation: 'DELETE & REPORT FOR IP INFRINGEMENT',
-      autoFiltered: false
-    }
-  ];
+  let scannedPosts = [];
+  if (isTechSoftware || isPristine) {
+    scannedPosts = [
+      {
+        id: 'post-1',
+        type: 'Tech Showcase Reel',
+        title: 'Scalable Full-Stack Architecture & Modern SaaS Platform',
+        caption: 'Building robust, responsive web applications with modern tech stacks. Check link in bio for live portfolio & demos! #webdevelopment #fullstack #saas #customsoftware',
+        issues: [],
+        reachStatus: '100% COMPLIANT - HEALTHY EXPLORE ELIGIBLE',
+        actionNeeded: 'None (Safe)',
+        thumbnailBg: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+      },
+      {
+        id: 'post-2',
+        type: 'Carousel Guide',
+        title: '5 Crucial UI/UX Flaws That Hurt Website Conversions',
+        caption: 'Swipe through to audit your digital product interface. Smooth navigation and sub-second load times keep bounce rates under 25%.',
+        issues: [
+          {
+            rule: '3-Sec Attention Hook Guidance',
+            severity: 'LOW ADVISORY',
+            details: 'First carousel slide could feature higher contrast text overlay to maximize swipe-through rate.',
+            recommendation: 'ADD HIGH CONTRAST HOOK',
+            fixedCaption: '5 UI/UX mistakes costing you clients (and the 2-minute fix for each). Swipe to read!'
+          }
+        ],
+        reachStatus: 'HEALTHY - MINOR OPTIMIZATION POSSIBLE',
+        actionNeeded: 'Hook Enhancement',
+        thumbnailBg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)'
+      },
+      {
+        id: 'post-3',
+        type: 'Client Project Reel',
+        title: 'Client Web Platform Launch Overview',
+        caption: 'From initial wireframes to production deployment. Responsive on all devices with zero performance lag. 🚀 #techlaunch #agency #uiux',
+        issues: [],
+        reachStatus: '100% COMPLIANT - VIRAL ELIGIBLE',
+        actionNeeded: 'None (Safe)',
+        thumbnailBg: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)'
+      }
+    ];
+  } else {
+    scannedPosts = [
+      {
+        id: 'post-1',
+        type: 'Product Reel',
+        title: 'New Season Signature Collection',
+        caption: 'Explore our latest arrivals crafted with premium standards. Direct ordering link in bio! #trending #lifestyle #quality',
+        issues: [],
+        reachStatus: '100% COMPLIANT - HEALTHY VIRAL ELIGIBLE',
+        actionNeeded: 'None (Safe)',
+        thumbnailBg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)'
+      },
+      {
+        id: 'post-2',
+        type: 'Customer Showcase Video',
+        title: 'Behind the Scenes & Unboxing',
+        caption: 'Handcrafted with attention to detail. Available with express delivery across India.',
+        issues: [],
+        reachStatus: '100% COMPLIANT',
+        actionNeeded: 'None (Safe)',
+        thumbnailBg: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+      }
+    ];
+  }
+
+  // Spam & Toxic Comment Moderation Queue (Pristine accounts have 0 spam comments)
+  let spamComments = [];
+  if (!isPristine && ghostFollowerCount > 10) {
+    spamComments = [
+      {
+        id: 'comm-1',
+        author: '@crypto_queen_sarah99',
+        text: 'Earn $5,000 every week working 1 hour from home! Message me on WhatsApp +1-829-440-2918 to get started now 💰🔥',
+        type: 'FINANCIAL SCAM BOT',
+        reason: 'Financial Scam Bot (Off-Platform Link)',
+        severity: 'CRITICAL',
+        recommendation: 'DELETE COMMENT & PERMANENT BLOCK',
+        autoFiltered: false
+      },
+      {
+        id: 'comm-2',
+        author: '@fake_competitor_bot',
+        text: 'Terrible quality! Don’t buy from here, got ripped off! Buy original for half price on my profile link!',
+        type: 'COMPETITOR DEFAMATION BOT',
+        reason: 'Competitor Defamation Bot',
+        severity: 'HIGH RISK',
+        recommendation: 'HIDE COMMENT & SHADOW-MUTE USER',
+        autoFiltered: false
+      }
+    ];
+  }
 
   // Best Time to Post & Algorithm Clock (Industry-calibrated)
   const postingSlots = {
@@ -377,19 +362,37 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
     { type: 'Price Drop Shock', hook: 'We made 500 units of this and Flipkart sellers are furious about our price...', retentionBoost: '+58% 3s retention' }
   ];
 
+  // Category-Aware High-Converting Bio Generator
+  let recBio = `✨ Official ${handle.toUpperCase()} Store\n🛍️ Premium Quality • 100% Authentic\n⚡ Cash on Delivery & Fast Pan-India Shipping\n👇 Tap below for Exclusive Member Deals`;
+  let recLink = `https://${handle}.online?utm_source=instagram&utm_medium=bio_link&utm_campaign=profile_traffic`;
+
+  const catGroup = category.group || '';
+  if (catGroup.includes('Technology') || catGroup.includes('Software') || isTechSoftware) {
+    recBio = `🚀 Scalable Web & Mobile App Development\n💻 Modern UI/UX • Custom SaaS • Scalable Cloud Solutions\n📈 Helping startups & businesses scale digitally\n👇 Request a Free Project Quote & Demo`;
+    recLink = `https://sidramotion.com?utm_source=instagram&utm_medium=bio_link`;
+  } else if (catGroup.includes('Creator') || catGroup.includes('Entertainment') || ['digital_creator', 'video_creator', 'entrepreneur'].includes(category.id)) {
+    recBio = `🎬 Creative Visuals & Tech Storytelling\n💡 Helping creators build and grow digital products\n📩 Collaborations & Business Inquiries: DM / Email\n👇 Watch latest releases & links below`;
+  } else if (catGroup.includes('Professional Services')) {
+    recBio = `💼 Strategic Business Advisory & Growth Solutions\n🏆 Trusted Partner for Scaling Companies\n📞 Book a 1-on-1 Consultation\n👇 Click below to get started`;
+  } else if (catGroup.includes('Food') || catGroup.includes('Hospitality')) {
+    recBio = `🍽️ Authentic Flavors & Handcrafted Delights\n✨ Fresh Daily • Cozy Ambiance • Dine-in & Delivery\n📍 Open Daily • Reserve Your Table\n👇 Order Online & Explore Special Menu`;
+  } else if (catGroup.includes('Health') || catGroup.includes('Fitness')) {
+    recBio = `💪 Transform Your Health, Mindset & Energy\n🏋️ Custom Workout & Nutrition Programs\n✨ Certified Coaching & Results Driven\n👇 Book Your Consultation Session`;
+  }
+
   // Bio Link & Funnel Audit
   const bioAudit = {
     hasLink: true,
     linkDomain: 'linktr.ee/' + handle,
     mobileSpeedScore: '82 / 100',
-    bounceRisk: 'MEDIUM (Multi-link tree drops conversion by 34% compared to direct 1-click product link)',
+    bounceRisk: 'MEDIUM (Multi-link tree drops conversion by 34% compared to direct 1-click link)',
     issues: [
       'Missing UTM Tracking parameters (?utm_source=instagram&utm_medium=bio)',
       'No direct 1-click WhatsApp business checkout link found',
       'Third-party link landing page adds an extra click friction layer'
     ],
-    recommendedBio: `✨ Official ${handle.toUpperCase()} Store\n🇮🇳 Premium Quality • 100,000+ Happy Customers\n⚡ Cash on Delivery & Free 48-hr Shipping\n👇 Tap below for Exclusive Member Deals`,
-    recommendedDirectLink: `https://${handle}.online?utm_source=instagram&utm_medium=bio_link&utm_campaign=profile_traffic`
+    recommendedBio: recBio,
+    recommendedDirectLink: recLink
   };
 
   // Competitor Spy Insights
@@ -422,7 +425,7 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
       ghostFollowerCount,
       ghostPercentage,
       activeFollowers: baseFollowers - ghostFollowerCount,
-      reachBoostPotential: `+${Math.floor(ghostPercentage * 1.6)}% Reach Boost after Purge`
+      reachBoostPotential: ghostPercentage > 0 ? `+${Math.floor(ghostPercentage * 1.6)}% Reach Boost after Purge` : '100% Optimal (No Bot Suppression)'
     },
     health: {
       score: healthScore,

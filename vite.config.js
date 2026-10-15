@@ -363,8 +363,8 @@ function listingSyncPlugin() {
           const knownProfiles = {
             'sidramotion': {
               displayName: 'Sidra Motion | Web Development & UI/UX',
-              followers: 4,
-              following: 20,
+              followers: 6,
+              following: 21,
               posts: 6,
               bio: '🚀 Building Scalable Websites & Mobile Apps\n💻 Full-Stack Dev | Modern UI/UX | Custom SaaS\n📈 Helping startups & brands scale digitally\n🌐 https://sidramotion.com',
               avatarUrl: '/sidra-logo.png',

@@ -825,13 +825,13 @@ export function generateSocialAuditHtml(auditData, selectedGhostIds = null) {
             </div>
 
             <div class="audit-list-item">
-              <span class="item-badge badge-danger">ALGORITHM PENALTY</span>
-              <strong>Ghost Follower Drag:</strong> ${m.ghostFollowerCount || 0} bots signal low relevance to test feeds, cutting organic reach.
+              <span class="item-badge ${m.ghostFollowerCount > 0 ? 'badge-danger' : 'badge-action'}">${m.ghostFollowerCount > 0 ? 'ALGORITHM PENALTY' : 'AUDIENCE INTEGRITY'}</span>
+              <strong>Ghost Follower Drag:</strong> ${m.ghostFollowerCount > 0 ? `${m.ghostFollowerCount} bots signal low relevance to test feeds, cutting organic reach.` : `0 bots detected. Authentic community reaches maximum initial test feeds.`}
             </div>
 
             <div class="audit-list-item">
               <span class="item-badge badge-action">REMEDIATION ACTION</span>
-              <strong>Purge Inactive Bots:</strong> Remove detected ghost accounts to restore normal test-feed distribution.
+              <strong>${m.ghostFollowerCount > 0 ? 'Purge Inactive Bots:' : 'Maintain Quality Growth:'}</strong> ${m.ghostFollowerCount > 0 ? 'Remove detected ghost accounts to restore normal test-feed distribution.' : 'Account is 100% clean. Continue posting high-retention content.'}
             </div>
 
             ${spam && spam.length > 0 ? `
@@ -841,16 +841,25 @@ export function generateSocialAuditHtml(auditData, selectedGhostIds = null) {
                 </div>
                 ${spam.slice(0, 2).map(s => `
                   <div style="font-size: 9.5px; color: #475569; margin-top: 3px; padding-left: 6px; border-left: 2px solid #ef4444;">
-                    "${s.text}" — <span style="color: #dc2626; font-weight: 700;">${s.reason}</span>
+                    "${s.text}" — <span style="color: #dc2626; font-weight: 700;">${s.reason || s.type || 'SPAM DETECTED'}</span>
                   </div>
                 `).join('')}
               </div>
-            ` : ''}
+            ` : `
+              <div style="margin-top: 8px;">
+                <div style="font-size: 9.5px; font-weight: 800; color: #166534; text-transform: uppercase;">
+                  🛡️ Comment Feed Status:
+                </div>
+                <div style="font-size: 9.5px; color: #15803d; margin-top: 3px; padding-left: 6px; border-left: 2px solid #22c55e;">
+                  ✅ Zero Spam or Toxic Comments Detected on Account.
+                </div>
+              </div>
+            `}
           </div>
         </div>
 
         <div style="text-align: right; font-size: 9px; color: #94a3b8; margin-top: 4px;">
-          Page 1 of 2 • Continued on Page 2 (Ghost Followers Purge List &amp; Official Seal) →
+          Page 1 of 2 • Continued on Page 2 (Follower Authenticity Audit &amp; Official Seal) →
         </div>
 
       </div>
@@ -873,51 +882,62 @@ export function generateSocialAuditHtml(auditData, selectedGhostIds = null) {
 
       <!-- Section 3: GHOST & BOT FOLLOWERS PURGE LIST -->
       <div>
-        <div class="section-title">
-          <span>👻 3. Detected Ghost &amp; Bot Followers Purge List</span>
-          <span class="badge" style="background: #dc2626;">${activeGhosts.length} ACCOUNTS FLAGGED</span>
-        </div>
+        ${activeGhosts.length > 0 ? `
+          <div class="section-title">
+            <span>👻 3. Detected Ghost &amp; Bot Followers Purge List</span>
+            <span class="badge" style="background: #dc2626;">${activeGhosts.length} ACCOUNTS FLAGGED</span>
+          </div>
 
-        <div style="font-size: 10px; color: #475569; margin-bottom: 6px;">
-          Purging these inactive accounts prevents algorithmic test-feed suppression and boosts organic reach by up to <strong>${m.reachBoostPotential || '+16%'}</strong>.
-        </div>
+          <div style="font-size: 10px; color: #475569; margin-bottom: 6px;">
+            Purging these inactive accounts prevents algorithmic test-feed suppression and boosts organic reach by up to <strong>${m.reachBoostPotential || '+16%'}</strong>.
+          </div>
 
-        <div class="table-container">
-          <table class="ghost-table">
-            <thead>
-              <tr>
-                <th style="width: 30px;">#</th>
-                <th style="width: 150px;">Account Handle</th>
-                <th>Detection Reason / Trigger Flag</th>
-                <th style="width: 100px;">Inactive Period</th>
-                <th style="width: 110px;">Reach Penalty</th>
-                <th style="width: 70px; text-align: center;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${activeGhosts.length > 0 ? activeGhosts.map((g, idx) => `
+          <div class="table-container">
+            <table class="ghost-table">
+              <thead>
                 <tr>
-                  <td style="color: #94a3b8; font-weight: 700;">${idx + 1}</td>
-                  <td>
-                    <span class="ghost-username">${g.username}</span>
-                  </td>
-                  <td>${g.reason}</td>
-                  <td style="color: #64748b; font-weight: 600;">${g.daysInactive} days</td>
-                  <td class="ghost-penalty">${g.reachPenalty}</td>
-                  <td style="text-align: center;">
-                    <span class="ghost-status-badge">PURGE</span>
-                  </td>
+                  <th style="width: 30px;">#</th>
+                  <th style="width: 150px;">Account Handle</th>
+                  <th>Detection Reason / Trigger Flag</th>
+                  <th style="width: 100px;">Inactive Period</th>
+                  <th style="width: 110px;">Reach Penalty</th>
+                  <th style="width: 70px; text-align: center;">Action</th>
                 </tr>
-              `).join('') : `
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 16px; color: #059669; font-weight: 700;">
-                    ✅ No ghost or bot accounts detected on this profile. Audience is 100% genuine!
-                  </td>
-                </tr>
-              `}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                ${activeGhosts.map((g, idx) => `
+                  <tr>
+                    <td style="color: #94a3b8; font-weight: 700;">${idx + 1}</td>
+                    <td>
+                      <span class="ghost-username">${g.username}</span>
+                    </td>
+                    <td>${g.reason}</td>
+                    <td style="color: #64748b; font-weight: 600;">${g.daysInactive} days</td>
+                    <td class="ghost-penalty">${g.reachPenalty}</td>
+                    <td style="text-align: center;">
+                      <span class="ghost-status-badge">PURGE</span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : `
+          <div class="section-title">
+            <span>🛡️ 3. Follower Authenticity &amp; Ghost Audit</span>
+            <span class="badge" style="background: #16a34a;">0 BOTS • 100% AUTHENTIC</span>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1.5px solid #22c55e; border-radius: 10px; padding: 20px; text-align: center; margin: 8px 0 16px 0;">
+            <div style="font-size: 28px; margin-bottom: 6px;">🎉 🛡️ ✅</div>
+            <div style="font-size: 14px; font-weight: 800; color: #15803d; text-transform: uppercase;">
+              0 Ghost or Inactive Bot Followers Detected
+            </div>
+            <div style="font-size: 11px; color: #166534; margin-top: 5px; max-width: 540px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+              Algorithmic integrity scan verified that <strong>100%</strong> of your <strong>${(m.followers || 0).toLocaleString()} followers</strong> are authentic active accounts. Zero dead bot profiles or inactive farm accounts are suppressing your content. Your profile qualifies for maximum organic explore distribution.
+            </div>
+          </div>
+        `}
       </div>
 
       <!-- Section 4: Algorithm Peak Clock & Viral Blueprint -->

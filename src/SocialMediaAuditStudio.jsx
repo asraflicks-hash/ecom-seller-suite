@@ -46,7 +46,7 @@ import {
 import SocialAuditPdfModal from './SocialAuditPdfModal.jsx';
 import { openPrintableSocialAuditReport } from './socialAuditPdfGenerator.js';
 
-export const DAILY_AUDIT_LIMIT = 2;
+export const DAILY_AUDIT_LIMIT = 10;
 
 const getTodayKey = () => new Date().toISOString().split('T')[0];
 
@@ -70,7 +70,12 @@ export default function SocialMediaAuditStudio({
   userProfile,
   isAdmin: initialIsAdmin = false
 }) {
-  // Daily Quota Tracking (Strictly 2 free scans per day per visitor)
+  // Check if current user is owner or admin (bypass daily limits completely)
+  const isOwnerOrAdmin = initialIsAdmin || 
+    localStorage.getItem('sidra_license_key_valid') === 'true' || 
+    localStorage.getItem('sidra_owner_logged_in') === 'true';
+
+  // Daily Quota Tracking (10 free scans per day per visitor)
   const [scansUsedToday, setScansUsedToday] = useState(() => getStoredScanUsage().count);
   const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
 
@@ -158,8 +163,8 @@ export default function SocialMediaAuditStudio({
       return;
     }
 
-    // Check daily scan quota (Unless admin or fine-tuning custom stats on existing profile)
-    if (!customStats && !initialIsAdmin) {
+    // Check daily scan quota (Unless owner/admin or fine-tuning custom stats on existing profile)
+    if (!customStats && !isOwnerOrAdmin) {
       const usage = getStoredScanUsage();
       if (usage.count >= DAILY_AUDIT_LIMIT) {
         setIsQuotaModalOpen(true);
@@ -223,8 +228,8 @@ export default function SocialMediaAuditStudio({
     setAuditData(results);
     setIsScanning(false);
 
-    // Increment daily usage count for new scans
-    if (!customStats && !initialIsAdmin) {
+    // Increment daily usage count for new scans (Bypassed for owner/admin)
+    if (!customStats && !isOwnerOrAdmin) {
       const usage = getStoredScanUsage();
       const updated = { date: getTodayKey(), count: usage.count + 1 };
       try {
@@ -487,41 +492,47 @@ export default function SocialMediaAuditStudio({
           </div>
 
           <div
-            onClick={() => scansUsedToday >= DAILY_AUDIT_LIMIT && setIsQuotaModalOpen(true)}
+            onClick={() => !isOwnerOrAdmin && scansUsedToday >= DAILY_AUDIT_LIMIT && setIsQuotaModalOpen(true)}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               padding: '4px 12px',
               borderRadius: '20px',
-              background: scansUsedToday >= DAILY_AUDIT_LIMIT
-                ? 'rgba(239, 68, 68, 0.2)'
-                : scansUsedToday === 1
-                  ? 'rgba(245, 158, 11, 0.2)'
-                  : 'rgba(16, 185, 129, 0.15)',
+              background: isOwnerOrAdmin
+                ? 'rgba(16, 185, 129, 0.15)'
+                : scansUsedToday >= DAILY_AUDIT_LIMIT
+                  ? 'rgba(239, 68, 68, 0.2)'
+                  : DAILY_AUDIT_LIMIT - scansUsedToday <= 2
+                    ? 'rgba(245, 158, 11, 0.2)'
+                    : 'rgba(16, 185, 129, 0.15)',
               border: `1.5px solid ${
-                scansUsedToday >= DAILY_AUDIT_LIMIT
-                  ? '#ef4444'
-                  : scansUsedToday === 1
-                    ? '#f59e0b'
-                    : '#10b981'
+                isOwnerOrAdmin
+                  ? '#10b981'
+                  : scansUsedToday >= DAILY_AUDIT_LIMIT
+                    ? '#ef4444'
+                    : DAILY_AUDIT_LIMIT - scansUsedToday <= 2
+                      ? '#f59e0b'
+                      : '#10b981'
               }`,
-              color: scansUsedToday >= DAILY_AUDIT_LIMIT
-                ? '#fca5a5'
-                : scansUsedToday === 1
-                  ? '#fbbf24'
-                  : '#86efac',
+              color: isOwnerOrAdmin
+                ? '#86efac'
+                : scansUsedToday >= DAILY_AUDIT_LIMIT
+                  ? '#fca5a5'
+                  : DAILY_AUDIT_LIMIT - scansUsedToday <= 2
+                    ? '#fbbf24'
+                    : '#86efac',
               fontSize: '11px',
               fontWeight: '800',
-              cursor: scansUsedToday >= DAILY_AUDIT_LIMIT ? 'pointer' : 'default'
+              cursor: (!isOwnerOrAdmin && scansUsedToday >= DAILY_AUDIT_LIMIT) ? 'pointer' : 'default'
             }}
           >
             <span>⚡ Daily Free Quota:</span>
             <span>
-              {initialIsAdmin
-                ? 'UNLIMITED (ADMIN)'
+              {isOwnerOrAdmin
+                ? 'UNLIMITED (ADMIN / PRO)'
                 : DAILY_AUDIT_LIMIT - scansUsedToday > 0
-                  ? `${DAILY_AUDIT_LIMIT - scansUsedToday} of ${DAILY_AUDIT_LIMIT} Scans Remaining Today`
+                  ? `${DAILY_AUDIT_LIMIT - scansUsedToday} of ${DAILY_AUDIT_LIMIT} Free Scans Remaining Today`
                   : `0/${DAILY_AUDIT_LIMIT} Used (Daily Limit Reached)`}
             </span>
           </div>
@@ -1023,8 +1034,15 @@ export default function SocialMediaAuditStudio({
                 textAlign: 'center',
                 boxSizing: 'border-box'
               }}>
-                <div style={{ background: '#0a0f1d', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700' }}>FOLLOWERS</div>
+                <div 
+                  onClick={() => setShowLiveCustomizer(true)}
+                  style={{ background: '#0a0f1d', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}
+                  title="Click to adjust/sync live follower count"
+                >
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <span>FOLLOWERS</span>
+                    <Edit3 size={10} color="#38bdf8" />
+                  </div>
                   <div style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', marginTop: '2px' }}>
                     {auditData.metrics.followers.toLocaleString()}
                   </div>
@@ -1140,12 +1158,12 @@ export default function SocialMediaAuditStudio({
                 onClick={() => setShowLiveCustomizer(!showLiveCustomizer)}
                 style={{
                   fontSize: '11px',
-                  fontWeight: '700',
-                  padding: '7px 12px',
+                  fontWeight: '800',
+                  padding: '7px 14px',
                   borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#cbd5e1',
+                  background: showLiveCustomizer ? 'rgba(56, 189, 248, 0.2)' : 'rgba(56, 189, 248, 0.1)',
+                  border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                  color: '#38bdf8',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1153,7 +1171,7 @@ export default function SocialMediaAuditStudio({
                 }}
               >
                 <Edit3 size={13} />
-                {showLiveCustomizer ? 'Hide Live Customizer' : 'Adjust Live Numbers (Followers / Posts)'}
+                {showLiveCustomizer ? 'Hide Live Customizer' : `✏️ Adjust / Sync Live Stats (Current: ${auditData.metrics.followers} Followers)`}
               </button>
             </div>
 
@@ -2619,7 +2637,7 @@ export default function SocialMediaAuditStudio({
               fontWeight: '800',
               marginBottom: '10px'
             }}>
-              DAILY AUDIT LIMIT REACHED (2/2 USED)
+              DAILY AUDIT LIMIT REACHED ({DAILY_AUDIT_LIMIT}/{DAILY_AUDIT_LIMIT} USED)
             </div>
 
             <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#ffffff', margin: '0 0 10px 0' }}>
@@ -2627,7 +2645,7 @@ export default function SocialMediaAuditStudio({
             </h3>
 
             <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', margin: '0 0 20px 0' }}>
-              To prevent automated scraping, protect public profile bandwidth, and ensure fair usage, free users are allocated <strong>2 deep profile audits per day</strong>. Your free quota resets tonight at 12:00 AM midnight.
+              To prevent automated scraping, protect public profile bandwidth, and ensure fair usage, free users are allocated <strong>{DAILY_AUDIT_LIMIT} deep profile audits per day</strong>. Your free quota resets tonight at 12:00 AM midnight.
             </p>
 
             <div style={{

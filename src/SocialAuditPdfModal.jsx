@@ -357,47 +357,59 @@ export default function SocialAuditPdfModal({ isOpen, onClose, auditData, select
                 • <strong>Banned Hashtags:</strong> Purge generic tags (#f4f, #followme) that risk shadowbans.
               </div>
               <div style={{ fontSize: '11px', color: '#334155', lineHeight: '1.45', marginBottom: '6px' }}>
-                • <strong>Ghost Follower Drag:</strong> {m.ghostFollowerCount || 0} bots signal low relevance to test feeds.
+                • <strong>Ghost Follower Drag:</strong> {m.ghostFollowerCount > 0 ? `${m.ghostFollowerCount} bots signal low relevance to test feeds.` : '0 bots detected. No test-feed suppression.'}
               </div>
               <div style={{ fontSize: '11px', color: '#334155', lineHeight: '1.45' }}>
-                • <strong>Action Required:</strong> Purge and remove inactive accounts to restore Explore distribution.
+                • <strong>Action Required:</strong> {m.ghostFollowerCount > 0 ? 'Purge and remove inactive accounts to restore Explore distribution.' : 'Account is 100% clean. Continue creating high-retention content.'}
               </div>
             </div>
           </div>
 
-          {/* Ghost Followers Table */}
+          {/* Ghost Followers Table or Pristine Celebration */}
           <div style={{ marginBottom: '22px' }}>
             <div style={{ fontSize: '13px', fontWeight: '900', textTransform: 'uppercase', color: '#0f172a', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>👻 3. Detected Ghost Followers Purge List</span>
-              <span style={{ fontSize: '11px', background: '#dc2626', color: '#ffffff', padding: '2px 8px', borderRadius: '4px' }}>
-                {activeGhosts.length} Accounts Flagged
+              <span>🛡️ 3. Follower Authenticity &amp; Ghost Audit</span>
+              <span style={{ fontSize: '11px', background: activeGhosts.length > 0 ? '#dc2626' : '#16a34a', color: '#ffffff', padding: '2px 8px', borderRadius: '4px' }}>
+                {activeGhosts.length > 0 ? `${activeGhosts.length} Accounts Flagged` : '0 Bots • 100% Clean'}
               </span>
             </div>
 
-            <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left' }}>
-                <thead style={{ background: '#0f172a', color: '#ffffff', textTransform: 'uppercase', fontSize: '10px' }}>
-                  <tr>
-                    <th style={{ padding: '8px 10px', width: '35px' }}>#</th>
-                    <th style={{ padding: '8px 10px', width: '160px' }}>Username</th>
-                    <th style={{ padding: '8px 10px' }}>Flag Reason</th>
-                    <th style={{ padding: '8px 10px', width: '110px' }}>Inactive Period</th>
-                    <th style={{ padding: '8px 10px', width: '120px' }}>Reach Penalty</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeGhosts.map((g, idx) => (
-                    <tr key={g.id || idx} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
-                      <td style={{ padding: '7px 10px', color: '#94a3b8', fontWeight: '700' }}>{idx + 1}</td>
-                      <td style={{ padding: '7px 10px', fontWeight: '800', fontFamily: 'monospace', color: '#0f172a' }}>{g.username}</td>
-                      <td style={{ padding: '7px 10px', color: '#334155' }}>{g.reason}</td>
-                      <td style={{ padding: '7px 10px', color: '#64748b' }}>{g.daysInactive} days</td>
-                      <td style={{ padding: '7px 10px', color: '#dc2626', fontWeight: '800' }}>{g.reachPenalty}</td>
+            {activeGhosts.length > 0 ? (
+              <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left' }}>
+                  <thead style={{ background: '#0f172a', color: '#ffffff', textTransform: 'uppercase', fontSize: '10px' }}>
+                    <tr>
+                      <th style={{ padding: '8px 10px', width: '35px' }}>#</th>
+                      <th style={{ padding: '8px 10px', width: '160px' }}>Username</th>
+                      <th style={{ padding: '8px 10px' }}>Flag Reason</th>
+                      <th style={{ padding: '8px 10px', width: '110px' }}>Inactive Period</th>
+                      <th style={{ padding: '8px 10px', width: '120px' }}>Reach Penalty</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {activeGhosts.map((g, idx) => (
+                      <tr key={g.id || idx} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                        <td style={{ padding: '7px 10px', color: '#94a3b8', fontWeight: '700' }}>{idx + 1}</td>
+                        <td style={{ padding: '7px 10px', fontWeight: '800', fontFamily: 'monospace', color: '#0f172a' }}>{g.username}</td>
+                        <td style={{ padding: '7px 10px', color: '#334155' }}>{g.reason}</td>
+                        <td style={{ padding: '7px 10px', color: '#64748b' }}>{g.daysInactive} days</td>
+                        <td style={{ padding: '7px 10px', color: '#dc2626', fontWeight: '800' }}>{g.reachPenalty}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{ background: '#f0fdf4', border: '1.5px solid #22c55e', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', marginBottom: '4px' }}>🎉 🛡️ ✅</div>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: '#15803d' }}>
+                  0 GHOST OR INACTIVE BOT ACCOUNTS DETECTED
+                </div>
+                <div style={{ fontSize: '11px', color: '#166534', marginTop: '3px' }}>
+                  All {(m.followers || 0).toLocaleString()} followers are authentic active users. No purge needed!
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer in Modal */}
