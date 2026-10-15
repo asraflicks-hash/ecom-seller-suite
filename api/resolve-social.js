@@ -5,7 +5,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const rawHandle = req.query.handle || '';
@@ -68,7 +68,8 @@ export default async function handler(req, res) {
       success: false,
       handle: cleanHandle,
       platform,
-      error: `Could not fetch live metadata for @${cleanHandle}. Profile might be private or rate-limited by ${platform}.`
+      error: `Could not fetch live metadata for @${cleanHandle}. Profile might be private or rate-limited by ${platform}.`,
+      debug: profileData || 'profileData was null'
     });
 
   } catch (err) {
@@ -97,6 +98,7 @@ async function scrapeInstagram(handle) {
   ];
 
   let lastAttempt = null;
+  const attempts = [];
   for (const ua of USER_AGENTS) {
     try {
       const response = await fetch(url, {
@@ -106,24 +108,23 @@ async function scrapeInstagram(handle) {
           'Accept-Language': 'en-US,en;q=0.9',
           'Cache-Control': 'no-cache'
         },
-        signal: AbortSignal.timeout(6000)
+        signal: AbortSignal.timeout(5000)
       });
-
-      if (!response.ok && response.status !== 200) continue;
 
       const html = await response.text();
       const parsed = parseInstagramHtml(html, handle, ua);
+      attempts.push({ ua: ua.slice(0, 25), status: response.status, len: html.length, parsedFound: parsed?.isFound, followers: parsed?.followers });
       if (parsed && parsed.isFound && (parsed.followers > 0 || parsed.posts > 0)) {
         return parsed;
       }
-      // If parsed had 0 followers and 0 posts, keep trying other user agents!
       lastAttempt = parsed;
     } catch (e) {
+      attempts.push({ ua: ua.slice(0, 25), error: e.message });
       continue;
     }
   }
 
-  return lastAttempt || null;
+  return { ...(lastAttempt || {}), attempts };
 }
 
 function parseInstagramHtml(html, handle) {
