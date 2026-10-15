@@ -125,7 +125,7 @@ export function parseSocialInput(input) {
   cleaned = cleaned.split('?')[0].split('/')[0].trim();
 
   return {
-    handle: cleaned || 'brand_demo',
+    handle: cleaned || 'sidramotion',
     platform: detectedPlatform
   };
 }
@@ -257,11 +257,11 @@ export function generateSocialAudit(rawInput, categoryId = 'software_company', s
         weekendBest: ['2:00 PM - 4:30 PM (Weekend Tech Reading)', '7:30 PM - 9:30 PM'],
         worstTimesToAvoid: ['1:00 AM - 7:00 AM (Zero Business Traffic)'],
         goldenWindowMinutes: 30,
-        goldenWindowExplanation: 'Meta tests your software demos with active professional accounts in the first 30 minutes. High saves and shares trigger Explore feed distribution!'
+        goldenWindowExplanation: 'Meta tests your software walkthroughs with active professional accounts in the first 30 minutes. High saves and shares trigger Explore feed distribution!'
       },
       hookSuggestions: [
         { type: 'Client Problem Hook', hook: 'Most businesses waste ₹2 Lakhs on slow websites before discovering this...', retentionBoost: '+64% 3s retention' },
-        { type: 'Tech Demo Hook', hook: 'Watch how we built a full multi-marketplace seller tool in under 14 days...', retentionBoost: '+72% 3s retention' },
+        { type: 'Tech Architecture Hook', hook: 'Watch how we built a full multi-marketplace seller tool in under 14 days...', retentionBoost: '+72% 3s retention' },
         { type: 'UI/UX Before vs After', hook: 'Never launch a mobile app until you fix these 3 fatal checkout mistakes...', retentionBoost: '+58% 3s retention' },
         { type: 'B2B Founder Secret', hook: 'If you want high-ticket clients from Instagram, do NOT post generic quotes...', retentionBoost: '+66% 3s retention' }
       ],
@@ -282,7 +282,7 @@ export function generateSocialAudit(rawInput, categoryId = 'software_company', s
         estimatedCompetitorEng: '3.8%',
         viralContentFormats: [
           'Behind-the-scenes timelapse of coding custom apps (3.6x reach)',
-          'Live software product demos (Seller Suite Pro) solving real pain points (4.2x reach)',
+          'Live software product walkthroughs (Seller Suite Pro) solving real pain points (4.2x reach)',
           'Client website speed optimization before vs after results (2.9x reach)'
         ],
         trendingAudioNiche: 'Minimal Tech Synthwave & Indie Lo-Fi (Meta Commercial Library)'

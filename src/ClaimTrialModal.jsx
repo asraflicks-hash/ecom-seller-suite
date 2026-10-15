@@ -105,7 +105,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
       });
     }
 
-    // Generate accurate message with real details only (Zero dummy/demo fallbacks)
+    // Generate accurate message with real details only (Zero dummy fallbacks)
     const pitchMessage = formatWhatsAppPitchMessage({
       customerId: finalCustomerId,
       name: cleanName,

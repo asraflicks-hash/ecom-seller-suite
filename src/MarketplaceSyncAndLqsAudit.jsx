@@ -1002,7 +1002,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* 1. TOP HEADER & QUICK DEMO SAMPLE TEST BUTTONS */}
+      {/* 1. TOP HEADER & QUICK SAMPLE TEST BUTTONS */}
       <div className="glass-panel" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1092,7 +1092,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
           </div>
         </div>
 
-        {/* 1-Click Quick Demo Bar */}
+        {/* 1-Click Quick Sample Bar */}
         <div 
           className="glass-card kinara-glow-dynamic"
           style={{

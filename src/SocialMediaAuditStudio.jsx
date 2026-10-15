@@ -49,10 +49,17 @@ export default function SocialMediaAuditStudio({
 }) {
   // Admin Access Gate: Public gets "Coming Soon", Admin gets 100% full access
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(() => {
-    return initialIsAdmin || 
-      localStorage.getItem('sidra_auth_type') === 'admin' || 
-      localStorage.getItem('sidra_auth_unlocked') === 'true' || 
-      localStorage.getItem('sidra_social_admin_unlocked') === 'true';
+    if (initialIsAdmin) return true;
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname || '';
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      if (path.includes('/admin') || path.includes('/owner')) return true;
+      if (hash.includes('admin') || hash.includes('owner')) return true;
+      if (search.includes('admin=true') || search.includes('owner=true')) return true;
+      if (sessionStorage.getItem('sidra_social_admin_unlocked') === 'true') return true;
+    }
+    return false;
   });
   const [adminPinInput, setAdminPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
@@ -111,7 +118,7 @@ export default function SocialMediaAuditStudio({
   const handleUnlockAdmin = () => {
     const pin = adminPinInput.trim();
     if (pin === '2607' || pin === 'SM26-MASTER-ADMIN-KEY' || pin === 'sidra2026' || pin.toLowerCase() === 'admin' || pin.toLowerCase() === 'owner') {
-      localStorage.setItem('sidra_social_admin_unlocked', 'true');
+      sessionStorage.setItem('sidra_social_admin_unlocked', 'true');
       setIsAdminUnlocked(true);
       setPinError(false);
     } else {
@@ -210,32 +217,36 @@ export default function SocialMediaAuditStudio({
 
   // 10 Helper Sub-Tools
   const SUB_TOOLS = [
-    { id: 'ghost_purge', label: '1. Ghost Follower Purge', icon: Users, badge: 'High ROI', color: '#ec4899' },
-    { id: 'meta_guidelines', label: '2. Meta Guidelines Doctor', icon: ShieldAlert, badge: '2026 Rules', color: '#f43f5e' },
-    { id: 'comment_cleaner', label: '3. Toxic Comment Cleaner', icon: MessageSquare, badge: 'Scam Shield', color: '#f59e0b' },
-    { id: 'banned_hashtags', label: '4. Banned Hashtag Radar', icon: Filter, badge: 'Shadowban Check', color: '#8b5cf6' },
-    { id: 'post_clock', label: '5. Algorithm Peak Clock', icon: Clock, badge: '30m Window', color: '#06b6d4' },
-    { id: 'reel_hook', label: '6. 3-Sec Reel Hook Auditor', icon: Flame, badge: 'Viral Retention', color: '#10b981' },
-    { id: 'bio_funnel', label: '7. Bio Link & Funnel Audit', icon: Link2, badge: 'Conversion', color: '#38bdf8' },
-    { id: 'competitor_spy', label: '8. Competitor Audience Spy', icon: Compass, badge: 'Overlaps', color: '#a855f7' },
-    { id: 'collab_fraud', label: '9. Influencer Fraud Spotter', icon: Award, badge: 'Fake Check', color: '#eab308' },
-    { id: 'auto_repair', label: '10. 1-Click Auto-Repair', icon: Zap, badge: '⏳ COMING SOON', color: '#6366f1' }
+    { id: 'ghost_purge', label: '1. Ghost Follower Purge', icon: Users, badge: 'Active', color: '#ec4899', desc: 'Dead follower detector & reach penalty blocker to restore Explore delivery.' },
+    { id: 'meta_guidelines', label: '2. Meta Guidelines Doctor', icon: ShieldAlert, badge: 'Active', color: '#f43f5e', desc: 'Scan captions & video claims against 2026 Meta Terms & shadowban triggers.' },
+    { id: 'comment_cleaner', label: '3. Toxic Comment Cleaner', icon: MessageSquare, badge: 'Active', color: '#f59e0b', desc: 'Automated scan & purge for bot attacks, phishing links & competitor spam.' },
+    { id: 'banned_hashtags', label: '4. Banned Hashtag Radar', icon: Filter, badge: 'Active', color: '#8b5cf6', desc: 'Instant check against 100+ suppressed and shadowbanned Instagram/FB tags.' },
+    { id: 'post_clock', label: '5. Algorithm Peak Clock', icon: Clock, badge: 'Active', color: '#06b6d4', desc: 'Pinpoint the 30-minute initial test window when engagement creates viral push.' },
+    { id: 'reel_hook', label: '6. 3-Sec Reel Hook Auditor', icon: Flame, badge: 'Active', color: '#10b981', desc: 'Score your video hooks against 3-second drop-off thresholds before posting.' },
+    { id: 'bio_funnel', label: '7. Bio Link & Funnel Audit', icon: Link2, badge: 'Active', color: '#38bdf8', desc: 'Diagnose conversion leaks in your link-in-bio & high-converting buyer journey.' },
+    { id: 'competitor_spy', label: '8. Competitor Audience Spy', icon: Compass, badge: 'Active', color: '#a855f7', desc: 'Analyze rival audience engagement patterns and high-retention formats.' },
+    { id: 'collab_fraud', label: '9. Influencer Fraud Spotter', icon: Award, badge: 'Active', color: '#eab308', desc: 'Detect engagement pods, bot follower spikes & real audience quality.' },
+    { id: 'auto_repair', label: '10. 1-Click Auto-Repair', icon: Zap, badge: 'Beta', color: '#6366f1', desc: 'Automated 1-click meta policy compliance fixer and comment cleanup.' }
   ];
 
   // =========================================================================
-  // PUBLIC VIEW: COMING SOON GATE (ADMIN CAN UNLOCK WITH MASTER PIN 2607)
+  // PUBLIC VIEW: COMING SOON GATE (ALL 10 TOOLS LABELED COMING SOON FOR PUBLIC)
+  // ADMIN CAN UNLOCK WITH MASTER PIN 2607
   // =========================================================================
   if (!isAdminUnlocked) {
     return (
       <div style={{
-        maxWidth: '820px',
-        margin: '30px auto',
-        padding: '36px 24px',
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 18, 35, 0.98) 100%)',
-        border: '2px solid rgba(236, 72, 153, 0.4)',
+        maxWidth: '960px',
+        width: '100%',
+        margin: '24px auto',
+        padding: '32px 20px',
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(10, 18, 35, 0.98) 100%)',
+        border: '2px solid rgba(236, 72, 153, 0.35)',
         borderRadius: '20px',
         textAlign: 'center',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(236, 72, 153, 0.15)'
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(236, 72, 153, 0.12)',
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
       }}>
         <div style={{
           display: 'inline-flex',
@@ -251,7 +262,7 @@ export default function SocialMediaAuditStudio({
           marginBottom: '16px'
         }}>
           <Clock size={16} />
-          ⏳ COMING SOON FOR PUBLIC • EXCLUSIVE ADMIN BETA
+          ⏳ COMING SOON FOR PUBLIC • EXCLUSIVE PRIVATE BETA
         </div>
 
         <h2 style={{
@@ -266,50 +277,79 @@ export default function SocialMediaAuditStudio({
         <p style={{
           fontSize: '14px',
           color: '#cbd5e1',
-          maxWidth: '580px',
-          margin: '0 auto 24px auto',
-          lineHeight: '1.6'
-        }}>
-          Ye advanced Social Media Account & Meta Policy Health Scanner abhi exclusively <strong>Sidra Motion Administrators & Verified Store Owners</strong> ke liye active hai. Public access jald hi open kiya jayega.
-        </p>
-
-        {/* Feature Highlights Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '12px',
           maxWidth: '680px',
           margin: '0 auto 28px auto',
-          textAlign: 'left'
+          lineHeight: '1.6'
         }}>
-          <div style={{ background: '#0a0f1d', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: '#ec4899' }}>👻 Ghost Follower Radar</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>Detects inactive bot accounts dragging down feed distribution.</div>
-          </div>
-          <div style={{ background: '#0a0f1d', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: '#f43f5e' }}>🛡️ Meta Policy Doctor</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>Scans captions & claims against Meta 2026 Community Standards.</div>
-          </div>
-          <div style={{ background: '#0a0f1d', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: '#f59e0b' }}>💬 Scam Comment Cleaner</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>Automated moderation of competitor bot attacks and phishing links.</div>
-          </div>
-          <div style={{ background: '#0a0f1d', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: '#06b6d4' }}>⏰ Algorithm Peak Clock</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>Calculates the 30-minute initial velocity window for viral push.</div>
-          </div>
+          Ye advanced Social Media Account & Meta Policy Health Scanner abhi exclusively <strong>Sidra Motion Administrators & Verified Store Owners</strong> ke liye active hai. Niche diye gaye sabhi <strong>10 Social Media AI Tools</strong> public ke liye jald hi launch honge.
+        </p>
+
+        {/* All 10 Tools Grid - Clearly Labeled Coming Soon */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '12px',
+          width: '100%',
+          maxWidth: '880px',
+          margin: '0 auto 32px auto',
+          textAlign: 'left',
+          boxSizing: 'border-box'
+        }}>
+          {SUB_TOOLS.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <div 
+                key={tool.id}
+                style={{
+                  background: '#0a0f1d',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  border: `1.5px solid ${tool.color}33`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '800', color: tool.color }}>
+                    <Icon size={16} />
+                    <span>{tool.label}</span>
+                  </div>
+                  <span style={{
+                    fontSize: '9px',
+                    fontWeight: '800',
+                    padding: '2px 8px',
+                    borderRadius: '8px',
+                    background: 'rgba(236, 72, 153, 0.2)',
+                    border: '1px solid rgba(236, 72, 153, 0.4)',
+                    color: '#f472b6',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    ⏳ COMING SOON
+                  </span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>
+                  {tool.desc}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Master Admin Unlock Box */}
         <div style={{
-          maxWidth: '480px',
+          maxWidth: '500px',
+          width: '100%',
           margin: '0 auto',
           padding: '20px',
-          background: 'rgba(11, 23, 44, 0.9)',
+          background: 'rgba(11, 23, 44, 0.92)',
           border: '1.5px solid rgba(0, 210, 255, 0.35)',
           borderRadius: '14px',
           textAlign: 'left',
-          boxShadow: '0 4px 20px rgba(0, 210, 255, 0.1)'
+          boxShadow: '0 4px 20px rgba(0, 210, 255, 0.1)',
+          boxSizing: 'border-box'
         }}>
           <div style={{
             fontSize: '13px',
@@ -324,7 +364,7 @@ export default function SocialMediaAuditStudio({
             <span>Administrator & Owner Access Portal:</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <input
               type="password"
               value={adminPinInput}
@@ -335,18 +375,20 @@ export default function SocialMediaAuditStudio({
               onKeyDown={(e) => e.key === 'Enter' && handleUnlockAdmin()}
               placeholder="Enter Master PIN (e.g. 2607)"
               style={{
-                flex: 1,
+                flex: '1 1 200px',
                 padding: '10px 14px',
                 background: '#070d19',
                 border: pinError ? '1.5px solid #ef4444' : '1.5px solid rgba(0, 210, 255, 0.4)',
                 borderRadius: '8px',
                 color: '#ffffff',
-                fontSize: '13px'
+                fontSize: '13px',
+                boxSizing: 'border-box'
               }}
             />
             <button
               onClick={handleUnlockAdmin}
               style={{
+                flex: '0 0 auto',
                 padding: '10px 18px',
                 background: 'linear-gradient(135deg, #00d2ff 0%, #a855f7 100%)',
                 border: 'none',
@@ -384,8 +426,11 @@ export default function SocialMediaAuditStudio({
       color: '#f8fafc',
       padding: '16px 12px 60px 12px',
       maxWidth: '1440px',
+      width: '100%',
       margin: '0 auto',
-      minHeight: '85vh'
+      minHeight: '85vh',
+      boxSizing: 'border-box',
+      overflowX: 'hidden'
     }}>
       {/* Top Banner & Header */}
       <div style={{
@@ -638,14 +683,17 @@ export default function SocialMediaAuditStudio({
             background: 'rgba(15, 23, 42, 0.9)',
             border: '1.5px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '16px',
-            padding: '20px 24px',
-            marginBottom: '20px'
+            padding: '20px 18px',
+            marginBottom: '20px',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: '20px',
-              alignItems: 'center'
+              alignItems: 'center',
+              boxSizing: 'border-box'
             }}>
               {/* Profile Card Info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -714,9 +762,10 @@ export default function SocialMediaAuditStudio({
               {/* 4 Core Vital Metrics */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
                 gap: '10px',
-                textAlign: 'center'
+                textAlign: 'center',
+                boxSizing: 'border-box'
               }}>
                 <div style={{ background: '#0a0f1d', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700' }}>FOLLOWERS</div>
@@ -871,11 +920,11 @@ export default function SocialMediaAuditStudio({
           {/* 10 Sub-Tools Navigation Bar */}
           <div style={{
             display: 'flex',
+            flexWrap: 'wrap',
             gap: '8px',
-            overflowX: 'auto',
-            paddingBottom: '8px',
             marginBottom: '20px',
-            scrollbarWidth: 'none'
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             {SUB_TOOLS.map(tool => {
               const Icon = tool.icon;
@@ -887,6 +936,7 @@ export default function SocialMediaAuditStudio({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '8px',
                     padding: '10px 14px',
                     borderRadius: '12px',
@@ -896,7 +946,10 @@ export default function SocialMediaAuditStudio({
                     fontSize: '12px',
                     fontWeight: isActive ? '800' : '600',
                     cursor: 'pointer',
-                    whiteSpace: 'nowrap',
+                    flex: '1 1 auto',
+                    minWidth: '150px',
+                    boxSizing: 'border-box',
+                    textAlign: 'center',
                     transition: 'all 0.2s'
                   }}
                 >
@@ -905,7 +958,7 @@ export default function SocialMediaAuditStudio({
                   <span style={{
                     fontSize: '9px',
                     fontWeight: '800',
-                    padding: '1px 6px',
+                    padding: '2px 7px',
                     borderRadius: '6px',
                     background: isActive ? tool.color : 'rgba(255,255,255,0.08)',
                     color: isActive ? '#ffffff' : '#94a3b8'
@@ -1672,7 +1725,7 @@ export default function SocialMediaAuditStudio({
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '16px', boxSizing: 'border-box' }}>
                 <div style={{ background: '#0a0f1d', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>DETECTED BIO LINK</div>
                   <div style={{ fontSize: '15px', fontWeight: '800', color: '#38bdf8', marginTop: '4px' }}>

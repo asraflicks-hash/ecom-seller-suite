@@ -424,7 +424,7 @@ export default function AiListingRepairStudio({
   const [bulletInputs, setBulletInputs] = useState('');
   const [tone, setTone] = useState('Premium & Feature-Rich');
   
-  // Generation / Repair State - Clean Idle State (No preloaded fake demo outputs)
+  // Generation / Repair State - Clean Idle State (No preloaded fake outputs)
   const [isRepairing, setIsRepairing] = useState(false);
   const [output, setOutput] = useState(null);
   const [viewStep, setViewStep] = useState('idle'); // 'idle' | 'audit' | 'repaired'

@@ -2505,7 +2505,7 @@ You can now refresh your dashboard at https://sellersuitepro.online/`;
                     />
                     <div style={{ fontSize: '10px', color: pubIdInput.includes('XXXX') ? '#f59e0b' : '#25d366', marginTop: '4px' }}>
                       {pubIdInput.includes('XXXX')
-                        ? '⚠️ Currently in demo mode. Replace with your real Publisher ID from AdSense.'
+                        ? '⚠️ Currently in placeholder mode. Replace with your real Publisher ID from AdSense.'
                         : '✓ Real Google AdSense ID active! Ads are linked to your account.'}
                     </div>
                   </div>

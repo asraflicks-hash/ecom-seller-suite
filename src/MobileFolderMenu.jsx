@@ -53,7 +53,7 @@ export default function MobileFolderMenu({
     { id: 'rto-calculator', label: '6. RTO & Net Profit Calculator', icon: DollarSign, tag: 'Stop Loss', glowColor: '#10b981', desc: 'Courier Return Penalties & Cashflow Simulation' },
     { id: 'listing-audit', label: '7. Sync & RGB Listing Score', icon: Gauge, tag: 'RGB Live Audit', glowColor: '#25d366', desc: 'Live A9 Audit Engine & Instant Fixes' },
     { id: 'omnichannel-seo', label: '8. 360° Omnichannel SEO & Marketing', icon: Globe, tag: '8 Kits • 76 Types', glowColor: '#a855f7', desc: 'Google Shopping, WhatsApp & Ad Copy' },
-    { id: 'social-doctor', label: '9. Social Media AI Doctor', icon: Share2, tag: 'Ghost & Meta Audit', glowColor: '#ec4899', desc: 'Dead Follower Purge, Meta Policy Scanner & Spam Cleaner' },
+    { id: 'social-doctor', label: '9. Social Media AI Doctor', icon: Share2, tag: 'Coming Soon', glowColor: '#ec4899', desc: 'Dead Follower Purge, Meta Policy Scanner & Spam Cleaner' },
   ];
 
   return (
