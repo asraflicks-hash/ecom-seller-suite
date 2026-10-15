@@ -47,7 +47,7 @@ export default function SocialMediaAuditStudio({
   userProfile,
   isAdmin: initialIsAdmin = false
 }) {
-  // Admin Access Gate: Public gets "Coming Soon", Admin gets 100% full access
+  // Access Gate: Public gets pure "Coming Soon", Owner/Admin gets 100% full access
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(() => {
     if (initialIsAdmin) return true;
     if (typeof window !== 'undefined') {
@@ -57,12 +57,10 @@ export default function SocialMediaAuditStudio({
       if (path.includes('/admin') || path.includes('/owner')) return true;
       if (hash.includes('admin') || hash.includes('owner')) return true;
       if (search.includes('admin=true') || search.includes('owner=true')) return true;
-      if (sessionStorage.getItem('sidra_social_admin_unlocked') === 'true') return true;
+      if (sessionStorage.getItem('sidra_owner_session_unlocked') === 'true') return true;
     }
     return false;
   });
-  const [adminPinInput, setAdminPinInput] = useState('');
-  const [pinError, setPinError] = useState(false);
 
   // Input & scan states
   const [targetHandle, setTargetHandle] = useState('sidramotion');
@@ -115,16 +113,6 @@ export default function SocialMediaAuditStudio({
     handleScoreHook('Stop buying expensive software until you see this custom build!');
   }, []);
 
-  const handleUnlockAdmin = () => {
-    const pin = adminPinInput.trim();
-    if (pin === '2607' || pin === 'SM26-MASTER-ADMIN-KEY' || pin === 'sidra2026' || pin.toLowerCase() === 'admin' || pin.toLowerCase() === 'owner') {
-      sessionStorage.setItem('sidra_social_admin_unlocked', 'true');
-      setIsAdminUnlocked(true);
-      setPinError(false);
-    } else {
-      setPinError(true);
-    }
-  };
 
   const handleRunAudit = (
     handleToAudit = targetHandle,
@@ -230,8 +218,8 @@ export default function SocialMediaAuditStudio({
   ];
 
   // =========================================================================
-  // PUBLIC VIEW: COMING SOON GATE (ALL 10 TOOLS LABELED COMING SOON FOR PUBLIC)
-  // ADMIN CAN UNLOCK WITH MASTER PIN 2607
+  // PUBLIC VIEW: CLEAN COMING SOON ROADMAP (ALL 10 TOOLS LABELED COMING SOON)
+  // ZERO ADMIN CONTROLS OR MENTIONS SHOWN IN PUBLIC
   // =========================================================================
   if (!isAdminUnlocked) {
     return (
@@ -262,7 +250,7 @@ export default function SocialMediaAuditStudio({
           marginBottom: '16px'
         }}>
           <Clock size={16} />
-          ⏳ COMING SOON FOR PUBLIC • EXCLUSIVE PRIVATE BETA
+          ⏳ COMING SOON • NEW FEATURE ROADMAP
         </div>
 
         <h2 style={{
@@ -281,7 +269,7 @@ export default function SocialMediaAuditStudio({
           margin: '0 auto 28px auto',
           lineHeight: '1.6'
         }}>
-          Ye advanced Social Media Account & Meta Policy Health Scanner abhi exclusively <strong>Sidra Motion Administrators & Verified Store Owners</strong> ke liye active hai. Niche diye gaye sabhi <strong>10 Social Media AI Tools</strong> public ke liye jald hi launch honge.
+          Ye advanced 360° Social Media Account & Meta Guidelines Health Scanner bohot jald Seller Suite Pro par sabhi sellers ke liye live kiya ja raha hai. Niche diye gaye sabhi <strong>10 Social Media AI Tools</strong> jald hi launch honge.
         </p>
 
         {/* All 10 Tools Grid - Clearly Labeled Coming Soon */}
@@ -338,81 +326,25 @@ export default function SocialMediaAuditStudio({
           })}
         </div>
 
-        {/* Master Admin Unlock Box */}
+        {/* Status Pill */}
         <div style={{
-          maxWidth: '500px',
+          maxWidth: '580px',
           width: '100%',
           margin: '0 auto',
-          padding: '20px',
-          background: 'rgba(11, 23, 44, 0.92)',
-          border: '1.5px solid rgba(0, 210, 255, 0.35)',
-          borderRadius: '14px',
-          textAlign: 'left',
-          boxShadow: '0 4px 20px rgba(0, 210, 255, 0.1)',
+          padding: '16px 20px',
+          background: 'rgba(15, 23, 42, 0.7)',
+          border: '1px solid rgba(236, 72, 153, 0.25)',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          color: '#cbd5e1',
+          fontSize: '13px',
           boxSizing: 'border-box'
         }}>
-          <div style={{
-            fontSize: '13px',
-            fontWeight: '800',
-            color: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '10px'
-          }}>
-            <Lock size={16} color="#00d2ff" />
-            <span>Administrator & Owner Access Portal:</span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <input
-              type="password"
-              value={adminPinInput}
-              onChange={(e) => {
-                setAdminPinInput(e.target.value);
-                setPinError(false);
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && handleUnlockAdmin()}
-              placeholder="Enter Master PIN (e.g. 2607)"
-              style={{
-                flex: '1 1 200px',
-                padding: '10px 14px',
-                background: '#070d19',
-                border: pinError ? '1.5px solid #ef4444' : '1.5px solid rgba(0, 210, 255, 0.4)',
-                borderRadius: '8px',
-                color: '#ffffff',
-                fontSize: '13px',
-                boxSizing: 'border-box'
-              }}
-            />
-            <button
-              onClick={handleUnlockAdmin}
-              style={{
-                flex: '0 0 auto',
-                padding: '10px 18px',
-                background: 'linear-gradient(135deg, #00d2ff 0%, #a855f7 100%)',
-                border: 'none',
-                borderRadius: '8px',
-                color: '#ffffff',
-                fontSize: '12px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              Unlock Admin Portal
-            </button>
-          </div>
-
-          {pinError && (
-            <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px' }}>
-              ❌ Invalid PIN. Please enter Master PIN (2607) or valid Admin Key.
-            </div>
-          )}
-
-          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '10px' }}>
-            Admin Hint: Master PIN is <strong>2607</strong>.
-          </div>
+          <Sparkles size={18} color="#ec4899" />
+          <span>Meta 2026 Graph Engine integration in progress • Rolling out soon!</span>
         </div>
       </div>
     );

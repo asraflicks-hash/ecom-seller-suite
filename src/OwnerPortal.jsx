@@ -49,6 +49,7 @@ import {
 import { verifyMasterPin, setOwnerMasterPin, checkPinLockoutStatus } from './securityUtils.js';
 import { getStoredOfficialUpdates, saveOfficialUpdates } from './CommunityUpdatesModal.jsx';
 import { getAdConfig, saveAdConfig } from './adConfig.js';
+import SocialMediaAuditStudio from './SocialMediaAuditStudio.jsx';
 
 const OFFICIAL_PRESEED_KEYS = [
   'SM26-MASTER-ADMIN-KEY',
@@ -1124,7 +1125,8 @@ You can now refresh your dashboard at https://sellersuitepro.online/`;
             { id: 'claims', label: `3. Seller Profiles & Lock Control (${claimedProfiles.length}${activeChangeRequest ? ' • 🔔 Request' : ''})`, icon: UserCheck },
             { id: 'broadcast', label: `4. Community Updates Broadcast 📢 (${officialUpdates.length})`, icon: Radio },
             { id: 'settings', label: '5. Security & Password Settings', icon: Shield },
-            { id: 'monetization', label: '6. 💰 Ads & Google AdSense Monetization', icon: DollarSign }
+            { id: 'monetization', label: '6. 💰 Ads & Google AdSense Monetization', icon: DollarSign },
+            { id: 'social-doctor', label: '7. 🩺 Social Media AI Doctor Studio (100% Unlocked)', icon: Share2 }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeSubTab === tab.id;
@@ -2670,6 +2672,22 @@ You can now refresh your dashboard at https://sellersuitepro.online/`;
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 7: SOCIAL MEDIA AI DOCTOR & AUDIT STUDIO (100% UNLOCKED FOR OWNER) */}
+        {activeSubTab === 'social-doctor' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
+            <SocialMediaAuditStudio
+              copyToClipboard={(text, key) => {
+                navigator.clipboard?.writeText(text);
+                setCopiedKeyText(key);
+                setTimeout(() => setCopiedKeyText(''), 2500);
+              }}
+              copiedKey={copiedKeyText}
+              userProfile={{}}
+              isAdmin={true}
+            />
           </div>
         )}
 
