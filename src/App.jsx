@@ -80,6 +80,7 @@ import AdBanner from './AdBanner.jsx';
 import SeoContentDirectory from './SeoContentDirectory.jsx';
 import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
 import MobileFolderMenu from './MobileFolderMenu.jsx';
+import SocialMediaAuditStudio from './SocialMediaAuditStudio.jsx';
 import { TopFreeIndiaTickerBanner } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
@@ -191,6 +192,7 @@ export default function App() {
       case 'rto-calculator': return '6. RTO & Net Profit Calculator';
       case 'listing-audit': return '7. Sync & RGB Listing Score';
       case 'omnichannel-seo': return '8. 360° Omnichannel SEO & Marketing Suite';
+      case 'social-doctor': return '9. Social Media AI Doctor & Audit';
       default: return 'Suite Module';
     }
   };
@@ -205,6 +207,7 @@ export default function App() {
       case 'rto-calculator': return { icon: DollarSign, color: '#10b981', tag: 'Stop Courier Loss' };
       case 'listing-audit': return { icon: Gauge, color: '#25d366', tag: 'RGB Live Audit' };
       case 'omnichannel-seo': return { icon: Globe, color: '#a855f7', tag: '76 Marketing Types' };
+      case 'social-doctor': return { icon: Share2, color: '#ec4899', tag: 'Ghost & Meta Audit' };
       default: return { icon: Sparkles, color: '#00d2ff', tag: 'Suite Tool' };
     }
   };
@@ -1075,10 +1078,10 @@ export default function App() {
                 letterSpacing: '0.3px',
                 minHeight: '40px'
               }}
-              title="Open Mobile Suite Menu (All 8 Tools & Controls)"
+              title="Open Mobile Suite Menu (All 9 Tools & Controls)"
             >
               <FolderOpen size={16} color="#00d2ff" />
-              <span>Menu (8) ▾</span>
+              <span>Menu (9) ▾</span>
             </button>
           </div>
         )}
@@ -1104,6 +1107,7 @@ export default function App() {
               { id: 'rto-calculator', label: '6. RTO & Net Profit Calculator', icon: DollarSign, tag: 'Stop Loss', glowColor: '#10b981' },
               { id: 'listing-audit', label: '7. Sync & RGB Listing Score', icon: Gauge, tag: 'RGB Live Audit', glowColor: '#25d366' },
               { id: 'omnichannel-seo', label: '8. 360° Omnichannel SEO & Marketing', icon: Globe, tag: '8 Kits & 76 Types', glowColor: '#a855f7' },
+              { id: 'social-doctor', label: '9. Social Doctor & Audit', icon: Share2, tag: 'Ghost & Meta Audit', glowColor: '#ec4899' },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -1177,6 +1181,7 @@ export default function App() {
                 { id: 'rto-calculator', label: '6. RTO Calc', icon: DollarSign, color: '#10b981' },
                 { id: 'listing-audit', label: '7. RGB Audit', icon: Gauge, color: '#25d366' },
                 { id: 'omnichannel-seo', label: '8. 360° SEO', icon: Globe, color: '#a855f7' },
+                { id: 'social-doctor', label: '9. Social Doctor', icon: Share2, color: '#ec4899' },
               ].map(chip => {
                 const Icon = chip.icon;
                 const isActive = activeTab === chip.id;
@@ -1268,6 +1273,14 @@ export default function App() {
                     copyToClipboard={copyToClipboard} 
                     copiedKey={copiedKey} 
                     isPreviewMode={false}
+                  />
+                )}
+                {activeTab === 'social-doctor' && (
+                  <SocialMediaAuditStudio 
+                    copyToClipboard={copyToClipboard} 
+                    copiedKey={copiedKey} 
+                    userProfile={userProfile}
+                    isAdmin={isAdminRoute || hasFullLicense}
                   />
                 )}
               </>
