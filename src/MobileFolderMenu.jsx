@@ -23,7 +23,11 @@ import {
   Bell, 
   ExternalLink,
   Share2,
-  Wrench
+  Wrench,
+  LogIn,
+  UserPlus,
+  LogOut,
+  Database
 } from 'lucide-react';
 import { AmazonLogo, FlipkartLogo, MeeshoLogo } from './MarketplaceLogos.jsx';
 
@@ -33,6 +37,10 @@ export default function MobileFolderMenu({
   activeTab,
   onSelectTab,
   currentCustomerId,
+  supabaseUser,
+  onOpenLogin,
+  onOpenSignup,
+  onSignOut,
   onOpenSyncMonitor,
   onOpenCommunity,
   onOpenProfile,
@@ -293,6 +301,165 @@ export default function MobileFolderMenu({
               );
             })}
           </div>
+        </div>
+
+        {/* Section 1.5: Supabase Auth & Seller Account */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.08) 0%, rgba(37, 211, 102, 0.08) 100%)',
+          border: '1.5px solid rgba(0, 210, 255, 0.25)',
+          borderRadius: '16px',
+          padding: '12px 14px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Database size={13} color="#00d2ff" />
+              <span style={{ fontSize: '11px', fontWeight: '800', color: '#00d2ff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Supabase Seller Auth
+              </span>
+            </div>
+            <span style={{
+              fontSize: '9px',
+              fontWeight: '800',
+              padding: '2px 6px',
+              borderRadius: '8px',
+              background: supabaseUser ? 'rgba(37, 211, 102, 0.2)' : 'rgba(251, 191, 36, 0.2)',
+              color: supabaseUser ? '#25d366' : '#fbbf24',
+              border: `1px solid ${supabaseUser ? 'rgba(37, 211, 102, 0.4)' : 'rgba(251, 191, 36, 0.4)'}`
+            }}>
+              {supabaseUser ? '🟢 LOGGED IN' : '⚡ SIGN IN NEEDED'}
+            </span>
+          </div>
+
+          {supabaseUser ? (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #00d2ff, #25d366)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '800',
+                  color: '#050b14',
+                  fontSize: '12px'
+                }}>
+                  {(supabaseUser.user_metadata?.full_name || supabaseUser.email || 'S')[0].toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '800', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {supabaseUser.user_metadata?.full_name || 'Verified Seller'}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {supabaseUser.email}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenProfile();
+                    onClose();
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '7px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Manage Profile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSignOut && onSignOut();
+                    onClose();
+                  }}
+                  style={{
+                    padding: '7px 12px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.35)',
+                    color: '#f87171',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <LogOut size={11} /> Logout
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                Apna cloud account banayein ya login karein Supabase database ke sath:
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenLogin && onOpenLogin();
+                    onClose();
+                  }}
+                  style={{
+                    padding: '9px 12px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                    border: 'none',
+                    color: '#050b14',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    boxShadow: '0 0 12px rgba(0, 210, 255, 0.3)'
+                  }}
+                >
+                  <LogIn size={13} /> Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenSignup && onOpenSignup();
+                    onClose();
+                  }}
+                  style={{
+                    padding: '9px 12px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
+                    border: 'none',
+                    color: '#050b14',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    boxShadow: '0 0 12px rgba(37, 211, 102, 0.3)'
+                  }}
+                >
+                  <UserPlus size={13} /> Sign Up
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Section 2: Quick Status Pills & Action Controls (From User's Screenshot) */}

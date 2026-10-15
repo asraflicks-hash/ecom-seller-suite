@@ -25,6 +25,8 @@ import {
   Eye,
   EyeOff,
   LogOut,
+  LogIn,
+  Database,
   ShoppingBag,
   Key,
   Plus,
@@ -82,6 +84,14 @@ import SellerServicesAndDealsHub from './SellerServicesAndDealsHub.jsx';
 import MobileFolderMenu from './MobileFolderMenu.jsx';
 import SocialMediaAuditStudio from './SocialMediaAuditStudio.jsx';
 import DeveloperModeAlertModal, { HeaderDevModeIndicator } from './DeveloperModeAlertModal.jsx';
+import AuthModal from './AuthModal.jsx';
+import { 
+  supabase, 
+  isSupabaseConfigured, 
+  getCurrentSession, 
+  onAuthChange, 
+  signOutUser 
+} from './supabaseClient.js';
 import { TopFreeIndiaTickerBanner } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
 import { 
@@ -133,6 +143,66 @@ export default function App() {
       hasCustomPassword: localStorage.getItem('sidra_has_password') === 'true'
     };
   });
+
+  // Supabase Authentication State
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+  const [supabaseUser, setSupabaseUser] = useState(null);
+
+  // Sync Supabase Authentication Session & User Profile
+  useEffect(() => {
+    getCurrentSession().then(session => {
+      if (session?.user) {
+        setSupabaseUser(session.user);
+        const u = session.user;
+        const uName = u.user_metadata?.full_name || u.email?.split('@')[0] || '';
+        const uPhone = u.user_metadata?.phone || '';
+        if (uName) localStorage.setItem('sidra_user_name', uName);
+        if (u.email) localStorage.setItem('sidra_user_email', u.email);
+        if (uPhone) localStorage.setItem('sidra_user_phone', uPhone);
+        localStorage.setItem('sidra_auth_type', 'supabase');
+        localStorage.setItem('sidra_auth_unlocked', 'true');
+        setIsAuthenticated(true);
+        setUserProfile(prev => ({
+          ...prev,
+          name: uName || prev.name,
+          email: u.email || prev.email,
+          phone: uPhone || prev.phone,
+          authType: 'supabase'
+        }));
+      }
+    });
+
+    const sub = onAuthChange((event, session) => {
+      if (session?.user) {
+        setSupabaseUser(session.user);
+        const u = session.user;
+        const uName = u.user_metadata?.full_name || u.email?.split('@')[0] || '';
+        const uPhone = u.user_metadata?.phone || '';
+        if (uName) localStorage.setItem('sidra_user_name', uName);
+        if (u.email) localStorage.setItem('sidra_user_email', u.email);
+        if (uPhone) localStorage.setItem('sidra_user_phone', uPhone);
+        localStorage.setItem('sidra_auth_type', 'supabase');
+        localStorage.setItem('sidra_auth_unlocked', 'true');
+        setIsAuthenticated(true);
+        setUserProfile(prev => ({
+          ...prev,
+          name: uName || prev.name,
+          email: u.email || prev.email,
+          phone: uPhone || prev.phone,
+          authType: 'supabase'
+        }));
+      } else if (event === 'SIGNED_OUT') {
+        setSupabaseUser(null);
+      }
+    });
+
+    return () => {
+      if (sub && typeof sub.unsubscribe === 'function') {
+        sub.unsubscribe();
+      }
+    };
+  }, []);
 
   // Authorized License Keys - Synchronized live via localStorage
   const OFFICIAL_ACTIVE_KEYS = [
@@ -1059,24 +1129,122 @@ export default function App() {
               <Briefcase size={13} color="#25d366" /> 💼 Agency Services & Deals
             </button>
 
-            <button
-              onClick={() => setShowAccountModal(true)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                color: '#cbd5e1',
-                fontSize: '11px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontWeight: '700'
-              }}
-            >
-              <User size={12} color="#00d2ff" /> Seller Profile
-            </button>
+            {/* Supabase Authentication Header Controls */}
+            {supabaseUser ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAccountModal(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.15) 0%, rgba(37, 211, 102, 0.15) 100%)',
+                    border: '1.5px solid rgba(0, 210, 255, 0.4)',
+                    padding: '5px 12px',
+                    borderRadius: '20px',
+                    color: '#f8fafc',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontWeight: '700',
+                    boxShadow: '0 0 12px rgba(0, 210, 255, 0.2)'
+                  }}
+                  title={`Logged in as ${supabaseUser.email} (Supabase Auth)`}
+                >
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 6px #25d366' }}></span>
+                  <User size={12} color="#00d2ff" />
+                  <span>{supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0]}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await signOutUser();
+                    setSupabaseUser(null);
+                  }}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    padding: '5px 10px',
+                    borderRadius: '16px',
+                    color: '#f87171',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: '700'
+                  }}
+                  title="Logout from Supabase"
+                >
+                  <LogOut size={11} /> Logout
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
+                  style={{
+                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                    border: 'none',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    color: '#050b14',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontWeight: '800',
+                    boxShadow: '0 0 14px rgba(0, 210, 255, 0.35)'
+                  }}
+                  title="Login with Supabase"
+                >
+                  <LogIn size={12} /> Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthModalMode('signup'); setShowAuthModal(true); }}
+                  style={{
+                    background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
+                    border: 'none',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    color: '#050b14',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontWeight: '800',
+                    boxShadow: '0 0 14px rgba(37, 211, 102, 0.3)'
+                  }}
+                  title="Sign Up with Supabase"
+                >
+                  <UserPlus size={12} /> Sign Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAccountModal(true)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    color: '#cbd5e1',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontWeight: '700'
+                  }}
+                  title="Seller Profile & Workstation Settings"
+                >
+                  <User size={12} color="#00d2ff" /> Profile
+                </button>
+              </div>
+            )}
             </div>
           </div>
         ) : (
@@ -1141,6 +1309,55 @@ export default function App() {
                 <span>Mobile</span>
               </button>
             </div>
+
+            {/* Mobile Supabase Auth Trigger */}
+            {supabaseUser ? (
+              <button
+                type="button"
+                onClick={() => setShowAccountModal(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  background: 'rgba(37, 211, 102, 0.15)',
+                  border: '1px solid rgba(37, 211, 102, 0.4)',
+                  color: '#25d366',
+                  padding: '6px 10px',
+                  borderRadius: '16px',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer'
+                }}
+                title={`Logged in as ${supabaseUser.email}`}
+              >
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25d366' }}></span>
+                <User size={12} color="#25d366" />
+                <span>{supabaseUser.user_metadata?.full_name?.split(' ')[0] || 'Seller'}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                  border: 'none',
+                  color: '#050b14',
+                  padding: '6px 11px',
+                  borderRadius: '16px',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  boxShadow: '0 0 12px rgba(0, 210, 255, 0.35)'
+                }}
+                title="Login / Sign Up via Supabase"
+              >
+                <LogIn size={12} />
+                <span>Login</span>
+              </button>
+            )}
 
             {/* Glowing Mobile Folder Menu Trigger Button */}
             <button
@@ -1607,6 +1824,16 @@ export default function App() {
       {showAccountModal && (
         <AccountSettingsModal 
           userProfile={userProfile}
+          supabaseUser={supabaseUser}
+          onOpenAuth={(mode) => {
+            setShowAccountModal(false);
+            setAuthModalMode(mode || 'login');
+            setShowAuthModal(true);
+          }}
+          onSupabaseSignOut={async () => {
+            await signOutUser();
+            setSupabaseUser(null);
+          }}
           onClose={() => setShowAccountModal(false)}
           onUpdateProfile={(updated) => {
             setUserProfile(prev => ({ ...prev, ...updated }));
@@ -1723,6 +1950,21 @@ export default function App() {
           setShowMobileFolderMenu(false);
         }}
         currentCustomerId={currentCustomerId}
+        supabaseUser={supabaseUser}
+        onOpenLogin={() => {
+          setShowMobileFolderMenu(false);
+          setAuthModalMode('login');
+          setShowAuthModal(true);
+        }}
+        onOpenSignup={() => {
+          setShowMobileFolderMenu(false);
+          setAuthModalMode('signup');
+          setShowAuthModal(true);
+        }}
+        onSignOut={async () => {
+          await signOutUser();
+          setSupabaseUser(null);
+        }}
         onOpenSyncMonitor={() => {
           setShowMobileFolderMenu(false);
           setShowSyncMonitor(true);
@@ -1759,6 +2001,17 @@ export default function App() {
           setShowMobileFolderMenu(false);
           const el = document.getElementById('seller-growth-hub');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
+
+      {/* Supabase Authentication Modal (Login / Sign Up / Forgot Password / Supabase Settings) */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialMode={authModalMode}
+        currentUser={supabaseUser}
+        onAuthSuccess={(user) => {
+          setSupabaseUser(user);
         }}
       />
 
@@ -1921,7 +2174,7 @@ export default function App() {
 // -------------------------------------------------------------
 // ACCOUNT SETTINGS & PROFILE MANAGEMENT MODAL
 // -------------------------------------------------------------
-function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout }) {
+function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout, supabaseUser, onOpenAuth, onSupabaseSignOut }) {
   const [activeTab, setActiveTab] = useState('profile');
   const [sellerName, setSellerName] = useState(() => localStorage.getItem('sidra_user_name') || userProfile.name || '');
   const [sellerPhone, setSellerPhone] = useState(() => localStorage.getItem('sidra_user_phone') || userProfile.phone || '');
@@ -2190,6 +2443,28 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
             }}
           >
             Password & Security
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('supabase')}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'supabase' ? 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)' : 'transparent',
+              color: activeTab === 'supabase' ? '#050b14' : '#94a3b8',
+              fontSize: '12px',
+              fontWeight: activeTab === 'supabase' ? '800' : '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px'
+            }}
+          >
+            <Database size={13} />
+            <span>Supabase Auth</span>
           </button>
         </div>
 
@@ -2941,6 +3216,163 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout 
               >
                 <LogOut size={13} /> Sign Out & Lock
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: SUPABASE CLOUD AUTH */}
+        {activeTab === 'supabase' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="glass-card" style={{ padding: '18px', borderRadius: '16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(0,210,255,0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '800', color: '#00d2ff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Database size={15} /> Supabase Authentication & Database
+                </span>
+                <span style={{
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  padding: '3px 8px',
+                  borderRadius: '10px',
+                  background: isSupabaseConfigured() ? 'rgba(37, 211, 102, 0.2)' : 'rgba(251, 191, 36, 0.2)',
+                  color: isSupabaseConfigured() ? '#25d366' : '#fbbf24',
+                  border: `1px solid ${isSupabaseConfigured() ? 'rgba(37, 211, 102, 0.4)' : 'rgba(251, 191, 36, 0.4)'}`
+                }}>
+                  {isSupabaseConfigured() ? '🟢 LIVE CONNECTED' : '⚡ DEMO / UNCONFIGURED'}
+                </span>
+              </div>
+
+              {supabaseUser ? (
+                <div>
+                  <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 12px 0' }}>
+                    Aap currently Supabase cloud database se connected aur logged in hain:
+                  </p>
+                  <div style={{
+                    background: 'rgba(15, 23, 42, 0.7)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    marginBottom: '16px',
+                    fontSize: '11px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}>
+                    <div>📧 <b>Email:</b> <span style={{ color: '#00d2ff' }}>{supabaseUser.email}</span></div>
+                    <div>👤 <b>Name:</b> <span>{supabaseUser.user_metadata?.full_name || 'Seller'}</span></div>
+                    {supabaseUser.user_metadata?.phone && (
+                      <div>📞 <b>Phone:</b> <span>{supabaseUser.user_metadata.phone}</span></div>
+                    )}
+                    <div>🆔 <b>User UUID:</b> <code style={{ color: '#38bdf8' }}>{supabaseUser.id}</code></div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={onSupabaseSignOut}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid #ef4444',
+                        color: '#f87171',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        fontWeight: '700',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <LogOut size={14} /> Sign Out from Supabase
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOpenAuth && onOpenAuth('login')}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        color: '#fff',
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        fontWeight: '700',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Switch Account
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 14px 0', lineHeight: '1.5' }}>
+                    Supabase ek high-speed PostgreSQL cloud database aur auth engine hai. Aap yahan se apna account bana sakte hain ya login kar sakte hain:
+                  </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                    <button
+                      type="button"
+                      onClick={() => onOpenAuth && onOpenAuth('login')}
+                      style={{
+                        background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                        color: '#050b14',
+                        border: 'none',
+                        padding: '11px',
+                        borderRadius: '10px',
+                        fontWeight: '800',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <LogIn size={14} /> Login with Supabase
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOpenAuth && onOpenAuth('signup')}
+                      style={{
+                        background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
+                        color: '#050b14',
+                        border: 'none',
+                        padding: '11px',
+                        borderRadius: '10px',
+                        fontWeight: '800',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <UserPlus size={14} /> Create Account (Sign Up)
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth && onOpenAuth('login')}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(0, 210, 255, 0.25)',
+                      color: '#00d2ff',
+                      padding: '8px',
+                      borderRadius: '8px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      fontWeight: '700'
+                    }}
+                  >
+                    ⚙️ Enter / Update Supabase Project API Keys
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
