@@ -225,7 +225,7 @@ export default function App() {
       case 'rto-calculator': return { icon: DollarSign, color: '#10b981', tag: 'Stop Courier Loss' };
       case 'listing-audit': return { icon: Gauge, color: '#25d366', tag: 'RGB Live Audit' };
       case 'omnichannel-seo': return { icon: Globe, color: '#a855f7', tag: '76 Marketing Types' };
-      case 'social-doctor': return { icon: Share2, color: '#ec4899', tag: 'Coming Soon' };
+      case 'social-doctor': return { icon: Share2, color: '#ec4899', tag: 'Live Audit' };
       default: return { icon: Sparkles, color: '#00d2ff', tag: 'Suite Tool' };
     }
   };
@@ -1193,7 +1193,7 @@ export default function App() {
               { id: 'rto-calculator', label: '6. RTO & Net Profit Calculator', icon: DollarSign, tag: 'Stop Loss', glowColor: '#10b981' },
               { id: 'listing-audit', label: '7. Sync & RGB Listing Score', icon: Gauge, tag: 'RGB Live Audit', glowColor: '#25d366' },
               { id: 'omnichannel-seo', label: '8. 360° Omnichannel SEO & Marketing', icon: Globe, tag: '8 Kits & 76 Types', glowColor: '#a855f7' },
-              { id: 'social-doctor', label: '9. Social Doctor & Audit', icon: Share2, tag: 'Coming Soon', glowColor: '#ec4899' },
+              { id: 'social-doctor', label: '9. Social Doctor & Audit', icon: Share2, tag: 'Live Audit', glowColor: '#ec4899' },
             ].map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;

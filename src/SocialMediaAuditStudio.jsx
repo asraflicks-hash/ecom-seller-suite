@@ -244,154 +244,18 @@ export default function SocialMediaAuditStudio({
 
   // 10 Helper Sub-Tools
   const SUB_TOOLS = [
-    { id: 'ghost_purge', label: '1. Ghost Follower Purge', icon: Users, badge: 'Active', color: '#ec4899', desc: 'Dead follower detector & reach penalty blocker to restore Explore delivery.' },
-    { id: 'meta_guidelines', label: '2. Meta Guidelines Doctor', icon: ShieldAlert, badge: 'Active', color: '#f43f5e', desc: 'Scan captions & video claims against 2026 Meta Terms & shadowban triggers.' },
-    { id: 'comment_cleaner', label: '3. Toxic Comment Cleaner', icon: MessageSquare, badge: 'Active', color: '#f59e0b', desc: 'Automated scan & purge for bot attacks, phishing links & competitor spam.' },
-    { id: 'banned_hashtags', label: '4. Banned Hashtag Radar', icon: Filter, badge: 'Active', color: '#8b5cf6', desc: 'Instant check against 100+ suppressed and shadowbanned Instagram/FB tags.' },
-    { id: 'post_clock', label: '5. Algorithm Peak Clock', icon: Clock, badge: 'Active', color: '#06b6d4', desc: 'Pinpoint the 30-minute initial test window when engagement creates viral push.' },
-    { id: 'reel_hook', label: '6. 3-Sec Reel Hook Auditor', icon: Flame, badge: 'Active', color: '#10b981', desc: 'Score your video hooks against 3-second drop-off thresholds before posting.' },
-    { id: 'bio_funnel', label: '7. Bio Link & Funnel Audit', icon: Link2, badge: 'Active', color: '#38bdf8', desc: 'Diagnose conversion leaks in your link-in-bio & high-converting buyer journey.' },
-    { id: 'competitor_spy', label: '8. Competitor Audience Spy', icon: Compass, badge: 'Active', color: '#a855f7', desc: 'Analyze rival audience engagement patterns and high-retention formats.' },
-    { id: 'collab_fraud', label: '9. Influencer Fraud Spotter', icon: Award, badge: 'Active', color: '#eab308', desc: 'Detect engagement pods, bot follower spikes & real audience quality.' },
-    { id: 'auto_repair', label: '10. 1-Click Auto-Repair', icon: Zap, badge: 'Beta', color: '#6366f1', desc: 'Automated 1-click meta policy compliance fixer and comment cleanup.' }
+    { id: 'ghost_purge', label: '1. Ghost Follower Purge', icon: Users, badge: 'Active Radar', color: '#ec4899', desc: 'Dead follower detector & reach penalty blocker to restore Explore delivery.' },
+    { id: 'meta_guidelines', label: '2. Meta Guidelines Doctor', icon: ShieldAlert, badge: 'Live Scanner', color: '#f43f5e', desc: 'Scan captions & video claims against 2026 Meta Terms & shadowban triggers.' },
+    { id: 'comment_cleaner', label: '3. Toxic Comment Cleaner', icon: MessageSquare, badge: 'Audit Active', color: '#f59e0b', desc: 'Automated scan & purge for bot attacks, phishing links & competitor spam.' },
+    { id: 'banned_hashtags', label: '4. Banned Hashtag Radar', icon: Filter, badge: 'Radar Active', color: '#8b5cf6', desc: 'Instant check against 100+ suppressed and shadowbanned Instagram/FB tags.' },
+    { id: 'post_clock', label: '5. Algorithm Peak Clock', icon: Clock, badge: 'Optimal Time', color: '#06b6d4', desc: 'Pinpoint the 30-minute initial test window when engagement creates viral push.' },
+    { id: 'reel_hook', label: '6. 3-Sec Reel Hook Auditor', icon: Flame, badge: 'Hook AI', color: '#10b981', desc: 'Score your video hooks against 3-second drop-off thresholds before posting.' },
+    { id: 'bio_funnel', label: '7. Bio Link & Funnel Audit', icon: Link2, badge: 'Funnel Test', color: '#38bdf8', desc: 'Diagnose conversion leaks in your link-in-bio & high-converting buyer journey.' },
+    { id: 'competitor_spy', label: '8. Competitor Audience Spy', icon: Compass, badge: 'Spy Engine', color: '#a855f7', desc: 'Analyze rival audience engagement patterns and high-retention formats.' },
+    { id: 'collab_fraud', label: '9. Influencer Fraud Spotter', icon: Award, badge: 'Fraud Check', color: '#eab308', desc: 'Detect engagement pods, bot follower spikes & real audience quality.' },
+    { id: 'auto_repair', label: '10. 1-Click Auto-Repair', icon: Zap, badge: '⏳ Coming Soon', color: '#6366f1', desc: 'Automated 1-click meta policy compliance fixer and comment cleanup.' }
   ];
 
-  // =========================================================================
-  // PUBLIC VIEW: CLEAN COMING SOON ROADMAP (ALL 10 TOOLS LABELED COMING SOON)
-  // ZERO ADMIN CONTROLS OR MENTIONS SHOWN IN PUBLIC
-  // =========================================================================
-  if (!isAdminUnlocked) {
-    return (
-      <div style={{
-        maxWidth: '960px',
-        width: '100%',
-        margin: '24px auto',
-        padding: '32px 20px',
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(10, 18, 35, 0.98) 100%)',
-        border: '2px solid rgba(236, 72, 153, 0.35)',
-        borderRadius: '20px',
-        textAlign: 'center',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(236, 72, 153, 0.12)',
-        boxSizing: 'border-box',
-        overflowX: 'hidden'
-      }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 16px',
-          borderRadius: '20px',
-          background: 'rgba(236, 72, 153, 0.2)',
-          border: '1.5px solid #ec4899',
-          color: '#f472b6',
-          fontSize: '12px',
-          fontWeight: '800',
-          marginBottom: '16px'
-        }}>
-          <Clock size={16} />
-          ⏳ COMING SOON • NEW FEATURE ROADMAP
-        </div>
-
-        <h2 style={{
-          fontSize: '24px',
-          fontWeight: '800',
-          margin: '0 0 10px 0',
-          fontFamily: "'Space Grotesk', sans-serif",
-          color: '#ffffff'
-        }}>
-          Tool 9: Social Media AI Auditor & Doctor Command Center
-        </h2>
-        <p style={{
-          fontSize: '14px',
-          color: '#cbd5e1',
-          maxWidth: '680px',
-          margin: '0 auto 28px auto',
-          lineHeight: '1.6'
-        }}>
-          Ye advanced 360° Social Media Account & Meta Guidelines Health Scanner bohot jald Seller Suite Pro par sabhi sellers ke liye live kiya ja raha hai. Niche diye gaye sabhi <strong>10 Social Media AI Tools</strong> jald hi launch honge.
-        </p>
-
-        {/* All 10 Tools Grid - Clearly Labeled Coming Soon */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '12px',
-          width: '100%',
-          maxWidth: '880px',
-          margin: '0 auto 32px auto',
-          textAlign: 'left',
-          boxSizing: 'border-box'
-        }}>
-          {SUB_TOOLS.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <div 
-                key={tool.id}
-                style={{
-                  background: '#0a0f1d',
-                  padding: '14px 16px',
-                  borderRadius: '12px',
-                  border: `1.5px solid ${tool.color}33`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '8px',
-                  boxSizing: 'border-box'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '800', color: tool.color }}>
-                    <Icon size={16} />
-                    <span>{tool.label}</span>
-                  </div>
-                  <span style={{
-                    fontSize: '9px',
-                    fontWeight: '800',
-                    padding: '2px 8px',
-                    borderRadius: '8px',
-                    background: 'rgba(236, 72, 153, 0.2)',
-                    border: '1px solid rgba(236, 72, 153, 0.4)',
-                    color: '#f472b6',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    ⏳ COMING SOON
-                  </span>
-                </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>
-                  {tool.desc}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Status Pill */}
-        <div style={{
-          maxWidth: '580px',
-          width: '100%',
-          margin: '0 auto',
-          padding: '16px 20px',
-          background: 'rgba(15, 23, 42, 0.7)',
-          border: '1px solid rgba(236, 72, 153, 0.25)',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '10px',
-          color: '#cbd5e1',
-          fontSize: '13px',
-          boxSizing: 'border-box'
-        }}>
-          <Sparkles size={18} color="#ec4899" />
-          <span>Meta 2026 Graph Engine integration in progress • Rolling out soon!</span>
-        </div>
-      </div>
-    );
-  }
-
-  // =========================================================================
-  // UNLOCKED ADMIN COMMAND CENTER (100% UNLOCKED FOR OWNER)
-  // =========================================================================
   return (
     <div style={{
       color: '#f8fafc',
@@ -443,7 +307,7 @@ export default function SocialMediaAuditStudio({
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}>
-                  Social Media AI Auditor & Doctor Command Center
+                  Social Media AI Auditor &amp; Doctor Command Center
                 </h1>
                 <span style={{
                   fontSize: '11px',
@@ -458,24 +322,24 @@ export default function SocialMediaAuditStudio({
                 </span>
               </div>
               <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#cbd5e1' }}>
-                Real-Time Account Audit, Ghost Follower Radar, Meta Community Policy Scanner & Comment Cleaner.
+                Real-Time Account Audit, Ghost Follower Radar, Meta Community Policy Scanner &amp; Status Doctor.
               </p>
             </div>
           </div>
 
-          {/* Admin Unlocked Status Badge */}
+          {/* Status Badge */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '8px',
             background: 'rgba(16, 185, 129, 0.15)',
             padding: '8px 14px',
             borderRadius: '12px',
             border: '1.5px solid #10b981'
           }}>
-            <Unlock size={16} color="#10b981" />
+            <ShieldCheck size={16} color="#10b981" />
             <span style={{ fontSize: '12px', fontWeight: '800', color: '#10b981' }}>
-              ADMIN COMMAND CENTER (100% UNLOCKED)
+              LIVE PROFILE STATUS &amp; AUDIT SCANNER
             </span>
           </div>
         </div>
@@ -901,6 +765,180 @@ export default function SocialMediaAuditStudio({
             )}
           </div>
 
+          {/* ========================================================================= */}
+          {/* 3-PILLAR DEEP STATUS DIAGNOSIS (DANGEROUS RISKS, PROFILE FLAWS, FAKE BOTS) */}
+          {/* ========================================================================= */}
+          <div style={{
+            marginBottom: '22px',
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 30, 0.98) 100%)',
+            border: '1.5px solid rgba(236, 72, 153, 0.35)',
+            borderRadius: '16px',
+            padding: '20px 20px',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <ShieldAlert size={18} color="#ffffff" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>
+                    Profile Status &amp; Risk Diagnosis: {auditData.handle}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8' }}>
+                    Deep scan breakdown: Dangerous Policy Risks • Profile Flaws &amp; Mistakes • Fake Followers &amp; Bots
+                  </p>
+                </div>
+              </div>
+
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 12px',
+                borderRadius: '20px',
+                background: 'rgba(99, 102, 241, 0.18)',
+                border: '1px solid rgba(99, 102, 241, 0.45)',
+                color: '#a5b4fc',
+                fontSize: '11px',
+                fontWeight: '800'
+              }}>
+                <span>🛠️ 1-Click Auto-Repair Engine:</span>
+                <span style={{ color: '#f472b6' }}>⏳ Coming Soon</span>
+              </div>
+            </div>
+
+            {/* 3 Pillar Cards Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '14px',
+              boxSizing: 'border-box'
+            }}>
+              {/* PILLAR 1: KYA DANGEROUS HAI (DANGEROUS ISSUES & POLICY RISKS) */}
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1.5px solid rgba(239, 68, 68, 0.35)',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', fontWeight: '800', fontSize: '13px' }}>
+                  <AlertTriangle size={16} />
+                  <span>1. Dangerous Issues (Kya Khatarnak Hai)</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  {auditData.health.score < 80 ? (
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <li style={{ color: '#fca5a5' }}>
+                        <strong>Engagement Risk:</strong> Engagement rate ({auditData.metrics.engagementRate}%) is under the {auditData.categoryName} benchmark ({auditData.metrics.benchmarkRate}%).
+                      </li>
+                      <li style={{ color: '#fca5a5' }}>
+                        <strong>Shadowban Warning:</strong> High ratio of inactive followers risks Explore delivery suppression under 2026 Meta ranking filters.
+                      </li>
+                      <li style={{ color: '#fca5a5' }}>
+                        <strong>Caption &amp; Tag Compliance:</strong> Review post captions against commercial terms to avoid restricted visibility.
+                      </li>
+                    </ul>
+                  ) : (
+                    <div style={{ color: '#86efac', display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '4px' }}>
+                      <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span>Zero critical policy violations or shadowban flags detected! Profile is in healthy standing.</span>
+                    </div>
+                  )}
+                </div>
+                <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '10px', color: '#fca5a5' }}>
+                  💡 Diagnostic: Review Tool 2 (Meta Guidelines) &amp; Tool 4 (Banned Tags) below.
+                </div>
+              </div>
+
+              {/* PILLAR 2: KYA GALAT HAI (PROFILE FLAWS & MISTAKES) */}
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1.5px solid rgba(245, 158, 11, 0.35)',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', fontWeight: '800', fontSize: '13px' }}>
+                  <Sliders size={16} />
+                  <span>2. Profile Flaws (Kya Galat Hai)</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <li>
+                      <strong>Bio Conversion Leak:</strong> {auditData.bioDetails?.link ? 'Bio has link, but lacks a high-converting direct WhatsApp lead CTA.' : 'Missing direct clickable business link in bio!'}
+                    </li>
+                    <li>
+                      <strong>Posting Timing Mismatch:</strong> Posting outside your golden viral test window ({auditData.postingSlots?.goldenWindowMinutes || 30} mins) drops first-hour distribution.
+                    </li>
+                    <li>
+                      <strong>Reel Hook Retention:</strong> First 3 seconds need sharp problem/curiosity statement to prevent drop-off.
+                    </li>
+                  </ul>
+                </div>
+                <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid rgba(245, 158, 11, 0.2)', fontSize: '10px', color: '#fde047' }}>
+                  💡 Diagnostic: Review Tool 5 (Algorithm Clock), Tool 6 (Hook Scorer) &amp; Tool 7 (Bio Funnel).
+                </div>
+              </div>
+
+              {/* PILLAR 3: KYA FAKE HAI (GHOST & BOT AUDIENCE) */}
+              <div style={{
+                background: 'rgba(168, 85, 247, 0.08)',
+                border: '1.5px solid rgba(168, 85, 247, 0.35)',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c084fc', fontWeight: '800', fontSize: '13px' }}>
+                  <Users size={16} />
+                  <span>3. Fake &amp; Bot Followers (Kya Fake Hai)</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ color: '#94a3b8' }}>Detected Ghost / Bot Accounts:</span>
+                    <strong style={{ color: auditData.metrics.ghostFollowerCount > 0 ? '#f43f5e' : '#10b981' }}>
+                      {auditData.metrics.ghostFollowerCount} accounts ({auditData.metrics.ghostPercentage}%)
+                    </strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ color: '#94a3b8' }}>Active Genuine Followers:</span>
+                    <strong style={{ color: '#38bdf8' }}>
+                      {auditData.metrics.activeFollowers.toLocaleString()} real users
+                    </strong>
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.4' }}>
+                    {auditData.metrics.ghostFollowerCount > 0 
+                      ? 'Ghost accounts never engage. Having inactive followers reduces overall account reach and signals low interest to the Meta algorithm.'
+                      : 'Audience is clean! No automated spam or ghost followers detected on this profile.'}
+                  </div>
+                </div>
+                <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid rgba(168, 85, 247, 0.2)', fontSize: '10px', color: '#d8b4fe' }}>
+                  💡 Diagnostic: Review Tool 1 (Ghost Purge Radar) &amp; Tool 9 (Fraud Spotter).
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* 10 Sub-Tools Navigation Bar */}
           <div style={{
             display: 'flex',
@@ -1018,6 +1056,21 @@ export default function SocialMediaAuditStudio({
                       <Download size={14} />
                       Export Purge List ({selectedGhostIds.size})
                     </button>
+                    <div style={{
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      background: 'rgba(236, 72, 153, 0.15)',
+                      border: '1px solid rgba(236, 72, 153, 0.45)',
+                      color: '#f472b6',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}>
+                      <Clock size={13} />
+                      <span>1-Click Auto-Purge: ⏳ Coming Soon</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1284,13 +1337,30 @@ export default function SocialMediaAuditStudio({
               padding: '20px',
               marginBottom: '20px'
             }}>
-              <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>
-                  💬 Toxic, Competitor & Bot Spam Comment Cleaner
-                </h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
-                  Identifies financial phishing scams, competitor bot attacks, and harmful comments to keep your account safe from community infractions.
-                </p>
+              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>
+                    💬 Toxic, Competitor &amp; Bot Spam Comment Cleaner
+                  </h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
+                    Identifies financial phishing scams, competitor bot attacks, and harmful comments to keep your account safe from community infractions.
+                  </p>
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  padding: '5px 12px',
+                  borderRadius: '16px',
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  border: '1px solid rgba(245, 158, 11, 0.45)',
+                  color: '#fbbf24',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}>
+                  <Clock size={13} />
+                  <span>1-Click Auto-Clean: ⏳ Coming Soon</span>
+                </div>
               </div>
 
               {auditData.spamComments.length === 0 ? (
@@ -1929,14 +1999,14 @@ export default function SocialMediaAuditStudio({
                 marginBottom: '14px'
               }}>
                 <Sparkles size={16} />
-                ENTERPRISE ROADMAP • COMING SOON
+                ⏳ 1-CLICK AUTO-REPAIR • COMING SOON (DEVELOPER MODE)
               </div>
 
               <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#ffffff', margin: 0 }}>
-                1-Click Social Media Auto-Repair & Safe Push
+                1-Click Social Media Auto-Repair &amp; Safe Push
               </h2>
-              <p style={{ maxWidth: '640px', margin: '8px auto 20px auto', fontSize: '13px', color: '#cbd5e1' }}>
-                Connect your official Instagram Professional / Facebook Page via Meta Graph API OAuth. Our AI Doctor will automatically purge flagged ghost followers in background batches, rewrite flagged captions, and hide spam comments in real-time.
+              <p style={{ maxWidth: '680px', margin: '8px auto 20px auto', fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6' }}>
+                Automated 1-Click OAuth direct push to Meta Graph API is currently in active calibration. All real profile diagnoses, dangerous policy flaws, and fake follower detections are 100% active in Tools 1 to 9 above. Connect feature will roll out shortly!
               </p>
 
               {/* Interactive Simulation Sandbox */}
