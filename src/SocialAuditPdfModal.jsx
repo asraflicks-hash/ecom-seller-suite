@@ -78,7 +78,18 @@ export default function SocialAuditPdfModal({ isOpen, onClose, auditData, select
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{
+            background: 'rgba(236, 72, 153, 0.15)',
+            border: '1px solid rgba(236, 72, 153, 0.4)',
+            borderRadius: '6px',
+            padding: '5px 10px',
+            fontSize: '10.5px',
+            color: '#fbcfe8'
+          }}>
+            💡 Tip: Uncheck <strong>"Headers &amp; footers"</strong> in print to hide URL
+          </div>
+
           <button
             onClick={handlePrint}
             style={{
@@ -124,78 +135,82 @@ export default function SocialAuditPdfModal({ isOpen, onClose, auditData, select
 
       {/* PDF Document Preview Paper */}
       <div style={{
-        maxWidth: '960px',
+        maxWidth: '920px',
         width: '100%',
         background: '#ffffff',
         color: '#0f172a',
-        borderRadius: '14px',
+        borderRadius: '10px',
         overflow: 'hidden',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
         border: '1px solid #cbd5e1',
         marginBottom: '40px'
       }}>
-        {/* Document Header */}
+        {/* Document Header - Strictly Side-by-Side Flex Layout */}
         <div style={{
           background: 'linear-gradient(135deg, #0b1329 0%, #1e1b4b 60%, #311042 100%)',
           color: '#ffffff',
-          padding: '24px 28px',
-          borderBottom: '4px solid #ec4899',
+          padding: '14px 20px',
+          borderBottom: '3.5px solid #ec4899',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '20px',
-          flexWrap: 'wrap'
+          alignItems: 'center',
+          gap: '16px',
+          flexWrap: 'nowrap'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 auto', minWidth: 0 }}>
             <img
               src={COMPANY_DETAILS.logoUrl}
               alt={COMPANY_DETAILS.name}
               style={{
-                height: '60px',
+                height: '46px',
                 width: 'auto',
                 background: '#ffffff',
-                padding: '4px 8px',
-                borderRadius: '8px'
+                padding: '3px 6px',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                flexShrink: 0
               }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
             <div>
-              <div style={{ fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', color: '#ffffff' }}>
+              <div style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', color: '#ffffff', letterSpacing: '-0.3px', lineHeight: 1.1 }}>
                 <span style={{ color: '#ec4899' }}>SELLER SUITE PRO</span>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', textTransform: 'uppercase', marginTop: '2px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#cbd5e1', textTransform: 'uppercase', marginTop: '1px' }}>
                 Social Media AI Doctor &amp; Enterprise Audit Report
               </div>
               <div style={{
                 display: 'inline-block',
-                marginTop: '6px',
+                marginTop: '4px',
                 background: 'rgba(236, 72, 153, 0.25)',
                 border: '1px solid rgba(236, 72, 153, 0.6)',
                 color: '#f472b6',
-                fontSize: '10px',
+                fontSize: '9px',
                 fontWeight: '800',
-                padding: '2px 8px',
-                borderRadius: '6px'
+                padding: '1px 6px',
+                borderRadius: '4px'
               }}>
                 ⚡ {COMPANY_DETAILS.standardsVersion}
               </div>
             </div>
           </div>
 
-          <div style={{ textAlign: 'right', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.6' }}>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff' }}>{COMPANY_DETAILS.name.toUpperCase()}</div>
-            <div>📞 Phone: <strong style={{ color: '#ffffff' }}>{COMPANY_DETAILS.phone}</strong></div>
+          <div style={{ textAlign: 'right', fontSize: '10px', color: '#cbd5e1', lineHeight: '1.45', flexShrink: 0, minWidth: '230px' }}>
+            <div style={{ fontSize: '13px', fontWeight: '900', color: '#ffffff', letterSpacing: '0.5px' }}>{COMPANY_DETAILS.name.toUpperCase()}</div>
+            <div>📞 Phone / WA: <strong style={{ color: '#ffffff' }}>{COMPANY_DETAILS.phone}</strong></div>
             <div>✉️ Email: <strong style={{ color: '#ffffff' }}>{COMPANY_DETAILS.email}</strong></div>
             <div>🌐 Portal: <strong style={{ color: '#ffffff' }}>{COMPANY_DETAILS.website}</strong></div>
             <div style={{
-              marginTop: '6px',
-              padding: '4px 8px',
-              background: 'rgba(0,0,0,0.3)',
+              marginTop: '4px',
+              padding: '2px 8px',
+              background: 'rgba(0,0,0,0.4)',
               borderRadius: '4px',
               fontFamily: 'monospace',
-              fontSize: '10px'
+              fontSize: '9px',
+              border: '1px solid rgba(255,255,255,0.12)',
+              display: 'inline-block'
             }}>
-              AUDIT DATE: {new Date().toLocaleDateString()}
+              ID: SSP-AUD-2026 • {new Date().toLocaleDateString()}
             </div>
           </div>
         </div>
