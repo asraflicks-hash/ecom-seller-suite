@@ -114,7 +114,9 @@ async function scrapeInstagram(handle) {
 
       const html = await response.text();
       const parsed = parseInstagramHtml(html, handle, ua);
-      attempts.push({ ua: ua.slice(0, 25), status: response.status, len: html.length, parsedFound: parsed?.isFound, followers: parsed?.followers });
+      const followerMatches = [...html.matchAll(/(.{0,40}Follower.{0,40})/gi)].map(m => m[0]).slice(0, 3);
+      const metaMatches = [...html.matchAll(/<meta[^>]+>/gi)].map(m => m[0]).filter(m => m.includes('description') || m.includes('title')).slice(0, 5);
+      attempts.push({ ua: ua.slice(0, 25), status: response.status, len: html.length, metaMatches, followerMatches });
       if (parsed && parsed.isFound && (parsed.followers > 0 || parsed.posts > 0)) {
         return parsed;
       }
