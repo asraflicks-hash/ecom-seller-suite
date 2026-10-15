@@ -525,10 +525,14 @@ export default function SocialMediaAuditStudio({
                 fontWeight: '600'
               }}
             >
-              {INDUSTRY_CATEGORIES.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
+              {Array.from(new Set(INDUSTRY_CATEGORIES.map(c => c.group || 'All Categories'))).map(groupName => (
+                <optgroup key={groupName} label={groupName} style={{ background: '#0a0f1d', color: '#38bdf8', fontWeight: '800' }}>
+                  {INDUSTRY_CATEGORIES.filter(c => (c.group || 'All Categories') === groupName).map(c => (
+                    <option key={c.id} value={c.id} style={{ background: '#070d19', color: '#ffffff', fontWeight: '500' }}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>

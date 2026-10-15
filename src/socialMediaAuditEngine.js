@@ -13,16 +13,84 @@ export const SOCIAL_PLATFORMS = [
 ];
 
 export const INDUSTRY_CATEGORIES = [
-  { id: 'software_company', name: 'Software Company, IT & Tech SaaS', benchmarkEng: 3.8, avgGhostRatio: 5 },
-  { id: 'd2c_fashion', name: 'D2C Fashion, Apparel & Footwear', benchmarkEng: 2.1, avgGhostRatio: 21 },
-  { id: 'electronics', name: 'Electronics & Smart Gadgets', benchmarkEng: 1.6, avgGhostRatio: 18 },
-  { id: 'beauty_skincare', name: 'Beauty, Cosmetics & Personal Care', benchmarkEng: 2.8, avgGhostRatio: 26 },
-  { id: 'food_beverage', name: 'Food, Beverage & Cloud Kitchens', benchmarkEng: 3.1, avgGhostRatio: 16 },
-  { id: 'health_supplements', name: 'Health, Wellness & Fitness', benchmarkEng: 2.4, avgGhostRatio: 22 },
-  { id: 'home_decor', name: 'Home Decor, Furnishing & Kitchenware', benchmarkEng: 1.9, avgGhostRatio: 19 },
-  { id: 'creator_influencer', name: 'Content Creator & Public Figure', benchmarkEng: 3.6, avgGhostRatio: 28 },
-  { id: 'local_retail', name: 'Local Business, Retail & Services', benchmarkEng: 1.8, avgGhostRatio: 15 },
-  { id: 'b2b_wholesale', name: 'B2B Wholesale & Manufacturing', benchmarkEng: 1.2, avgGhostRatio: 14 }
+  // 💻 1. Tech, Software & IT
+  { id: 'software_company', group: '💻 Technology & Software', name: 'Software Company', benchmarkEng: 3.8, avgGhostRatio: 5 },
+  { id: 'it_company', group: '💻 Technology & Software', name: 'Information Technology Company', benchmarkEng: 3.2, avgGhostRatio: 6 },
+  { id: 'web_designer', group: '💻 Technology & Software', name: 'Web Designer & Developer', benchmarkEng: 4.1, avgGhostRatio: 7 },
+  { id: 'app_developer', group: '💻 Technology & Software', name: 'App Developer & Mobile SaaS', benchmarkEng: 3.6, avgGhostRatio: 5 },
+  { id: 'telecom_company', group: '💻 Technology & Software', name: 'Telecommunication Company', benchmarkEng: 1.8, avgGhostRatio: 12 },
+  { id: 'computers_internet', group: '💻 Technology & Software', name: 'Computers & Internet Website', benchmarkEng: 2.6, avgGhostRatio: 9 },
+
+  // 🛍️ 2. E-Commerce, Shopping & Retail
+  { id: 'ecommerce_store', group: '🛍️ E-Commerce & Retail', name: 'E-Commerce Website & Online Store', benchmarkEng: 2.4, avgGhostRatio: 19 },
+  { id: 'clothing_brand', group: '🛍️ E-Commerce & Retail', name: 'Clothing (Brand) & Apparel', benchmarkEng: 2.1, avgGhostRatio: 21 },
+  { id: 'footwear_store', group: '🛍️ E-Commerce & Retail', name: 'Footwear & Shoes Store', benchmarkEng: 2.0, avgGhostRatio: 18 },
+  { id: 'jewelry_watches', group: '🛍️ E-Commerce & Retail', name: 'Jewelry & Watches Store', benchmarkEng: 2.3, avgGhostRatio: 17 },
+  { id: 'electronics_shop', group: '🛍️ E-Commerce & Retail', name: 'Electronics & Gadgets Store', benchmarkEng: 1.6, avgGhostRatio: 18 },
+  { id: 'bags_luggage', group: '🛍️ E-Commerce & Retail', name: 'Bags & Luggage Store', benchmarkEng: 1.9, avgGhostRatio: 16 },
+  { id: 'home_decor', group: '🛍️ E-Commerce & Retail', name: 'Home Decor & Furniture Store', benchmarkEng: 1.9, avgGhostRatio: 19 },
+  { id: 'kitchenware_store', group: '🛍️ E-Commerce & Retail', name: 'Kitchenware & Home Appliances', benchmarkEng: 1.8, avgGhostRatio: 14 },
+  { id: 'cosmetics_beauty_supply', group: '🛍️ E-Commerce & Retail', name: 'Cosmetics & Beauty Supply', benchmarkEng: 2.8, avgGhostRatio: 24 },
+  { id: 'grocery_supermarket', group: '🛍️ E-Commerce & Retail', name: 'Supermarket & Grocery Store', benchmarkEng: 1.7, avgGhostRatio: 12 },
+  { id: 'baby_goods_kids', group: '🛍️ E-Commerce & Retail', name: 'Baby Goods & Children Clothing', benchmarkEng: 2.5, avgGhostRatio: 16 },
+  { id: 'wholesale_manufacturing', group: '🛍️ E-Commerce & Retail', name: 'Wholesaler & Industrial Manufacturing', benchmarkEng: 1.2, avgGhostRatio: 14 },
+
+  // 🎬 3. Creators, Media & Entertainment
+  { id: 'digital_creator', group: '🎬 Creator & Entertainment', name: 'Digital Creator / Content Creator', benchmarkEng: 3.8, avgGhostRatio: 26 },
+  { id: 'video_creator', group: '🎬 Creator & Entertainment', name: 'Video Creator / YouTuber', benchmarkEng: 4.2, avgGhostRatio: 25 },
+  { id: 'entrepreneur', group: '🎬 Creator & Entertainment', name: 'Entrepreneur & Business Founder', benchmarkEng: 3.5, avgGhostRatio: 22 },
+  { id: 'public_figure', group: '🎬 Creator & Entertainment', name: 'Public Figure / Influencer', benchmarkEng: 3.6, avgGhostRatio: 28 },
+  { id: 'musician_band', group: '🎬 Creator & Entertainment', name: 'Musician / Band / Singer', benchmarkEng: 4.5, avgGhostRatio: 29 },
+  { id: 'actor_model', group: '🎬 Creator & Entertainment', name: 'Actor / Model / Performer', benchmarkEng: 3.9, avgGhostRatio: 31 },
+  { id: 'artist_designer', group: '🎬 Creator & Entertainment', name: 'Artist & Graphic Designer', benchmarkEng: 4.0, avgGhostRatio: 18 },
+  { id: 'blogger_writer', group: '🎬 Creator & Entertainment', name: 'Blogger / Author / Journalist', benchmarkEng: 3.1, avgGhostRatio: 20 },
+  { id: 'gamer_gaming_creator', group: '🎬 Creator & Entertainment', name: 'Gamer / Gaming Video Creator', benchmarkEng: 4.8, avgGhostRatio: 24 },
+  { id: 'podcaster_show', group: '🎬 Creator & Entertainment', name: 'Podcaster / Talk Show Host', benchmarkEng: 3.4, avgGhostRatio: 19 },
+  { id: 'news_media_publisher', group: '🎬 Creator & Entertainment', name: 'News & Media Publisher', benchmarkEng: 2.2, avgGhostRatio: 16 },
+  { id: 'photographer_videographer', group: '🎬 Creator & Entertainment', name: 'Photographer & Videographer', benchmarkEng: 4.4, avgGhostRatio: 17 },
+
+  // 💼 4. Business & Professional Services
+  { id: 'advertising_marketing_agency', group: '💼 Professional Services', name: 'Advertising & Marketing Agency', benchmarkEng: 3.4, avgGhostRatio: 11 },
+  { id: 'business_consultant', group: '💼 Professional Services', name: 'Business Consultant / Advisory', benchmarkEng: 2.8, avgGhostRatio: 10 },
+  { id: 'finance_accountant', group: '💼 Professional Services', name: 'Financial Services & Tax Accountant', benchmarkEng: 2.1, avgGhostRatio: 8 },
+  { id: 'legal_lawyer', group: '💼 Professional Services', name: 'Legal Service / Lawyer / Law Firm', benchmarkEng: 1.9, avgGhostRatio: 7 },
+  { id: 'real_estate_agency', group: '💼 Professional Services', name: 'Real Estate Agent & Property Developer', benchmarkEng: 2.6, avgGhostRatio: 15 },
+  { id: 'recruitment_hr', group: '💼 Professional Services', name: 'Recruitment & Staffing Agency', benchmarkEng: 2.0, avgGhostRatio: 9 },
+  { id: 'travel_tour_agency', group: '💼 Professional Services', name: 'Travel Agency & Tour Operator', benchmarkEng: 3.3, avgGhostRatio: 17 },
+  { id: 'event_planner', group: '💼 Professional Services', name: 'Event Planner & Wedding Decorator', benchmarkEng: 3.7, avgGhostRatio: 14 },
+  { id: 'courier_logistics', group: '💼 Professional Services', name: 'Logistics, Shipping & Courier Service', benchmarkEng: 1.5, avgGhostRatio: 10 },
+
+  // 🍽️ 5. Food, Dining & Hospitality
+  { id: 'restaurant_cafe', group: '🍽️ Food & Hospitality', name: 'Restaurant / Cafe / Bistro', benchmarkEng: 3.6, avgGhostRatio: 14 },
+  { id: 'cloud_kitchen_fast_food', group: '🍽️ Food & Hospitality', name: 'Fast Food Restaurant & Cloud Kitchen', benchmarkEng: 3.2, avgGhostRatio: 15 },
+  { id: 'bakery_dessert', group: '🍽️ Food & Hospitality', name: 'Bakery & Dessert Parlor', benchmarkEng: 3.9, avgGhostRatio: 16 },
+  { id: 'food_beverage_company', group: '🍽️ Food & Hospitality', name: 'Food & Beverage Manufacturer', benchmarkEng: 3.1, avgGhostRatio: 16 },
+  { id: 'bar_pub_lounge', group: '🍽️ Food & Hospitality', name: 'Bar, Pub & Lounge', benchmarkEng: 3.4, avgGhostRatio: 18 },
+  { id: 'hotel_resort', group: '🍽️ Food & Hospitality', name: 'Hotel, Resort & Guest House', benchmarkEng: 3.0, avgGhostRatio: 15 },
+  { id: 'catering_service', group: '🍽️ Food & Hospitality', name: 'Catering & Banquet Service', benchmarkEng: 2.7, avgGhostRatio: 12 },
+
+  // 💅 6. Health, Beauty & Fitness
+  { id: 'beauty_salon_barber', group: '💅 Health, Beauty & Fitness', name: 'Beauty Salon, Hair Salon & Barbershop', benchmarkEng: 3.7, avgGhostRatio: 18 },
+  { id: 'spa_wellness', group: '💅 Health, Beauty & Fitness', name: 'Spa & Wellness Center', benchmarkEng: 3.1, avgGhostRatio: 15 },
+  { id: 'fitness_trainer_gym', group: '💅 Health, Beauty & Fitness', name: 'Gym, Fitness Center & Trainer', benchmarkEng: 4.1, avgGhostRatio: 22 },
+  { id: 'doctor_clinic_hospital', group: '💅 Health, Beauty & Fitness', name: 'Medical Clinic, Doctor & Hospital', benchmarkEng: 2.2, avgGhostRatio: 9 },
+  { id: 'pharmacy_chemist', group: '💅 Health, Beauty & Fitness', name: 'Pharmacy & Chemist Store', benchmarkEng: 1.6, avgGhostRatio: 8 },
+  { id: 'vitamins_supplements', group: '💅 Health, Beauty & Fitness', name: 'Health Nutrition & Supplements', benchmarkEng: 2.7, avgGhostRatio: 20 },
+  { id: 'mental_health_therapist', group: '💅 Health, Beauty & Fitness', name: 'Mental Health & Counseling Service', benchmarkEng: 3.0, avgGhostRatio: 10 },
+
+  // 🎓 7. Education & Non-Profit
+  { id: 'school_college_university', group: '🎓 Education & Community', name: 'School, College & University', benchmarkEng: 2.5, avgGhostRatio: 11 },
+  { id: 'coaching_training_institute', group: '🎓 Education & Community', name: 'Coaching Center & Training Institute', benchmarkEng: 2.9, avgGhostRatio: 12 },
+  { id: 'tutor_teacher', group: '🎓 Education & Community', name: 'Tutor & Online Educator', benchmarkEng: 3.4, avgGhostRatio: 13 },
+  { id: 'nonprofit_ngo', group: '🎓 Education & Community', name: 'Non-Governmental Organization (NGO)', benchmarkEng: 2.8, avgGhostRatio: 14 },
+  { id: 'community_organization', group: '🎓 Education & Community', name: 'Community Organization / Foundation', benchmarkEng: 2.4, avgGhostRatio: 12 },
+
+  // 🚗 8. Automotive, Home & Local Services
+  { id: 'auto_dealership_repair', group: '🚗 Local & Automotive Services', name: 'Motor Vehicle Dealership & Auto Repair', benchmarkEng: 2.3, avgGhostRatio: 13 },
+  { id: 'interior_designer_architect', group: '🚗 Local & Automotive Services', name: 'Architect & Interior Designer', benchmarkEng: 3.6, avgGhostRatio: 14 },
+  { id: 'construction_contractor', group: '🚗 Local & Automotive Services', name: 'Construction Company & Contractor', benchmarkEng: 1.8, avgGhostRatio: 11 },
+  { id: 'cleaning_pest_control', group: '🚗 Local & Automotive Services', name: 'Cleaning Service & Pest Control', benchmarkEng: 2.0, avgGhostRatio: 10 },
+  { id: 'local_business_service', group: '🚗 Local & Automotive Services', name: 'Local Business & Neighborhood Service', benchmarkEng: 1.9, avgGhostRatio: 12 }
 ];
 
 // Hash helper for consistent deterministic evaluation of handles
