@@ -38,9 +38,10 @@ export default async function handler(req, res) {
     });
   }
 
+  let profileData = null;
   try {
     if (platform === 'instagram') {
-      const profileData = await scrapeInstagram(cleanHandle);
+      profileData = await scrapeInstagram(cleanHandle);
       if (profileData && profileData.isFound && (profileData.followers > 0 || profileData.posts > 0 || profileData.following > 0)) {
         return res.status(200).json({
           success: true,
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
         });
       }
     } else if (platform === 'youtube') {
-      const profileData = await scrapeYouTube(cleanHandle);
+      profileData = await scrapeYouTube(cleanHandle);
       if (profileData && profileData.isFound) {
         return res.status(200).json({
           success: true,
