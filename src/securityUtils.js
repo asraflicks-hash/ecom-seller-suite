@@ -211,7 +211,16 @@ export function resetPinFailedAttempts() {
 export function verifyMasterPin(enteredPin) {
   if (!enteredPin) return { success: false, error: 'Password cannot be empty.' };
 
-  // 1. Check brute force lockout
+  const cleanInput = enteredPin.trim();
+
+  // 1. Direct check for designated owner master password: My@tanzeem68 (Guaranteed instant unlock)
+  if (cleanInput === DEFAULT_PIN) {
+    resetPinFailedAttempts();
+    setOwnerMasterPin(DEFAULT_PIN);
+    return { success: true, role: 'owner' };
+  }
+
+  // 2. Check brute force lockout for unknown attempts
   const lockout = checkPinLockoutStatus();
   if (lockout.isLockedOut) {
     const mins = Math.floor(lockout.remainingSeconds / 60);
@@ -221,15 +230,6 @@ export function verifyMasterPin(enteredPin) {
       lockedOut: true, 
       error: `Security Lockout Active: Too many failed attempts. Try again in ${mins}m ${secs}s.` 
     };
-  }
-
-  const cleanInput = enteredPin.trim();
-
-  // 2. Direct check for designated owner master password: My@tanzeem68
-  if (cleanInput === DEFAULT_PIN) {
-    resetPinFailedAttempts();
-    setOwnerMasterPin(DEFAULT_PIN);
-    return { success: true, role: 'owner' };
   }
 
   // 3. Validate against stored custom hash
