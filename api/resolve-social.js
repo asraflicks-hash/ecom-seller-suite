@@ -96,6 +96,7 @@ async function scrapeInstagram(handle) {
     'WhatsApp/2.21.12.21 A'
   ];
 
+  let lastAttempt = null;
   for (const ua of USER_AGENTS) {
     try {
       const response = await fetch(url, {
