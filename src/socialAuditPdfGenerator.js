@@ -56,7 +56,11 @@ export function generateSocialAuditHtml(auditData, selectedGhostIds = null) {
   const h = auditData.health || {};
   const bio = auditData.bioAudit || {};
   const spam = auditData.spamComments || [];
-  const slots = auditData.postingSlots || [];
+  const slots = auditData.postingSlots || {};
+  const platformId = (auditData.platform || 'instagram').toLowerCase();
+  const followerLabel = platformId === 'youtube' ? 'Subscribers' : platformId === 'facebook' ? 'Page Followers' : platformId === 'linkedin' ? 'Connections / Followers' : 'Total Followers';
+  const postLabel = platformId === 'youtube' ? 'Videos' : platformId === 'linkedin' ? 'Articles' : platformId === 'twitter' ? 'Tweets' : 'Posts';
+  const followingLabel = platformId === 'youtube' ? 'Channels' : 'Following';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -745,9 +749,9 @@ export function generateSocialAuditHtml(auditData, selectedGhostIds = null) {
         <!-- Core Vital Metrics 4-Box Grid -->
         <div class="metrics-grid">
           <div class="metric-box">
-            <div class="metric-lbl">Total Followers</div>
+            <div class="metric-lbl">${followerLabel}</div>
             <div class="metric-val blue">${(m.followers || 0).toLocaleString()}</div>
-            <div class="metric-sub">Posts: ${m.posts || 0} • Following: ${m.following || 0}</div>
+            <div class="metric-sub">${postLabel}: ${m.posts || 0} • ${followingLabel}: ${m.following || 0}</div>
           </div>
 
           <div class="metric-box success">

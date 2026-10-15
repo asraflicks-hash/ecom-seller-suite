@@ -428,7 +428,7 @@ function listingSyncPlugin() {
             res.setHeader('Content-Type', 'application/json');
             return res.end(JSON.stringify({
               success: true,
-              platform: 'instagram',
+              platform: platform || 'instagram',
               handle: cleanHandle,
               ...knownProfiles[lookupKey]
             }));

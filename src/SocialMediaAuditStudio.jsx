@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import {
   SOCIAL_PLATFORMS,
+  PLATFORM_CONFIGS,
   INDUSTRY_CATEGORIES,
   parseSocialInput,
   generateSocialAudit,
@@ -307,18 +308,21 @@ export default function SocialMediaAuditStudio({
     setTimeout(() => setAutoRepairProgress('DONE'), 3000);
   };
 
-  // 10 Helper Sub-Tools
+  const currentPlatformId = auditData?.platform || selectedPlatform;
+  const platformCfg = PLATFORM_CONFIGS[currentPlatformId] || PLATFORM_CONFIGS.instagram;
+
+  // 10 Helper Sub-Tools (Dynamic for active platform)
   const SUB_TOOLS = [
-    { id: 'ghost_purge', label: '1. Ghost Follower Purge', icon: Users, badge: 'Active Radar', color: '#ec4899', desc: 'Dead follower detector & reach penalty blocker to restore Explore delivery.' },
-    { id: 'meta_guidelines', label: '2. Meta Guidelines Doctor', icon: ShieldAlert, badge: 'Live Scanner', color: '#f43f5e', desc: 'Scan captions & video claims against 2026 Meta Terms & shadowban triggers.' },
+    { id: 'ghost_purge', label: '1. Ghost Follower Purge', icon: Users, badge: 'Active Radar', color: '#ec4899', desc: 'Dead follower detector & reach penalty blocker to restore feed delivery.' },
+    { id: 'meta_guidelines', label: platformCfg.guidelineToolName, icon: ShieldAlert, badge: 'Live Scanner', color: '#f43f5e', desc: platformCfg.guidelineToolDesc },
     { id: 'comment_cleaner', label: '3. Toxic Comment Cleaner', icon: MessageSquare, badge: 'Audit Active', color: '#f59e0b', desc: 'Automated scan & purge for bot attacks, phishing links & competitor spam.' },
-    { id: 'banned_hashtags', label: '4. Banned Hashtag Radar', icon: Filter, badge: 'Radar Active', color: '#8b5cf6', desc: 'Instant check against 100+ suppressed and shadowbanned Instagram/FB tags.' },
-    { id: 'post_clock', label: '5. Algorithm Peak Clock', icon: Clock, badge: 'Optimal Time', color: '#06b6d4', desc: 'Pinpoint the 30-minute initial test window when engagement creates viral push.' },
-    { id: 'reel_hook', label: '6. 3-Sec Reel Hook Auditor', icon: Flame, badge: 'Hook AI', color: '#10b981', desc: 'Score your video hooks against 3-second drop-off thresholds before posting.' },
-    { id: 'bio_funnel', label: '7. Bio Link & Funnel Audit', icon: Link2, badge: 'Funnel Test', color: '#38bdf8', desc: 'Diagnose conversion leaks in your link-in-bio & high-converting buyer journey.' },
+    { id: 'banned_hashtags', label: platformCfg.tagToolName, icon: Filter, badge: 'Radar Active', color: '#8b5cf6', desc: platformCfg.tagToolDesc },
+    { id: 'post_clock', label: platformCfg.clockToolName, icon: Clock, badge: 'Optimal Time', color: '#06b6d4', desc: platformCfg.clockToolDesc },
+    { id: 'reel_hook', label: platformCfg.hookToolName, icon: Flame, badge: 'Hook AI', color: '#10b981', desc: platformCfg.hookToolDesc },
+    { id: 'bio_funnel', label: platformCfg.bioToolName, icon: Link2, badge: 'Funnel Test', color: '#38bdf8', desc: 'Diagnose conversion leaks in your link & high-converting buyer journey.' },
     { id: 'competitor_spy', label: '8. Competitor Audience Spy', icon: Compass, badge: 'Spy Engine', color: '#a855f7', desc: 'Analyze rival audience engagement patterns and high-retention formats.' },
     { id: 'collab_fraud', label: '9. Influencer Fraud Spotter', icon: Award, badge: 'Fraud Check', color: '#eab308', desc: 'Detect engagement pods, bot follower spikes & real audience quality.' },
-    { id: 'auto_repair', label: '10. 1-Click Auto-Repair', icon: Zap, badge: '⏳ Coming Soon', color: '#6366f1', desc: 'Automated 1-click meta policy compliance fixer and comment cleanup.' }
+    { id: 'auto_repair', label: '10. 1-Click Auto-Repair', icon: Zap, badge: '⏳ Coming Soon', color: '#6366f1', desc: `Automated 1-click ${platformCfg.name} policy compliance fixer and comment cleanup.` }
   ];
 
   return (
@@ -730,7 +734,7 @@ export default function SocialMediaAuditStudio({
                 type="text"
                 value={targetHandle}
                 onChange={(e) => setTargetHandle(e.target.value)}
-                placeholder="e.g. @username or instagram.com/profile"
+                placeholder={platformCfg.placeholder || "e.g. @username or profile link"}
                 onKeyDown={(e) => e.key === 'Enter' && handleRunAudit()}
                 style={{
                   width: '100%',
@@ -1053,7 +1057,7 @@ export default function SocialMediaAuditStudio({
                   title="Click to adjust/sync live follower count"
                 >
                   <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    <span>FOLLOWERS</span>
+                    <span>{platformCfg.followerLabel}</span>
                     <Edit3 size={10} color="#38bdf8" />
                   </div>
                   <div style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', marginTop: '2px' }}>
@@ -1061,13 +1065,13 @@ export default function SocialMediaAuditStudio({
                   </div>
                 </div>
                 <div style={{ background: '#0a0f1d', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700' }}>POSTS</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700' }}>{platformCfg.postsLabel}</div>
                   <div style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', marginTop: '2px' }}>
                     {auditData.metrics.posts}
                   </div>
                 </div>
                 <div style={{ background: '#0a0f1d', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700' }}>FOLLOWING</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700' }}>{platformCfg.followingLabel}</div>
                   <div style={{ fontSize: '18px', fontWeight: '800', color: '#38bdf8', marginTop: '2px' }}>
                     {auditData.metrics.following}
                   </div>
@@ -1101,7 +1105,7 @@ export default function SocialMediaAuditStudio({
                 border: '1px solid rgba(255, 255, 255, 0.08)'
               }}>
                 <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', marginBottom: '4px' }}>
-                  INSTAGRAM BIO DATA & DOMAIN:
+                  {platformCfg.bioHeader}:
                 </div>
                 <pre style={{ margin: 0, fontSize: '12px', color: '#e2e8f0', whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
                   {auditData.bioDetails.text}
@@ -1359,10 +1363,10 @@ export default function SocialMediaAuditStudio({
                         <strong>Engagement Risk:</strong> Engagement rate ({auditData.metrics.engagementRate}%) is under the {auditData.categoryName} benchmark ({auditData.metrics.benchmarkRate}%).
                       </li>
                       <li style={{ color: '#fca5a5' }}>
-                        <strong>Shadowban Warning:</strong> High ratio of inactive followers risks Explore delivery suppression under 2026 Meta ranking filters.
+                        <strong>Shadowban Warning:</strong> High ratio of inactive followers risks feed delivery suppression under 2026 {platformCfg.name} ranking filters.
                       </li>
                       <li style={{ color: '#fca5a5' }}>
-                        <strong>Caption &amp; Tag Compliance:</strong> Review post captions against commercial terms to avoid restricted visibility.
+                        <strong>Caption &amp; Tag Compliance:</strong> Review post captions and keywords against commercial terms to avoid restricted visibility.
                       </li>
                     </ul>
                   ) : (
@@ -1373,7 +1377,7 @@ export default function SocialMediaAuditStudio({
                   )}
                 </div>
                 <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '10px', color: '#fca5a5' }}>
-                  💡 Diagnostic: Review Tool 2 (Meta Guidelines) &amp; Tool 4 (Banned Tags) below.
+                  💡 Diagnostic: Review Tool 2 ({platformCfg.guidelineToolName.replace(/^\d+\.\s*/, '')}) &amp; Tool 4 ({platformCfg.tagToolName.replace(/^\d+\.\s*/, '')}) below.
                 </div>
               </div>
 
@@ -1395,18 +1399,18 @@ export default function SocialMediaAuditStudio({
                 <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
                   <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <li>
-                      <strong>Bio Conversion Leak:</strong> {auditData.bioDetails?.link ? 'Bio has link, but lacks a high-converting direct WhatsApp lead CTA.' : 'Missing direct clickable business link in bio!'}
+                      <strong>Bio Conversion Leak:</strong> {auditData.bioDetails?.link ? 'Profile has link, but lacks a high-converting direct WhatsApp lead CTA.' : 'Missing direct clickable business link in profile/bio!'}
                     </li>
                     <li>
                       <strong>Posting Timing Mismatch:</strong> Posting outside your golden viral test window ({auditData.postingSlots?.goldenWindowMinutes || 30} mins) drops first-hour distribution.
                     </li>
                     <li>
-                      <strong>Reel Hook Retention:</strong> First 3 seconds need sharp problem/curiosity statement to prevent drop-off.
+                      <strong>{currentPlatformId === 'youtube' ? 'Video Intro Hook Retention' : currentPlatformId === 'linkedin' ? 'Post Hook & Dwell Time' : currentPlatformId === 'twitter' ? 'Tweet Hook Retention' : 'Video / Hook Retention'}:</strong> {currentPlatformId === 'youtube' ? 'First 5-10 seconds need a sharp curiosity hook to prevent swipe-away.' : currentPlatformId === 'linkedin' ? 'First 2 lines must trigger "See more" click to expand dwell time.' : 'First 3 seconds need sharp problem/curiosity statement to prevent drop-off.'}
                     </li>
                   </ul>
                 </div>
                 <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid rgba(245, 158, 11, 0.2)', fontSize: '10px', color: '#fde047' }}>
-                  💡 Diagnostic: Review Tool 5 (Algorithm Clock), Tool 6 (Hook Scorer) &amp; Tool 7 (Bio Funnel).
+                  💡 Diagnostic: Review Tool 5 ({platformCfg.clockToolName.replace(/^\d+\.\s*/, '')}), Tool 6 ({platformCfg.hookToolName.replace(/^\d+\.\s*/, '')}) &amp; Tool 7 ({platformCfg.bioToolName.replace(/^\d+\.\s*/, '')}).
                 </div>
               </div>
 
@@ -1440,7 +1444,7 @@ export default function SocialMediaAuditStudio({
                   </div>
                   <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.4' }}>
                     {auditData.metrics.ghostFollowerCount > 0 
-                      ? 'Ghost accounts never engage. Having inactive followers reduces overall account reach and signals low interest to the Meta algorithm.'
+                      ? `Ghost accounts never engage. Having inactive followers reduces overall account reach and signals low interest to the ${platformCfg.name} algorithm.`
                       : 'Audience is clean! No automated spam or ghost followers detected on this profile.'}
                   </div>
                 </div>
@@ -1703,7 +1707,7 @@ export default function SocialMediaAuditStudio({
             }}>
               <div style={{ marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>
-                  🛡️ Meta 2026 Community Standards & Post Violation Doctor
+                  🛡️ {platformCfg.guidelineToolName.replace(/^\d+\.\s*/, '')}
                 </h3>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
                   Deep inspection of post captions, claims, audio licenses, and engagement bait triggers that cause silent algorithm shadowbans.
@@ -2089,7 +2093,7 @@ export default function SocialMediaAuditStudio({
             }}>
               <div style={{ marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>
-                  ⏰ Algorithm Peak Spike Clock & 30-Minute Golden Window
+                  ⏰ {platformCfg.clockToolName.replace(/^\d+\.\s*/, '')} &amp; {auditData.postingSlots?.goldenWindowMinutes || 30}-Minute Golden Window
                 </h3>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
                   Industry-calibrated timing based on active follower timezone heatmaps and initial velocity requirements.
@@ -2105,7 +2109,7 @@ export default function SocialMediaAuditStudio({
                 fontSize: '12px',
                 color: '#cbd5e1'
               }}>
-                <strong style={{ color: '#06b6d4' }}>The 30-Minute Golden Rule:</strong> {auditData.postingSlots.goldenWindowExplanation}
+                <strong style={{ color: '#06b6d4' }}>The {auditData.postingSlots?.goldenWindowMinutes || 30}-Minute Golden Rule:</strong> {auditData.postingSlots.goldenWindowExplanation}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
@@ -2146,7 +2150,7 @@ export default function SocialMediaAuditStudio({
           )}
 
           {/* ========================================================================= */}
-          {/* TOOL 6: 3-SECOND REEL HOOK & RETENTION AUDITOR */}
+          {/* TOOL 6: HOOK & RETENTION AUDITOR */}
           {/* ========================================================================= */}
           {activeSubTool === 'reel_hook' && (
             <div style={{
@@ -2158,10 +2162,10 @@ export default function SocialMediaAuditStudio({
             }}>
               <div style={{ marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>
-                  🎣 3-Second Reel Hook & Drop-Off Resistance Auditor
+                  🎣 {platformCfg.hookToolName.replace(/^\d+\.\s*/, '')}
                 </h3>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
-                  Meta algorithm decides Reel viral distribution based on whether viewers stay past the first 3 seconds. Test your hook here:
+                  {platformCfg.hookToolDesc} Test your hook here:
                 </p>
               </div>
 

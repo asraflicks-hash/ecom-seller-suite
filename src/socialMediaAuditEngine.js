@@ -12,6 +12,117 @@ export const SOCIAL_PLATFORMS = [
   { id: 'threads', name: 'Threads', icon: 'MessageCircle', color: '#000000', domain: 'threads.net', placeholder: '@handle or threads.net/@yourhandle' }
 ];
 
+export const PLATFORM_CONFIGS = {
+  instagram: {
+    name: 'Instagram',
+    color: '#E1306C',
+    followerLabel: 'FOLLOWERS',
+    followingLabel: 'FOLLOWING',
+    postsLabel: 'POSTS',
+    guidelineToolName: '2. Meta Guidelines Doctor',
+    guidelineToolDesc: 'Scan captions & Reel claims against 2026 Meta Terms & shadowban triggers.',
+    tagToolName: '4. Banned Hashtag Radar',
+    tagToolDesc: 'Instant check against 100+ suppressed and shadowbanned Instagram tags.',
+    clockToolName: '5. Algorithm Peak Clock',
+    clockToolDesc: 'Pinpoint the 30-minute initial test window when engagement creates Explore page push.',
+    hookToolName: '6. 3-Sec Reel Hook Auditor',
+    hookToolDesc: 'Score your video hooks against 3-second drop-off thresholds before posting.',
+    bioToolName: '7. Bio Link & Funnel Audit',
+    bioHeader: 'INSTAGRAM BIO DATA & DOMAIN',
+    placeholder: 'e.g. @username or instagram.com/profile'
+  },
+  youtube: {
+    name: 'YouTube',
+    color: '#FF0000',
+    followerLabel: 'SUBSCRIBERS',
+    followingLabel: 'CHANNELS',
+    postsLabel: 'VIDEOS & SHORTS',
+    guidelineToolName: '2. YouTube Policy & Copyright Doctor',
+    guidelineToolDesc: 'Scan titles, descriptions & tags against YouTube Community Guidelines & demonetization triggers.',
+    tagToolName: '4. High-CTR Tag & Keyword Radar',
+    tagToolDesc: 'Detect low-volume tags, keyword stuffing, and identify high-search volume tags.',
+    clockToolName: '5. Peak Viewer Upload Clock',
+    clockToolDesc: 'Pinpoint the golden 2-hour upload window before your audience peak browsing hours.',
+    hookToolName: '6. 5-Sec Video / Shorts Hook AI',
+    hookToolDesc: 'Audit intro retention to beat the 5-second viewer swipe-away threshold on YouTube Shorts & Videos.',
+    bioToolName: '7. Channel Description & Funnel Audit',
+    bioHeader: 'YOUTUBE CHANNEL ABOUT & LINKS',
+    placeholder: 'e.g. @channelhandle or youtube.com/@channel'
+  },
+  facebook: {
+    name: 'Facebook',
+    color: '#1877F2',
+    followerLabel: 'PAGE FOLLOWERS',
+    followingLabel: 'FOLLOWING',
+    postsLabel: 'POSTS',
+    guidelineToolName: '2. Facebook Page Policy Doctor',
+    guidelineToolDesc: 'Scan posts & ad claims against Facebook Community Standards & Page distribution penalties.',
+    tagToolName: '4. Facebook Organic Reach Optimizer',
+    tagToolDesc: 'Audit hashtag clutter and organic reach dampening factors on Facebook Pages.',
+    clockToolName: '5. Feed Algorithm Peak Clock',
+    clockToolDesc: 'Pinpoint peak desktop and mobile feed consumption hours for Indian Facebook audiences.',
+    hookToolName: '6. Feed Hook & Video Retention Scorer',
+    hookToolDesc: 'Score your post opening lines to maximize comment triggers and 3-second video views.',
+    bioToolName: '7. Page Action Button & Funnel Audit',
+    bioHeader: 'FACEBOOK PAGE ABOUT & CTA BUTTON',
+    placeholder: 'e.g. facebook.com/yourpage or Page username'
+  },
+  twitter: {
+    name: 'Twitter / X',
+    color: '#1DA1F2',
+    followerLabel: 'FOLLOWERS',
+    followingLabel: 'FOLLOWING',
+    postsLabel: 'POSTS / TWEETS',
+    guidelineToolName: '2. X Policy & Shadowban Doctor',
+    guidelineToolDesc: 'Audit account health against X automated spam filters, search suggestion bans & reply deboosting.',
+    tagToolName: '4. X Trending Hashtag & Keyword Radar',
+    tagToolDesc: 'Avoid hashtag over-stuffing (penalty for >2 tags) and align with trending topics.',
+    clockToolName: '5. Golden 15-Minute Viral Clock',
+    clockToolDesc: 'X algorithm heavily weights bookmarks & retweets in the first 15 minutes of posting.',
+    hookToolName: '6. Viral Tweet / Thread Hook AI',
+    hookToolDesc: 'Score your first-tweet hook to drive 4x higher thread reads and bookmark ratios.',
+    bioToolName: '7. X Bio & Pinned Link Funnel Audit',
+    bioHeader: 'X / TWITTER BIO & PINNED LINK',
+    placeholder: 'e.g. @username or x.com/profile'
+  },
+  linkedin: {
+    name: 'LinkedIn',
+    color: '#0A66C2',
+    followerLabel: 'CONNECTIONS / FOLLOWERS',
+    followingLabel: 'FOLLOWING',
+    postsLabel: 'ARTICLES & POSTS',
+    guidelineToolName: '2. LinkedIn Professional Guidelines Doctor',
+    guidelineToolDesc: 'Scan posts for outbound link penalties, engagement pods suppression, and format quality.',
+    tagToolName: '4. Industry Hashtags & Topic Radar',
+    tagToolDesc: 'Audit professional 3-to-5 hashtag best practices to get featured in LinkedIn Topic feeds.',
+    clockToolName: '5. B2B Morning Peak Engagement Clock',
+    clockToolDesc: 'Pinpoint business hours (8:30 AM - 10:30 AM) when corporate feeds see highest interaction.',
+    hookToolName: '6. Post Hook & "See More" Click Scorer',
+    hookToolDesc: 'Maximize dwell time and "See more" click rates with compelling professional hooks.',
+    bioToolName: '7. LinkedIn Headline & CTA Funnel Audit',
+    bioHeader: 'LINKEDIN HEADLINE & ABOUT SECTION',
+    placeholder: 'e.g. linkedin.com/in/username or @company'
+  },
+  threads: {
+    name: 'Threads',
+    color: '#000000',
+    followerLabel: 'FOLLOWERS',
+    followingLabel: 'FOLLOWING',
+    postsLabel: 'THREADS',
+    guidelineToolName: '2. Threads Community Guidelines Doctor',
+    guidelineToolDesc: 'Scan conversations & topics against Meta Threads terms & topic suppression.',
+    tagToolName: '4. Single-Tag Topic Radar',
+    tagToolDesc: 'Threads prioritizes single-topic tags over hashtag spam; audit your topic relevance.',
+    clockToolName: '5. Discussion Velocity Peak Clock',
+    clockToolDesc: 'Target evening conversation spikes when text discussion feeds peak.',
+    hookToolName: '6. Conversation Starter Hook Scorer',
+    hookToolDesc: 'Score questions and opening statements for comment debate velocity.',
+    bioToolName: '7. Threads Profile & Bio Funnel Audit',
+    bioHeader: 'THREADS BIO DATA & INSTAGRAM LINK',
+    placeholder: 'e.g. @handle or threads.net/@yourhandle'
+  }
+};
+
 export const INDUSTRY_CATEGORIES = [
   // 💻 1. Tech, Software & IT
   { id: 'software_company', group: '💻 Technology & Software', name: 'Software Company', benchmarkEng: 3.8, avgGhostRatio: 5 },
@@ -351,8 +462,8 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
     ];
   }
 
-  // Best Time to Post & Algorithm Clock (Industry-calibrated)
-  const postingSlots = {
+  // Best Time to Post & Algorithm Clock (Platform & Industry-calibrated)
+  let postingSlots = {
     weekdayBest: ['12:30 PM - 1:45 PM (Lunch Break)', '7:15 PM - 9:30 PM (Peak Evening Leisure)'],
     weekendBest: ['11:00 AM - 2:00 PM (Sunday Leisure Spike)', '8:00 PM - 10:30 PM'],
     worstTimesToAvoid: ['2:00 AM - 6:30 AM (Algorithmic Dead Zone - Cold Impressions Waste)'],
@@ -360,23 +471,80 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
     goldenWindowExplanation: 'Meta tests your post with 10% of active followers in the first 30 minutes. If engagement hits >4.5% during this golden window, the algorithm pushes it into the broader Explore & Suggested Feed!'
   };
 
-  // 3-Second Viral Hook Presets
-  const hookSuggestions = [
+  if (activePlatform === 'youtube') {
+    postingSlots = {
+      weekdayBest: ['3:00 PM - 5:30 PM (Pre-Prime Watch Time)', '7:00 PM - 10:00 PM (Evening Leisure Peak)'],
+      weekendBest: ['10:00 AM - 1:30 PM (Weekend Family Watch Spike)', '6:30 PM - 9:30 PM'],
+      worstTimesToAvoid: ['1:00 AM - 7:00 AM (Low Search & Browse Velocity)'],
+      goldenWindowMinutes: 120,
+      goldenWindowExplanation: 'YouTube tests your video with initial impressions in the first 2 hours. If Click-Through Rate (CTR) >7% and Average View Duration (AVD) >50%, YouTube pushes it to Suggested & Browse Features!'
+    };
+  } else if (activePlatform === 'linkedin') {
+    postingSlots = {
+      weekdayBest: ['8:30 AM - 10:30 AM (Morning Work Routine)', '1:00 PM - 2:30 PM (Post-Lunch Break)'],
+      weekendBest: ['11:00 AM - 1:00 PM (Casual Professional Reading)', 'Low Weekend B2B Volume'],
+      worstTimesToAvoid: ['10:00 PM - 6:00 AM (Off-work corporate silence)'],
+      goldenWindowMinutes: 60,
+      goldenWindowExplanation: 'LinkedIn checks dwell time & comment replies within the first 60 minutes. Deep professional comments trigger 3x wider feed distribution than quick likes.'
+    };
+  } else if (activePlatform === 'twitter') {
+    postingSlots = {
+      weekdayBest: ['8:00 AM - 9:30 AM (Morning News Commute)', '12:30 PM - 2:00 PM', '6:30 PM - 8:30 PM'],
+      weekendBest: ['10:00 AM - 12:30 PM', '8:00 PM - 10:00 PM'],
+      worstTimesToAvoid: ['2:00 AM - 6:00 AM'],
+      goldenWindowMinutes: 15,
+      goldenWindowExplanation: 'The X/Twitter algorithm heavily evaluates engagement within the first 15 minutes. Retweets and Bookmarks generate 5x algorithmic multiplier over basic views.'
+    };
+  } else if (activePlatform === 'facebook') {
+    postingSlots = {
+      weekdayBest: ['1:00 PM - 3:30 PM (Afternoon Mobile Scroll)', '7:30 PM - 9:30 PM (Family Leisure)'],
+      weekendBest: ['12:00 PM - 2:30 PM', '7:00 PM - 9:30 PM'],
+      worstTimesToAvoid: ['1:00 AM - 6:30 AM'],
+      goldenWindowMinutes: 45,
+      goldenWindowExplanation: 'Facebook prioritizes meaningful social interactions (shares & thoughtful comments) in the first 45 minutes to distribute Page posts into follower feeds.'
+    };
+  }
+
+  // Platform-Calibrated Viral Hook Presets
+  let hookSuggestions = [
     { type: 'Curiosity Gap', hook: 'Stop buying [Product] until you know this one hidden truth...', retentionBoost: '+44% 3s retention' },
     { type: 'Contrarian Statement', hook: 'Everyone is using [Product] completely wrong, and here is why...', retentionBoost: '+52% 3s retention' },
     { type: 'Visual Proof / Speed Hook', hook: 'Watch what happens when we test this against a ₹5,000 competitor...', retentionBoost: '+61% 3s retention' },
     { type: 'Relatable Pain Point', hook: 'If you struggle with [Problem], do NOT scroll past this Reel.', retentionBoost: '+48% 3s retention' },
-    { type: 'Price Drop Shock', hook: 'We made 500 units of this and Flipkart sellers are furious about our price...', retentionBoost: '+58% 3s retention' }
+    { type: 'Price Drop Shock', hook: 'We made 500 units of this and competitors are furious about our price...', retentionBoost: '+58% 3s retention' }
   ];
 
+  if (activePlatform === 'youtube') {
+    hookSuggestions = [
+      { type: 'High-Stakes Challenge', hook: 'I tested the #1 biggest mistake in [Niche] so you never have to...', retentionBoost: '+65% 30s retention' },
+      { type: 'Direct Value Proposition', hook: 'In the next 8 minutes, you will master the exact framework to [Goal]...', retentionBoost: '+54% viewer retention' },
+      { type: 'Shock Comparison', hook: '₹500 vs ₹50,000 [Product]: Is the expensive version actually worth it?', retentionBoost: '+72% CTR & retention' },
+      { type: 'Story Teaser', hook: 'This single decision almost ruined my entire business in 2026...', retentionBoost: '+59% retention' },
+      { type: 'Speed Tutorial', hook: 'Here is the step-by-step blueprint nobody talks about for [Topic]...', retentionBoost: '+63% retention' }
+    ];
+  } else if (activePlatform === 'linkedin') {
+    hookSuggestions = [
+      { type: 'Hard Business Truth', hook: 'Most founders spend ₹10 Lakhs learning this lesson. Here it is for free:', retentionBoost: '+84% "See more" clicks' },
+      { type: 'Case Study Teaser', hook: 'How we scaled [Client] from zero to ₹50L/mo with 1 simple operational shift:', retentionBoost: '+91% "See more" clicks' },
+      { type: 'Contrarian Career Insight', hook: 'Unpopular opinion: 90% of advice about [Industry] is completely outdated in 2026.', retentionBoost: '+78% comments' },
+      { type: 'Framework Breakdown', hook: 'The 3-part framework every business leader needs before Q4:', retentionBoost: '+69% saves & reposts' }
+    ];
+  } else if (activePlatform === 'twitter') {
+    hookSuggestions = [
+      { type: 'Curated Resource Thread', hook: 'I spent 120 hours studying [Topic]. Here are 7 lessons that will save you months: 🧵', retentionBoost: '+88% retweets' },
+      { type: 'Contrarian Thread', hook: 'Stop doing [Common Practice]. Do this instead (step-by-step breakdown):', retentionBoost: '+94% bookmarks' },
+      { type: 'Actionable Checklist', hook: 'The ultimate 2026 checklist for [Niche] founders (Bookmark this):', retentionBoost: '+79% bookmarks' }
+    ];
+  }
+
   // Category-Aware High-Converting Bio Generator
-  let recBio = `✨ Official ${handle.toUpperCase()} Store\n🛍️ Premium Quality • 100% Authentic\n⚡ Cash on Delivery & Fast Pan-India Shipping\n👇 Tap below for Exclusive Member Deals`;
-  let recLink = `https://${handle}.online?utm_source=instagram&utm_medium=bio_link&utm_campaign=profile_traffic`;
+  let recBio = `✨ Official ${handle.toUpperCase()} Channel / Page\n🛍️ Premium Quality • 100% Authentic\n⚡ Fast Delivery & Verified Updates\n👇 Tap below for Exclusive Resources & Links`;
+  let recLink = `https://${handle}.online?utm_source=${activePlatform}&utm_medium=bio_link&utm_campaign=profile_traffic`;
 
   const catGroup = category.group || '';
   if (catGroup.includes('Technology') || catGroup.includes('Software') || isTechSoftware) {
     recBio = `🚀 Scalable Web & Mobile App Development\n💻 Modern UI/UX • Custom SaaS • Scalable Cloud Solutions\n📈 Helping startups & businesses scale digitally\n👇 Request a Free Project Quote & Demo`;
-    recLink = `https://sidramotion.com?utm_source=instagram&utm_medium=bio_link`;
+    recLink = `https://sidramotion.com?utm_source=${activePlatform}&utm_medium=bio_link`;
   } else if (catGroup.includes('Creator') || catGroup.includes('Entertainment') || ['digital_creator', 'video_creator', 'entrepreneur'].includes(category.id)) {
     recBio = `🎬 Creative Visuals & Tech Storytelling\n💡 Helping creators build and grow digital products\n📩 Collaborations & Business Inquiries: DM / Email\n👇 Watch latest releases & links below`;
   } else if (catGroup.includes('Professional Services')) {
@@ -394,7 +562,7 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
     mobileSpeedScore: '82 / 100',
     bounceRisk: 'MEDIUM (Multi-link tree drops conversion by 34% compared to direct 1-click link)',
     issues: [
-      'Missing UTM Tracking parameters (?utm_source=instagram&utm_medium=bio)',
+      `Missing UTM Tracking parameters (?utm_source=${activePlatform}&utm_medium=profile_link)`,
       'No direct 1-click WhatsApp business checkout link found',
       'Third-party link landing page adds an extra click friction layer'
     ],
@@ -406,12 +574,20 @@ export function generateSocialAudit(rawInput, categoryId = 'digital_creator_infl
   const competitorAnalysis = {
     topCompetitorCategory: category.name,
     estimatedCompetitorEng: (category.benchmarkEng + 0.6).toFixed(1) + '%',
-    viralContentFormats: [
-      'Behind-the-scenes packing order ASMR Reels (2.4x avg reach)',
-      'Customer unboxing honest reactions (1.9x avg reach)',
-      'Side-by-side durability test Reels (3.1x avg reach)'
-    ],
-    trendingAudioNiche: 'Commercial Indie Lo-Fi & Fast Percussion Beat (Meta Approved)'
+    viralContentFormats: activePlatform === 'youtube'
+      ? ['Honest Comparison Testing Videos (2.8x avg views)', 'Behind-the-Scenes Creator Workflows (2.2x views)', 'Speed Breakdown Shorts (3.4x retention)']
+      : activePlatform === 'linkedin'
+      ? ['PDF Carousel Slides on Business Lessons (3.1x reach)', 'First-Person Founder Case Studies (2.5x reach)', 'Contrarian Industry Insights (2.1x comments)']
+      : activePlatform === 'twitter'
+      ? ['Curated Resource Mega-Threads (3.8x bookmarks)', 'Short Bulleted Frameworks (2.4x retweets)', 'Visual Charts & Infographics (2.9x reach)']
+      : [
+        'Behind-the-scenes packing order ASMR Reels (2.4x avg reach)',
+        'Customer unboxing honest reactions (1.9x avg reach)',
+        'Side-by-side durability test Reels (3.1x avg reach)'
+      ],
+    trendingAudioNiche: activePlatform === 'youtube'
+      ? 'High-Energy Background Beats (YouTube Audio Library - Monetization Safe)'
+      : 'Commercial Indie Lo-Fi & Fast Percussion Beat (Copyright Safe)'
   };
 
   return {
