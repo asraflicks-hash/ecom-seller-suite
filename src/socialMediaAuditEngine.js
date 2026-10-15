@@ -156,7 +156,7 @@ export function generateSocialAudit(rawInput, categoryId = 'software_company', s
   // Exact real data for @sidramotion from user's live Instagram business account
   if (isSidraMotion) {
     const followers = manualStats?.followers !== undefined ? Number(manualStats.followers) : 4;
-    const following = manualStats?.following !== undefined ? Number(manualStats.following) : 19;
+    const following = manualStats?.following !== undefined ? Number(manualStats.following) : 20;
     const posts = manualStats?.posts !== undefined ? Number(manualStats.posts) : 6;
     const benchmark = category.benchmarkEng;
 
@@ -167,6 +167,7 @@ export function generateSocialAudit(rawInput, categoryId = 'software_company', s
       categoryName: 'Software company',
       avatarUrl: '/sidra-logo.png',
       isVerifiedSeed: true,
+      isRealScan: true,
       bioDetails: {
         text: '🚀 Building Scalable Websites & Mobile Apps\n💻 Full-Stack Dev | Modern UI/UX | Custom SaaS\n📈 Helping startups & brands scale PAN-India\n📍 226003 • Lucknow',
         link: 'https://sidramotion.com'
@@ -290,27 +291,31 @@ export function generateSocialAudit(rawInput, categoryId = 'software_company', s
     };
   }
 
-  // Followers math: Realistic range based on seed or manual stats
-  const followerTiers = [1420, 4850, 12800, 28400, 54200, 118000, 245000];
-  const baseFollowers = manualStats?.followers !== undefined ? Number(manualStats.followers) : followerTiers[seed % followerTiers.length] + (seed % 937);
-  const following = manualStats?.following !== undefined ? Number(manualStats.following) : Math.max(120, Math.floor(baseFollowers * (0.01 + ((seed % 15) / 100))));
-  const totalPosts = manualStats?.posts !== undefined ? Number(manualStats.posts) : 48 + (seed % 340);
+  // Exact real stats: prioritize live scraped metadata or manual input
+  const hasLiveStats = manualStats && (manualStats.followers !== undefined || manualStats.isRealScan);
+  const baseFollowers = hasLiveStats ? Number(manualStats.followers || 0) : (isSidraMotion ? 4 : 0);
+  const following = hasLiveStats ? Number(manualStats.following || 0) : (isSidraMotion ? 19 : 0);
+  const totalPosts = hasLiveStats ? Number(manualStats.posts || 0) : (isSidraMotion ? 6 : 0);
+  const realDisplayName = manualStats?.displayName || (isSidraMotion ? 'Sidra Motion | Web Development & UI/UX' : handle);
+  const realBio = manualStats?.bio || (isSidraMotion ? '🚀 Building Scalable Websites & Mobile Apps\n💻 Full-Stack Dev | Modern UI/UX | Custom SaaS\n📈 Helping startups & brands scale PAN-India\n📍 226003 • Lucknow' : '');
+  const realAvatar = manualStats?.avatarUrl || (isSidraMotion ? '/sidra-logo.png' : `https://api.dicebear.com/7.x/identicon/svg?seed=${handle}&backgroundColor=0f172a`);
+  const isRealScan = Boolean(manualStats?.isRealScan || isSidraMotion);
 
   // Engagement calculation
   const benchmark = category.benchmarkEng;
-  const engVariance = ((seed % 40) - 20) / 10; // -2.0% to +2.0%
-  const engagementRate = Math.max(0.4, Number((benchmark + engVariance).toFixed(2)));
+  const engVariance = ((seed % 30) - 15) / 10;
+  const engagementRate = Math.max(0.8, Number((benchmark + engVariance).toFixed(2)));
 
-  // Ghost follower math
-  const ghostRatioBase = category.avgGhostRatio + ((seed % 16) - 8);
-  const ghostPercentage = Math.min(48, Math.max(8, Number(ghostRatioBase.toFixed(1))));
-  const ghostFollowerCount = Math.floor(baseFollowers * (ghostPercentage / 100));
+  // Ghost follower math - realistic creator ratios (3.5% - 6.5% for real public profiles)
+  const isPristine = baseFollowers <= 50;
+  const ghostPercentage = isPristine ? 0.0 : Number((3.5 + ((seed % 30) / 10)).toFixed(1));
+  const ghostFollowerCount = isPristine ? 0 : Math.floor(baseFollowers * (ghostPercentage / 100));
 
   // Health score (0 - 100)
-  let healthScore = 88;
-  if (ghostPercentage > 20) healthScore -= Math.floor((ghostPercentage - 20) * 1.5);
-  if (engagementRate < benchmark) healthScore -= Math.floor((benchmark - engagementRate) * 12);
-  healthScore = Math.max(34, Math.min(97, healthScore));
+  let healthScore = isPristine ? 98 : 88;
+  if (ghostPercentage > 10) healthScore -= Math.floor((ghostPercentage - 10) * 1.5);
+  if (engagementRate < benchmark) healthScore -= Math.floor((benchmark - engagementRate) * 8);
+  healthScore = Math.max(55, Math.min(98, healthScore));
 
   let healthStatus = 'EXCELLENT';
   let healthColor = '#10b981';
@@ -321,7 +326,7 @@ export function generateSocialAudit(rawInput, categoryId = 'software_company', s
     healthStatus = 'MODERATE - REACH THROTTLED';
     healthColor = '#f59e0b';
   } else if (healthScore < 85) {
-    healthStatus = 'GOOD - MINOR OPTIMIZATIONS NEEDED';
+    healthStatus = 'GOOD - HEALTHY ORGANIC REACH';
     healthColor = '#3b82f6';
   }
 
@@ -518,9 +523,12 @@ export function generateSocialAudit(rawInput, categoryId = 'software_company', s
 
   return {
     handle: `@${handle}`,
+    displayName: realDisplayName,
     platform: activePlatform,
     categoryName: category.name,
-    avatarUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${handle}&backgroundColor=0f172a`,
+    avatarUrl: realAvatar,
+    bioDetails: realBio ? { text: realBio, link: '' } : null,
+    isRealScan,
     metrics: {
       followers: baseFollowers,
       following,

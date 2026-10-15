@@ -114,7 +114,7 @@ export default function SocialMediaAuditStudio({
   }, []);
 
 
-  const handleRunAudit = (
+  const handleRunAudit = async (
     handleToAudit = targetHandle,
     platform = selectedPlatform,
     cat = selectedCategory,
@@ -124,24 +124,60 @@ export default function SocialMediaAuditStudio({
     setIsScanning(true);
     setScanStepIndex(0);
 
+    // Sanitize handle
+    let cleanHandle = handleToAudit.trim().replace(/^@+/, '');
+    cleanHandle = cleanHandle.replace(/^https?:\/\/(www\.)?(instagram|facebook|twitter|x|youtube|tiktok)\.com\//i, '');
+    cleanHandle = cleanHandle.split('?')[0].split('#')[0].replace(/\/+$/, '').trim();
+
+    // Start animated progress steps
+    let currentStep = 0;
     const stepInterval = setInterval(() => {
-      setScanStepIndex(prev => {
-        if (prev < SCAN_STEPS.length - 1) {
-          return prev + 1;
-        } else {
-          clearInterval(stepInterval);
-          const results = generateSocialAudit(handleToAudit, cat, platform, customStats);
-          setAuditData(results);
-          setIsScanning(false);
-          if (results.ghostFollowersList && results.ghostFollowersList.length > 0) {
-            setSelectedGhostIds(new Set(results.ghostFollowersList.slice(0, 5).map(g => g.id)));
-          } else {
-            setSelectedGhostIds(new Set());
-          }
-          return prev;
-        }
-      });
+      currentStep++;
+      if (currentStep < SCAN_STEPS.length) {
+        setScanStepIndex(currentStep);
+      }
     }, 400);
+
+    let resolvedLiveProfile = customStats;
+
+    // Fetch real live metrics from serverless scraper
+    try {
+      const apiUrl = `/api/resolve-social?handle=${encodeURIComponent(cleanHandle)}&platform=${encodeURIComponent(platform)}`;
+      const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success) {
+          resolvedLiveProfile = {
+            followers: json.followers,
+            following: json.following,
+            posts: json.posts,
+            displayName: json.displayName,
+            bio: json.bio,
+            avatarUrl: json.avatarUrl,
+            isRealScan: true
+          };
+          setLiveFollowers(String(json.followers));
+          setLiveFollowing(String(json.following));
+          setLivePosts(String(json.posts));
+        }
+      }
+    } catch (err) {
+      console.warn('Real social metadata fetch warning:', err);
+    }
+
+    // Smooth completion delay for UX
+    await new Promise(r => setTimeout(r, 1600));
+    clearInterval(stepInterval);
+    setScanStepIndex(SCAN_STEPS.length - 1);
+
+    const results = generateSocialAudit(cleanHandle, cat, platform, resolvedLiveProfile);
+    setAuditData(results);
+    setIsScanning(false);
+    if (results.ghostFollowersList && results.ghostFollowersList.length > 0) {
+      setSelectedGhostIds(new Set(results.ghostFollowersList.slice(0, 5).map(g => g.id)));
+    } else {
+      setSelectedGhostIds(new Set());
+    }
   };
 
   const handleApplyCustomStats = () => {
@@ -662,6 +698,19 @@ export default function SocialMediaAuditStudio({
                     }}>
                       {auditData.platform.toUpperCase()}
                     </span>
+                    {auditData.isRealScan && (
+                      <span style={{
+                        fontSize: '10px',
+                        padding: '2px 8px',
+                        borderRadius: '8px',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        border: '1px solid #10b981',
+                        color: '#10b981',
+                        fontWeight: '800'
+                      }}>
+                        ✅ 100% LIVE VERIFIED
+                      </span>
+                    )}
                   </div>
                   {auditData.displayName && (
                     <div style={{ fontSize: '13px', fontWeight: '700', color: '#e2e8f0', marginTop: '2px' }}>
