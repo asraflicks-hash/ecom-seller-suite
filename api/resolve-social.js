@@ -41,13 +41,15 @@ export default async function handler(req, res) {
   try {
     if (platform === 'instagram') {
       const profileData = await scrapeInstagram(cleanHandle);
-      return res.status(200).json({
-        success: true,
-        platform: 'instagram',
-        handle: cleanHandle,
-        ...profileData,
-        isRealScan: true
-      });
+      if (profileData && profileData.isFound && (profileData.followers > 0 || profileData.posts > 0 || profileData.following > 0)) {
+        return res.status(200).json({
+          success: true,
+          platform: 'instagram',
+          handle: cleanHandle,
+          ...profileData,
+          isRealScan: true
+        });
+      }
     } else if (platform === 'youtube') {
       const profileData = await scrapeYouTube(cleanHandle);
       if (profileData && profileData.isFound) {
@@ -196,8 +198,7 @@ function parseInstagramHtml(html, handle) {
     posts,
     displayName: displayName || handle,
     bio: bio || '',
-    avatarUrl: ogImage || '',
-    debug: { rawMeta, ogTitle, htmlSnippet: html.slice(0, 300) }
+    avatarUrl: ogImage || ''
   };
 }
 
