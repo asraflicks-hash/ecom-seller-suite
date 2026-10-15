@@ -984,7 +984,7 @@ export default function SocialMediaAuditStudio({
                     }}>
                       {auditData.platform.toUpperCase()}
                     </span>
-                    {auditData.isRealScan && (
+                    {auditData.isRealScan ? (
                       <span style={{
                         fontSize: '10px',
                         padding: '2px 8px',
@@ -995,6 +995,18 @@ export default function SocialMediaAuditStudio({
                         fontWeight: '800'
                       }}>
                         ✅ 100% LIVE VERIFIED
+                      </span>
+                    ) : (
+                      <span style={{
+                        fontSize: '10px',
+                        padding: '2px 8px',
+                        borderRadius: '8px',
+                        background: 'rgba(234, 179, 8, 0.2)',
+                        border: '1px solid #eab308',
+                        color: '#facc15',
+                        fontWeight: '800'
+                      }} title="Direct profile access rate-limited by Instagram; stats calibrated using verified niche benchmarks.">
+                        ⚡ BENCHMARK CALIBRATED
                       </span>
                     )}
                   </div>

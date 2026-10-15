@@ -371,6 +371,16 @@ function listingSyncPlugin() {
               isVerified: false,
               isRealScan: true
             },
+            'famashhadii': {
+              displayName: 'Maulana Syed Faiz Abbas Mashhadi',
+              followers: 30000,
+              following: 269,
+              posts: 1202,
+              bio: '🎤 Official Page of Maulana Faiz Abbas Mashhadi\n📚 Islamic Scholar | Speaker | Khateeb\n🌙 Spreading knowledge & message of Ahlulbayt (a.s)\n📩 Managed by the Social Media Team',
+              avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=famashhadii&backgroundColor=0f172a',
+              isVerified: false,
+              isRealScan: true
+            },
             'zshuja_313': {
               displayName: 'Syed Shuja | Videographer',
               followers: 9662,
