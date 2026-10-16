@@ -1162,7 +1162,9 @@ export default function OmnichannelSeoSuite({
   copyToClipboard, 
   copiedKey,
   isPreviewMode = false,
-  onRequireKey
+  isGuest = false,
+  onRequireKey,
+  onRequireAuth
 }) {
   // Navigation Modes: 'audit-engine' | 'disciplines' | 'directory'
   const [activeMode, setActiveMode] = useState('audit-engine');
@@ -1293,6 +1295,11 @@ export default function OmnichannelSeoSuite({
 
   // Download file helper
   const handleDownloadFile = (content, filename, type = 'text/plain') => {
+    if (isPreviewMode || isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
+      return;
+    }
     const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

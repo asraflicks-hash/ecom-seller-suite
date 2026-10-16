@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   Copy, 
@@ -14,9 +14,11 @@ import {
   Gauge,
   ExternalLink,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Database
 } from 'lucide-react';
 import { MarketplaceLogo } from './MarketplaceLogos.jsx';
+import { saveUserWork } from './supabaseClient.js';
 
 // Pre-configured URL sample audits for instant testing
 const URL_AUDIT_PRESETS = [
@@ -405,8 +407,18 @@ export default function AiListingRepairStudio({
   copyToClipboard, 
   copiedKey,
   isPreviewMode = false,
-  onRequireKey
+  isGuest = false,
+  onRequireKey,
+  onRequireAuth
 }) {
+  // Guest 5% limit tracker
+  const [guestUsedGenerations, setGuestUsedGenerations] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return Number(sessionStorage.getItem('ssp_guest_repairs') || 0);
+    }
+    return 0;
+  });
+
   // Input Modes: 'url' (Marketplace URL / ASIN Importer) | 'manual'
   const [inputMode, setInputMode] = useState('url');
   const [platform, setPlatform] = useState('amazon'); // 'amazon' | 'flipkart' | 'meesho'
@@ -428,6 +440,30 @@ export default function AiListingRepairStudio({
   const [isRepairing, setIsRepairing] = useState(false);
   const [output, setOutput] = useState(null);
   const [viewStep, setViewStep] = useState('idle'); // 'idle' | 'audit' | 'repaired'
+  const [cloudSavedToast, setCloudSavedToast] = useState(false);
+
+  // Restore work listener from Cloud Work History Modal
+  useEffect(() => {
+    const handleRestore = (e) => {
+      if (e.detail?.tool_id === 'listing-ai' && e.detail.work_data) {
+        const wd = e.detail.work_data;
+        if (wd.platform) setPlatform(wd.platform);
+        if (wd.urlInput !== undefined) setUrlInput(wd.urlInput);
+        if (wd.inputMode) setInputMode(wd.inputMode);
+        if (wd.auditData) setAuditData(wd.auditData);
+        if (wd.productName !== undefined) setProductName(wd.productName);
+        if (wd.brand !== undefined) setBrand(wd.brand);
+        if (wd.category !== undefined) setCategory(wd.category);
+        if (wd.bulletInputs !== undefined) setBulletInputs(wd.bulletInputs);
+        if (wd.output) setOutput(wd.output);
+        setViewStep(wd.output ? 'repaired' : (wd.auditData ? 'audit' : 'idle'));
+        setCloudSavedToast(true);
+        setTimeout(() => setCloudSavedToast(false), 3500);
+      }
+    };
+    window.addEventListener('ssp_restore_work', handleRestore);
+    return () => window.removeEventListener('ssp_restore_work', handleRestore);
+  }, []);
 
   // Switch Platform Handler with real-time validation check
   const handlePlatformChange = (newPlatform) => {
@@ -573,17 +609,53 @@ export default function AiListingRepairStudio({
   // Run repair engine
   const handleExecuteRepair = () => {
     if (!auditData) return;
+
+    if (isGuest && guestUsedGenerations >= 1) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
+      return;
+    }
+
     setIsRepairing(true);
 
     setTimeout(() => {
       setIsRepairing(false);
-      setOutput({
+
+      if (isGuest) {
+        const next = guestUsedGenerations + 1;
+        setGuestUsedGenerations(next);
+        try { sessionStorage.setItem('ssp_guest_repairs', String(next)); } catch (e) {}
+      }
+
+      const repairedData = {
         ...auditData.repaired,
         score: 98,
         status: 'CHAMPION LISTING',
         color: '#25d366'
-      });
+      };
+      setOutput(repairedData);
       setViewStep('repaired');
+
+      // Auto-save to cloud account
+      try {
+        saveUserWork({
+          toolId: 'listing-ai',
+          toolName: '1. AI Listing & SEO Repair',
+          title: auditData.repaired?.title || auditData.label || 'Optimized Listing',
+          summary: `Score: 98/100 • ${platform.toUpperCase()} • Title + 5 Bullets + Keywords`,
+          workData: {
+            inputMode: 'url',
+            platform,
+            urlInput,
+            auditData,
+            output: repairedData
+          }
+        });
+        setCloudSavedToast(true);
+        setTimeout(() => setCloudSavedToast(false), 4000);
+      } catch (e) {
+        console.warn('Auto-save error:', e);
+      }
     }, 750);
   };
 
@@ -593,10 +665,23 @@ export default function AiListingRepairStudio({
       alert('Please enter your Product Name, Brand, or USPs/Features on the left.');
       return;
     }
+
+    if (isGuest && guestUsedGenerations >= 1) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
+      return;
+    }
+
     setIsRepairing(true);
 
     setTimeout(() => {
       setIsRepairing(false);
+
+      if (isGuest) {
+        const next = guestUsedGenerations + 1;
+        setGuestUsedGenerations(next);
+        try { sessionStorage.setItem('ssp_guest_repairs', String(next)); } catch (e) {}
+      }
       const features = bulletInputs.split(',').map(f => f.trim()).filter(Boolean);
       const cleanProd = productName.trim() || 'Premium Product';
       const cleanBrand = brand.trim() || 'Apex Brand';
@@ -622,7 +707,7 @@ export default function AiListingRepairStudio({
 
       const searchTerms = `${cleanProd.toLowerCase().replace(/[^a-z0-9 ]/g, '')} ${cleanBrand.toLowerCase()} ${features.map(f => f.toLowerCase().replace(/[^a-z0-9 ]/g, '')).join(' ')} top rated online offer sale discount`.substring(0, 245);
 
-      setOutput({
+      const generatedData = {
         brand: cleanBrand,
         title: genTitle,
         bullets: bulletTemplates,
@@ -633,14 +718,44 @@ export default function AiListingRepairStudio({
         score: 96,
         status: 'CHAMPION LISTING',
         color: '#25d366'
-      });
+      };
+
+      setOutput(generatedData);
       setViewStep('repaired');
+
+      // Auto-save to cloud account
+      try {
+        saveUserWork({
+          toolId: 'listing-ai',
+          toolName: '1. AI Listing & SEO Repair',
+          title: genTitle,
+          summary: `Score: 96/100 • ${platform.toUpperCase()} • ${cleanBrand} ${cleanProd}`,
+          workData: {
+            inputMode: 'manual',
+            platform,
+            productName,
+            brand,
+            category,
+            bulletInputs,
+            output: generatedData
+          }
+        });
+        setCloudSavedToast(true);
+        setTimeout(() => setCloudSavedToast(false), 4000);
+      } catch (e) {
+        console.warn('Auto-save error:', e);
+      }
     }, 700);
   };
 
   // Export full listing pack
   const downloadListingAsText = () => {
     if (!output) return;
+    if (isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
+      return;
+    }
     const content = `===================================================================
 SIDRA MOTION SELLER SUITE PRO 2026 — OFFICIAL REPAIRED LISTING
 PORTAL: https://sellersuitepro.online
@@ -703,6 +818,11 @@ SUPPORT: contact@sidramotion.com | PORTAL: sellersuitepro.online
   // Copy entire data pack at once
   const handleCopyFullDataPack = () => {
     if (!output) return;
+    if (isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
+      return;
+    }
     const text = `=== 100% REPAIRED LISTING DATA PACK (sellersuitepro.online) ===
 
 1. PRODUCT TITLE (Paste in Vital Info -> Item Name):
@@ -831,6 +951,38 @@ ${output.description}`;
 
   return (
     <div className="responsive-workspace-grid">
+      {/* Toast Alert for Cloud Save / Restore */}
+      {cloudSavedToast && (
+        <div style={{
+          gridColumn: '1 / -1',
+          background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.2) 0%, rgba(37, 211, 102, 0.18) 100%)',
+          border: '1.5px solid rgba(0, 210, 255, 0.5)',
+          borderRadius: '14px',
+          padding: '10px 18px',
+          color: '#f8fafc',
+          fontSize: '12px',
+          fontWeight: '700',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 210, 255, 0.25)',
+          marginBottom: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Database size={16} color="#00d2ff" />
+            <span>✓ <b>Work Saved to Cloud!</b> Aapka kaam account me safe ho gaya hai — sign out karne ke baad bhi wapas aane par milega.</span>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setCloudSavedToast(false)}
+            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '13px' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* LEFT PANEL: URL IMPORTER & AUDIT CONTROLS */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Module Header */}

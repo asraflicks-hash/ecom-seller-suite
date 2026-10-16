@@ -12,28 +12,18 @@ import {
   Store, 
   CheckCircle, 
   AlertCircle, 
-  Key, 
-  Database, 
-  ExternalLink, 
   Sparkles,
   ShieldCheck,
   RefreshCw,
-  LogOut,
-  Copy,
-  Check,
-  Code
+  LogOut
 } from 'lucide-react';
 import { 
   signInWithEmail, 
   signUpWithEmail, 
   signInWithGoogle,
   resetPasswordForEmail, 
-  isSupabaseConfigured, 
-  getActiveSupabaseConfig, 
-  saveSupabaseConfig, 
-  clearSupabaseConfig,
-  signOutUser,
-  SUPABASE_SQL_SCHEMA
+  isSupabaseConfigured,
+  signOutUser
 } from './supabaseClient';
 
 export default function AuthModal({ 
@@ -43,8 +33,7 @@ export default function AuthModal({
   currentUser,
   onAuthSuccess 
 }) {
-  const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'forgot' | 'config'
-  const [showConfig, setShowConfig] = useState(false);
+  const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'forgot'
 
   // Form Fields
   const [email, setEmail] = useState('');
@@ -56,30 +45,17 @@ export default function AuthModal({
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
-  // Supabase Custom Config Fields
-  const [supabaseUrlInput, setSupabaseUrlInput] = useState('');
-  const [supabaseKeyInput, setSupabaseKeyInput] = useState('');
-
   // Status & Feedback
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [isConfigured, setIsConfigured] = useState(isSupabaseConfigured());
-  const [activeConfig, setActiveConfig] = useState(getActiveSupabaseConfig());
+  const isConfigured = isSupabaseConfigured();
 
   useEffect(() => {
     setMode(initialMode);
     setErrorMsg('');
     setSuccessMsg('');
   }, [initialMode, isOpen]);
-
-  useEffect(() => {
-    const cfg = getActiveSupabaseConfig();
-    setActiveConfig(cfg);
-    setIsConfigured(cfg.isConfigured);
-    setSupabaseUrlInput(cfg.url || '');
-    setSupabaseKeyInput(cfg.anonKey || '');
-  }, [isOpen, showConfig]);
 
   if (!isOpen) return null;
 
@@ -90,7 +66,7 @@ export default function AuthModal({
     setSuccessMsg('');
 
     if (!email.trim() || !password) {
-      setErrorMsg('Kripya Email aur Password dono bharein.');
+      setErrorMsg('Please enter both your email address and password.');
       return;
     }
 
@@ -98,7 +74,7 @@ export default function AuthModal({
     try {
       const data = await signInWithEmail(email.trim(), password);
       const user = data?.user;
-      setSuccessMsg('Aapka Login safalta-purvak ho gaya hai! 🎉');
+      setSuccessMsg('Successfully signed in! Welcome back. 🎉');
       
       // Update local storage for seamless compatibility with app profile
       if (user) {
@@ -117,10 +93,17 @@ export default function AuthModal({
       setTimeout(() => {
         onAuthSuccess && onAuthSuccess(user);
         onClose();
-      }, 900);
+      }, 700);
     } catch (err) {
       console.error('Login error:', err);
-      setErrorMsg(err.message || 'Login fail hua. Kripya credentials check karein.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('invalid login credentials')) {
+        setErrorMsg('Invalid email or password. Please verify your credentials and try again.');
+      } else if (msg.toLowerCase().includes('email not confirmed')) {
+        setErrorMsg('Please confirm your email address or contact support.');
+      } else {
+        setErrorMsg(msg || 'Sign in failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -132,23 +115,27 @@ export default function AuthModal({
     setErrorMsg('');
     setSuccessMsg('');
 
+    if (!fullName.trim()) {
+      setErrorMsg('Please enter your Full Name or Seller Name.');
+      return;
+    }
     if (!email.trim() || !password) {
-      setErrorMsg('Email aur Password required hain.');
+      setErrorMsg('Both Email and Password are required.');
       return;
     }
     if (password.length < 6) {
-      setErrorMsg('Password kam se kam 6 characters ka hona chahiye.');
+      setErrorMsg('Password must be at least 6 characters long.');
       return;
     }
     if (password !== confirmPassword) {
-      setErrorMsg('Password aur Confirm Password match nahi ho rahe.');
+      setErrorMsg('Passwords do not match. Please re-enter.');
       return;
     }
 
     setLoading(true);
     try {
       const data = await signUpWithEmail(email.trim(), password, {
-        fullName: fullName.trim() || email.split('@')[0],
+        fullName: fullName.trim(),
         phone: phone.trim(),
         storeName: storeName.trim()
       });
@@ -156,11 +143,11 @@ export default function AuthModal({
       const user = data?.user;
       
       if (data?.session) {
-        setSuccessMsg('Account safalta-purvak create ho gaya aur aap logged-in hain! 🚀');
+        setSuccessMsg('Account created successfully! Workstation unlocked. 🚀');
         if (user) {
           localStorage.setItem('sidra_auth_unlocked', 'true');
           localStorage.setItem('sidra_auth_type', 'supabase');
-          localStorage.setItem('sidra_user_name', fullName.trim() || email.split('@')[0]);
+          localStorage.setItem('sidra_user_name', fullName.trim());
           localStorage.setItem('sidra_user_email', email.trim());
           if (phone.trim()) localStorage.setItem('sidra_user_phone', phone.trim());
           if (storeName.trim()) localStorage.setItem('sidra_store_name', storeName.trim());
@@ -168,14 +155,39 @@ export default function AuthModal({
         setTimeout(() => {
           onAuthSuccess && onAuthSuccess(user);
           onClose();
-        }, 1100);
+        }, 900);
       } else {
-        // Confirmation email required
-        setSuccessMsg('Account create ho gaya! Kripya apna email check karein verification link ke liye.');
+        // Confirmation email link dispatched or auto-verified
+        setSuccessMsg('Account created! Logging you in...');
+        // Attempt immediate login in case auto-confirmation is active
+        try {
+          const loginData = await signInWithEmail(email.trim(), password);
+          if (loginData?.user) {
+            localStorage.setItem('sidra_auth_unlocked', 'true');
+            localStorage.setItem('sidra_auth_type', 'supabase');
+            localStorage.setItem('sidra_user_name', fullName.trim());
+            localStorage.setItem('sidra_user_email', email.trim());
+            setTimeout(() => {
+              onAuthSuccess && onAuthSuccess(loginData.user);
+              onClose();
+            }, 700);
+            return;
+          }
+        } catch (e) {
+          // If requires manual link click
+          setSuccessMsg('Account created! Please check your email inbox for the verification link.');
+        }
       }
     } catch (err) {
       console.error('Signup error:', err);
-      setErrorMsg(err.message || 'Signup fail hua. Kripya details check karein.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('rate limit')) {
+        setErrorMsg('Email limit reached for now. Please wait a few moments or log in if already registered.');
+      } else if (msg.toLowerCase().includes('already registered')) {
+        setErrorMsg('This email is already registered. Please click "Sign In" above to log in.');
+      } else {
+        setErrorMsg(msg || 'Registration failed. Please check your details.');
+      }
     } finally {
       setLoading(false);
     }
@@ -188,94 +200,38 @@ export default function AuthModal({
     setSuccessMsg('');
 
     if (!email.trim()) {
-      setErrorMsg('Kripya apna registered email enter karein.');
+      setErrorMsg('Please enter your registered email address.');
       return;
     }
 
     setLoading(true);
     try {
       await resetPasswordForEmail(email.trim());
-      setSuccessMsg('Password reset link aapke email par bhej diya gaya hai! 📩');
+      setSuccessMsg('Password reset link has been dispatched to your email address! 📩');
     } catch (err) {
       console.error('Reset error:', err);
-      setErrorMsg(err.message || 'Password reset link bhejne me samasya aayi.');
+      setErrorMsg(err.message || 'Unable to send password reset email. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Saving Custom Supabase Config
-  const handleSaveConfig = (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    if (!supabaseUrlInput.trim() || !supabaseKeyInput.trim()) {
-      setErrorMsg('Supabase Project URL aur Anon Key dono daalna zaroori hai.');
-      return;
-    }
-
-    if (!supabaseUrlInput.includes('supabase.co') && !supabaseUrlInput.startsWith('http')) {
-      setErrorMsg('Invalid URL format. Example: https://xxxx.supabase.co');
-      return;
-    }
-
-    saveSupabaseConfig(supabaseUrlInput.trim(), supabaseKeyInput.trim());
-    const cfg = getActiveSupabaseConfig();
-    setActiveConfig(cfg);
-    setIsConfigured(cfg.isConfigured);
-    setSuccessMsg('Supabase Credentials safalta se save ho gaye! Live Database Connected! 🟢');
-    setTimeout(() => {
-      setShowConfig(false);
-      setSuccessMsg('');
-    }, 1200);
-  };
-
-  const handleClearConfig = () => {
-    clearSupabaseConfig();
-    const cfg = getActiveSupabaseConfig();
-    setActiveConfig(cfg);
-    setIsConfigured(cfg.isConfigured);
-    setSupabaseUrlInput('');
-    setSupabaseKeyInput('');
-    setSuccessMsg('Custom Supabase credentials hata diye gaye.');
-  };
-
-  const [copiedSchema, setCopiedSchema] = useState(false);
-  const [showSqlSchema, setShowSqlSchema] = useState(false);
-
+  // Handle Google OAuth Sign In
   const handleGoogleSignIn = async () => {
     setErrorMsg('');
     setSuccessMsg('');
     setLoading(true);
     try {
-      const data = await signInWithGoogle();
-      const user = data?.user;
-      if (user) {
-        setSuccessMsg('Google se login safal hua! 🎉');
-        const uName = user.user_metadata?.full_name || user.email?.split('@')[0];
-        localStorage.setItem('sidra_auth_unlocked', 'true');
-        localStorage.setItem('sidra_auth_type', 'supabase');
-        localStorage.setItem('sidra_user_name', uName);
-        localStorage.setItem('sidra_user_email', user.email || '');
-        setTimeout(() => {
-          onAuthSuccess && onAuthSuccess(user);
-          onClose();
-        }, 800);
-      }
+      await signInWithGoogle();
     } catch (err) {
       console.error('Google sign-in error:', err);
-      setErrorMsg(err.message || 'Google sign-in fail hua.');
-    } finally {
+      const msg = err.message || '';
+      if (msg.includes('provider is not enabled') || msg.includes('Unsupported provider')) {
+        setErrorMsg('Google Sign-In is not enabled yet in your Supabase Dashboard. Please enable the Google provider in Supabase > Authentication > Providers > Google.');
+      } else {
+        setErrorMsg(msg || 'Google Sign-In failed. Please try again.');
+      }
       setLoading(false);
-    }
-  };
-
-  const handleCopySchema = () => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
-      setCopiedSchema(true);
-      setTimeout(() => setCopiedSchema(false), 2500);
     }
   };
 
@@ -313,48 +269,43 @@ export default function AuthModal({
         color: '#f8fafc',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
       }}>
-        {/* Header Ribbon */}
+        {/* Header Ribbon - Clean & Professional */}
         <div style={{
-          padding: '20px 24px 14px 24px',
+          padding: '20px 24px 16px 24px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '38px',
-              height: '38px',
+              width: '40px',
+              height: '40px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)',
+              background: mode === 'signup' 
+                ? 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)' 
+                : 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 16px rgba(0, 210, 255, 0.4)'
+              boxShadow: '0 0 16px rgba(0, 210, 255, 0.35)'
             }}>
               {mode === 'signup' ? <UserPlus size={20} color="#050b14" /> : <LogIn size={20} color="#050b14" />}
             </div>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>{mode === 'signup' ? 'Create Seller Account' : mode === 'forgot' ? 'Reset Password' : 'Login to Seller Suite'}</span>
-                <span style={{
-                  fontSize: '9px',
-                  background: 'rgba(0, 210, 255, 0.15)',
-                  color: '#00d2ff',
-                  border: '1px solid rgba(0, 210, 255, 0.3)',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  fontWeight: '700'
-                }}>SUPABASE AUTH</span>
+              <div style={{ fontSize: '17px', fontWeight: '800', letterSpacing: '-0.3px' }}>
+                {mode === 'signup' ? 'Create Seller Account' : mode === 'forgot' ? 'Reset Password' : 'Login to Seller Suite'}
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                Sidra Motion E-Commerce Workstation
+                Sidra Motion E-Commerce Workstation • 100% Free
               </div>
             </div>
           </div>
 
           <button 
+            type="button"
             onClick={onClose}
+            aria-label="Close"
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
               border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -373,183 +324,6 @@ export default function AuthModal({
           </button>
         </div>
 
-        {/* Supabase Connection Status Pill */}
-        <div style={{
-          padding: '10px 24px',
-          background: isConfigured ? 'rgba(37, 211, 102, 0.08)' : 'rgba(251, 191, 36, 0.08)',
-          borderBottom: `1px solid ${isConfigured ? 'rgba(37, 211, 102, 0.2)' : 'rgba(251, 191, 36, 0.2)'}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '11px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Database size={13} color={isConfigured ? '#25d366' : '#fbbf24'} />
-            <span style={{ color: isConfigured ? '#25d366' : '#fbbf24', fontWeight: '700' }}>
-              {isConfigured ? '🟢 Supabase Cloud Database Connected' : '⚡ Demo Mode (Supabase Keys Unset)'}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowConfig(!showConfig)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#00d2ff',
-              cursor: 'pointer',
-              fontWeight: '700',
-              fontSize: '11px',
-              textDecoration: 'underline'
-            }}
-          >
-            {showConfig ? 'Hide Config' : 'Project API Keys'}
-          </button>
-        </div>
-
-        {/* Collapsible Supabase Project API Keys Drawer */}
-        {showConfig && (
-          <div style={{
-            padding: '16px 24px',
-            background: 'rgba(0, 0, 0, 0.4)',
-            borderBottom: '1px solid rgba(0, 210, 255, 0.2)',
-            fontSize: '12px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontWeight: '800', color: '#00d2ff', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Key size={14} /> Connect Your Supabase Project
-              </span>
-              <a 
-                href="https://supabase.com/dashboard" 
-                target="_blank" 
-                rel="noreferrer"
-                style={{ color: '#38bdf8', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
-              >
-                Dashboard <ExternalLink size={10} />
-              </a>
-            </div>
-            <p style={{ color: '#94a3b8', fontSize: '11px', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-              Apne Supabase Dashboard me jaakar <b>Project Settings → API</b> se URL aur `anon` `public` key copy karke yahan paste karein:
-            </p>
-
-            <form onSubmit={handleSaveConfig} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div>
-                <label style={{ fontSize: '10px', color: '#cbd5e1', fontWeight: '700', textTransform: 'uppercase' }}>
-                  Project URL (e.g. https://xyz.supabase.co)
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://your-project.supabase.co"
-                  value={supabaseUrlInput}
-                  onChange={(e) => setSupabaseUrlInput(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    background: 'rgba(15, 23, 42, 0.8)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    fontSize: '11px',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '10px', color: '#cbd5e1', fontWeight: '700', textTransform: 'uppercase' }}>
-                  Anon Public Key (eyJhbG...)
-                </label>
-                <input
-                  type="password"
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  value={supabaseKeyInput}
-                  onChange={(e) => setSupabaseKeyInput(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    background: 'rgba(15, 23, 42, 0.8)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    fontSize: '11px',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                <button
-                  type="submit"
-                  style={{
-                    flex: 1,
-                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
-                    color: '#050b14',
-                    border: 'none',
-                    padding: '8px',
-                    borderRadius: '8px',
-                    fontWeight: '800',
-                    fontSize: '11px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Save & Connect Live Database
-                </button>
-                {isConfigured && (
-                  <button
-                    type="button"
-                    onClick={handleClearConfig}
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      color: '#f87171',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontWeight: '700',
-                      fontSize: '11px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Disconnect
-                  </button>
-                )}
-              </div>
-            </form>
-
-            {/* Copy Supabase SQL Schema for PostgreSQL tables */}
-            <div style={{ marginTop: '14px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Code size={13} /> PostgreSQL Database Schema (Profiles & Audits)
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopySchema}
-                  style={{
-                    background: copiedSchema ? 'rgba(37, 211, 102, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                    border: `1px solid ${copiedSchema ? '#25d366' : 'rgba(255, 255, 255, 0.2)'}`,
-                    color: copiedSchema ? '#25d366' : '#38bdf8',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    fontSize: '10px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  {copiedSchema ? <Check size={11} /> : <Copy size={11} />}
-                  <span>{copiedSchema ? 'Copied SQL!' : 'Copy SQL Schema'}</span>
-                </button>
-              </div>
-              <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.4' }}>
-                Supabase Dashboard me <b>SQL Editor</b> me jaakar New Query me ye SQL paste karein aur Run dabayein. Profiles aur Social Audits tables automatically create ho jayenge.
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* If Already Logged In View */}
         {currentUser ? (
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -567,7 +341,7 @@ export default function AuthModal({
               <ShieldCheck size={32} color="#050b14" />
             </div>
             <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: '800' }}>
-              Aap Pehle Se Logged In Hain
+              You are currently signed in
             </h3>
             <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px 0' }}>
               Logged in as: <span style={{ color: '#00d2ff', fontWeight: '700' }}>{currentUser.email}</span>
@@ -591,6 +365,7 @@ export default function AuthModal({
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
+                type="button"
                 onClick={onClose}
                 style={{
                   flex: 1,
@@ -607,6 +382,7 @@ export default function AuthModal({
                 Continue Workstation
               </button>
               <button
+                type="button"
                 onClick={handleLogout}
                 style={{
                   background: 'rgba(239, 68, 68, 0.2)',
@@ -660,7 +436,7 @@ export default function AuthModal({
                     boxShadow: mode === 'login' ? '0 0 16px rgba(0, 210, 255, 0.3)' : 'none'
                   }}
                 >
-                  <LogIn size={15} /> Login (Sign In)
+                  <LogIn size={15} /> Sign In
                 </button>
                 <button
                   type="button"
@@ -683,7 +459,7 @@ export default function AuthModal({
                     boxShadow: mode === 'signup' ? '0 0 16px rgba(37, 211, 102, 0.3)' : 'none'
                   }}
                 >
-                  <UserPlus size={15} /> Sign Up (Naya Khata)
+                  <UserPlus size={15} /> Register Account
                 </button>
               </div>
             )}
@@ -731,7 +507,7 @@ export default function AuthModal({
             {/* TAB 1: LOGIN FORM */}
             {mode === 'login' && (
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* Google One-Click Login */}
+                {/* 1-Click Google Sign In */}
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
@@ -796,8 +572,7 @@ export default function AuthModal({
                         color: '#fff',
                         fontSize: '13px',
                         outline: 'none',
-                        boxSizing: 'border-box',
-                        transition: 'border 0.2s'
+                        boxSizing: 'border-box'
                       }}
                     />
                   </div>
@@ -814,11 +589,10 @@ export default function AuthModal({
                       style={{
                         background: 'transparent',
                         border: 'none',
-                        color: '#38bdf8',
+                        color: '#00d2ff',
                         fontSize: '11px',
                         cursor: 'pointer',
-                        fontWeight: '600',
-                        textDecoration: 'underline'
+                        fontWeight: '600'
                       }}
                     >
                       Forgot Password?
@@ -834,7 +608,7 @@ export default function AuthModal({
                       onChange={(e) => setPassword(e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '11px 40px 11px 38px',
+                        padding: '11px 38px 11px 38px',
                         borderRadius: '12px',
                         background: 'rgba(15, 23, 42, 0.8)',
                         border: '1.5px solid rgba(255, 255, 255, 0.12)',
@@ -896,7 +670,7 @@ export default function AuthModal({
                   }}
                 >
                   {loading ? <RefreshCw size={18} className="spin-fast" /> : <LogIn size={18} />}
-                  <span>{loading ? 'Logging in...' : 'Sign In with Supabase'}</span>
+                  <span>{loading ? 'Logging in...' : 'Sign In to Workstation'}</span>
                 </button>
               </form>
             )}
@@ -904,7 +678,7 @@ export default function AuthModal({
             {/* TAB 2: SIGNUP FORM */}
             {mode === 'signup' && (
               <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {/* Google One-Click Sign Up */}
+                {/* 1-Click Google Sign Up */}
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
@@ -1124,7 +898,7 @@ export default function AuthModal({
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px'
+                      gap: '5px'
                     }}
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -1164,10 +938,10 @@ export default function AuthModal({
               <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '8px' }}>
                   <h4 style={{ margin: '0 0 6px 0', fontSize: '15px', color: '#f8fafc' }}>
-                    Password Bhool Gaye?
+                    Forgot Your Password?
                   </h4>
                   <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8', lineHeight: '1.4' }}>
-                    Apna registered email address daalein. Hum aapko password reset karne ka direct secure link bhejenge.
+                    Enter your registered email address and we will dispatch a secure password reset link to your inbox.
                   </p>
                 </div>
 
@@ -1234,12 +1008,12 @@ export default function AuthModal({
                     textDecoration: 'underline'
                   }}
                 >
-                  ← Wapas Login par jayein
+                  ← Back to Sign In
                 </button>
               </form>
             )}
 
-            {/* Bottom Footer Note */}
+            {/* Bottom Footer Note - Clean, Secure & Private */}
             <div style={{
               marginTop: '20px',
               paddingTop: '16px',
@@ -1250,8 +1024,8 @@ export default function AuthModal({
               fontSize: '11px',
               color: '#64748b'
             }}>
-              <span>Powered by <b>Supabase Auth</b></span>
-              <span>🔒 256-bit Encrypted</span>
+              <span>🛡️ Seller Suite Pro Security</span>
+              <span>🔒 256-Bit SSL Encrypted • Privacy Protected</span>
             </div>
           </div>
         )}

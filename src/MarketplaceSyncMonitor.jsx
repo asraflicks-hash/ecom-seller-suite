@@ -40,7 +40,6 @@ export const DEFAULT_CONNECTED_CHANNELS = [
   {
     id: 'amazon',
     name: 'Amazon India (IN)',
-    logo: AmazonLogo,
     status: 'connected', // 'connected' | 'syncing' | 'error' | 'disconnected'
     storeName: 'Apex Electronics & Gear Store',
     merchantId: 'A2K9L99X82P',
@@ -53,7 +52,6 @@ export const DEFAULT_CONNECTED_CHANNELS = [
   {
     id: 'flipkart',
     name: 'Flipkart Seller Hub',
-    logo: FlipkartLogo,
     status: 'connected',
     storeName: 'Apex Retail Enterprises',
     merchantId: 'FK-SELLER-9842',
@@ -66,7 +64,6 @@ export const DEFAULT_CONNECTED_CHANNELS = [
   {
     id: 'meesho',
     name: 'Meesho Supplier Panel',
-    logo: MeeshoLogo,
     status: 'connected',
     storeName: 'Apex Direct Factory Hub',
     merchantId: 'MEES-IND-4421',
@@ -521,7 +518,7 @@ export default function MarketplaceSyncMonitor({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <ch.logo size={24} />
+                <MarketplaceLogo platform={ch.id} size={24} />
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: '800', color: '#fff' }}>
                     {ch.name}
@@ -893,7 +890,7 @@ export default function MarketplaceSyncMonitor({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <ch.logo size={36} />
+                    <MarketplaceLogo platform={ch.id} size={36} />
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '15px', fontWeight: '800', color: '#fff' }}>

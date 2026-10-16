@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
 // 1. Check environment variables (Vite standard)
-const ENV_SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || '').trim();
-const ENV_SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+const ENV_SUPABASE_URL = (import.meta.env?.VITE_SUPABASE_URL || '').trim();
+const ENV_SUPABASE_ANON_KEY = (import.meta.env?.VITE_SUPABASE_ANON_KEY || '').trim();
 
-// 2. Fallback to localStorage configuration (allows instant UI config without rebuilding)
+// 2. Official Production Supabase Project Credentials (kitjqhhbsqusqmofabzq)
+const PRODUCTION_SUPABASE_URL = 'https://kitjqhhbsqusqmofabzq.supabase.co';
+const PRODUCTION_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpdGpxaGhic3F1c3Ftb2ZhYnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwODQzODUsImV4cCI6MjEwNzY2MDM4NX0.QSwFHPhB4uXE4lab4JUjjSDWFGh6jB5z8DXIu3GsxZ8';
+
+// 3. Fallback to localStorage configuration (allows custom override if needed)
 export function getStoredSupabaseConfig() {
   if (typeof window === 'undefined') return { url: '', anonKey: '' };
   try {
@@ -18,9 +22,9 @@ export function getStoredSupabaseConfig() {
 
 export function getActiveSupabaseConfig() {
   const stored = getStoredSupabaseConfig();
-  const url = ENV_SUPABASE_URL || stored.url;
-  const anonKey = ENV_SUPABASE_ANON_KEY || stored.anonKey;
-  const source = ENV_SUPABASE_URL ? 'environment' : stored.url ? 'custom_storage' : 'none';
+  const url = ENV_SUPABASE_URL || stored.url || PRODUCTION_SUPABASE_URL;
+  const anonKey = ENV_SUPABASE_ANON_KEY || stored.anonKey || PRODUCTION_SUPABASE_ANON_KEY;
+  const source = ENV_SUPABASE_URL ? 'environment' : stored.url ? 'custom_storage' : 'production_default';
   const isConfigured = Boolean(url && anonKey && url.startsWith('http') && anonKey.length > 20);
 
   return {
@@ -99,8 +103,7 @@ export function clearSupabaseConfig() {
 export async function signInWithEmail(email, password) {
   const client = getSupabase();
   if (!client) {
-    // Demo Mock fallback if credentials not yet linked
-    return mockSignIn(email, password);
+    throw new Error('Supabase Database connect nahi hai! Kripya "Project API Keys" par click karke apna Supabase Project URL aur Anon Key enter karein.');
   }
 
   const { data, error } = await client.auth.signInWithPassword({
@@ -121,8 +124,7 @@ export async function signInWithEmail(email, password) {
 export async function signUpWithEmail(email, password, { fullName = '', phone = '', storeName = '' } = {}) {
   const client = getSupabase();
   if (!client) {
-    // Demo Mock fallback
-    return mockSignUp(email, password, { fullName, phone, storeName });
+    throw new Error('Supabase Database connect nahi hai! Real user registration ke liye apna Supabase Project URL aur Anon Key enter karein.');
   }
 
   const { data, error } = await client.auth.signUp({
@@ -174,7 +176,7 @@ export async function signOutUser() {
 export async function signInWithGoogle() {
   const client = getSupabase();
   if (!client) {
-    return mockSignIn('google.seller@gmail.com', 'google_verified_auth');
+    throw new Error('Google Sign-In ke liye Supabase database connect hona zaroori hai. Kripya apna Supabase Project URL aur Anon Key enter karein.');
   }
 
   const { data, error } = await client.auth.signInWithOAuth({
@@ -286,6 +288,205 @@ export async function saveAuditToDatabase(audit) {
 }
 
 /**
+ * Load Seller Profile from Supabase PostgreSQL Database (profiles table)
+ */
+export async function loadProfileFromDatabase() {
+  const client = getSupabase();
+  if (!client) return null;
+
+  try {
+    const session = await getCurrentSession();
+    if (!session?.user?.id) return null;
+
+    const { data, error } = await client
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('loadProfileFromDatabase notice:', error.message);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.warn('loadProfileFromDatabase error:', err);
+    return null;
+  }
+}
+
+/**
+ * Save User Work / Project / History item to Supabase & Account-keyed LocalStorage
+ */
+export async function saveUserWork({ toolId, toolName, title, summary = '', workData = {} }) {
+  const client = getSupabase();
+  const session = await getCurrentSession();
+  const user = session?.user || null;
+  const userEmail = user?.email || (typeof window !== 'undefined' ? localStorage.getItem('sidra_user_email') : '') || 'guest_seller';
+  const userId = user?.id || null;
+
+  const newItem = {
+    id: 'work_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    user_id: userId,
+    user_email: userEmail,
+    tool_id: toolId,
+    tool_name: toolName,
+    title: title || `${toolName} Project`,
+    summary: summary || '',
+    work_data: workData,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  // 1. Save to Account-bound LocalStorage Cache (Immediate offline safety)
+  if (typeof window !== 'undefined') {
+    try {
+      const storageKey = `ssp_work_history_${userEmail.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+      const existingRaw = localStorage.getItem(storageKey);
+      const list = existingRaw ? JSON.parse(existingRaw) : [];
+      // Prepend newest item
+      const updatedList = [newItem, ...list.filter(i => i.title !== newItem.title || i.tool_id !== newItem.tool_id)].slice(0, 100);
+      localStorage.setItem(storageKey, JSON.stringify(updatedList));
+      
+      // Dispatch event for UI reactivity
+      window.dispatchEvent(new CustomEvent('ssp_work_saved', { detail: newItem }));
+    } catch (e) {
+      console.warn('Local work history cache notice:', e);
+    }
+  }
+
+  // 2. Persist to Supabase Database (if user is authenticated & table exists)
+  if (client && userId) {
+    try {
+      const dbPayload = {
+        user_id: userId,
+        user_email: userEmail,
+        tool_id: toolId,
+        tool_name: toolName,
+        title: newItem.title,
+        summary: newItem.summary,
+        work_data: workData,
+        created_at: newItem.created_at,
+        updated_at: newItem.updated_at
+      };
+
+      const { data, error } = await client
+        .from('user_work_history')
+        .insert([dbPayload])
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Supabase user_work_history insert notice:', error.message);
+      } else if (data && data.id) {
+        newItem.db_id = data.id;
+      }
+    } catch (err) {
+      console.warn('saveUserWork Supabase sync error:', err);
+    }
+  }
+
+  return newItem;
+}
+
+/**
+ * Fetch User Work History (combines Supabase cloud database + user-bound local cache)
+ */
+export async function getUserWorkHistory() {
+  const client = getSupabase();
+  const session = await getCurrentSession();
+  const user = session?.user || null;
+  const userEmail = user?.email || (typeof window !== 'undefined' ? localStorage.getItem('sidra_user_email') : '') || '';
+
+  let cloudItems = [];
+  if (client && user?.id) {
+    try {
+      const { data, error } = await client
+        .from('user_work_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (!error && Array.isArray(data)) {
+        cloudItems = data;
+      }
+    } catch (e) {
+      console.warn('Supabase getUserWorkHistory notice:', e);
+    }
+  }
+
+  // Retrieve user local cache
+  let localItems = [];
+  if (typeof window !== 'undefined' && userEmail) {
+    try {
+      const storageKey = `ssp_work_history_${userEmail.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+      const existingRaw = localStorage.getItem(storageKey);
+      if (existingRaw) {
+        localItems = JSON.parse(existingRaw);
+      }
+    } catch (e) {}
+  }
+
+  // Merge unique items by title and timestamp
+  const map = new Map();
+  cloudItems.forEach(item => {
+    const k = `${item.tool_id}::${item.title}`;
+    map.set(k, item);
+  });
+  localItems.forEach(item => {
+    const k = `${item.tool_id}::${item.title}`;
+    if (!map.has(k)) {
+      map.set(k, item);
+    }
+  });
+
+  const merged = Array.from(map.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  return merged;
+}
+
+/**
+ * Delete a saved work item from Supabase and local cache
+ */
+export async function deleteUserWork(item) {
+  const client = getSupabase();
+  const session = await getCurrentSession();
+  const user = session?.user || null;
+  const userEmail = user?.email || (typeof window !== 'undefined' ? localStorage.getItem('sidra_user_email') : '') || '';
+
+  // Delete from local cache
+  if (typeof window !== 'undefined' && userEmail) {
+    try {
+      const storageKey = `ssp_work_history_${userEmail.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+      const existingRaw = localStorage.getItem(storageKey);
+      if (existingRaw) {
+        const list = JSON.parse(existingRaw);
+        const filtered = list.filter(i => i.id !== item.id && i.id !== item.db_id && i.title !== item.title);
+        localStorage.setItem(storageKey, JSON.stringify(filtered));
+      }
+    } catch (e) {}
+  }
+
+  // Delete from Supabase
+  if (client && user?.id && (item.db_id || item.id)) {
+    try {
+      const targetId = item.db_id || (typeof item.id === 'number' ? item.id : null);
+      if (targetId) {
+        await client.from('user_work_history').delete().eq('id', targetId);
+      } else {
+        await client.from('user_work_history').delete().eq('user_id', user.id).eq('title', item.title);
+      }
+    } catch (e) {
+      console.warn('deleteUserWork Supabase error:', e);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('ssp_work_deleted', { detail: item }));
+  }
+}
+
+/**
  * Copy-pasteable SQL Schema for Supabase SQL Editor
  */
 export const SUPABASE_SQL_SCHEMA = `-- 1. Profiles Table (Automatically synced with Auth)
@@ -302,7 +503,21 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Social Audits Log Table
+-- 2. User Work History Table (Stores all seller work across all 8 modules)
+CREATE TABLE IF NOT EXISTS public.user_work_history (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_email TEXT,
+  tool_id TEXT NOT NULL,
+  tool_name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  summary TEXT,
+  work_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Social Audits Log Table
 CREATE TABLE IF NOT EXISTS public.social_audits (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -316,20 +531,28 @@ CREATE TABLE IF NOT EXISTS public.social_audits (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Enable Row Level Security (RLS)
+-- 4. Enable Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_work_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.social_audits ENABLE ROW LEVEL SECURITY;
 
--- 4. RLS Policies: Allow users to view & edit their own data
+-- 5. RLS Policies: Allow users to view & edit their own data
+DROP POLICY IF EXISTS "Users can manage their own profile" ON public.profiles;
 CREATE POLICY "Users can manage their own profile" 
   ON public.profiles FOR ALL 
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can manage their own work history" ON public.user_work_history;
+CREATE POLICY "Users can manage their own work history" 
+  ON public.user_work_history FOR ALL 
+  USING (auth.uid() = user_id OR user_id IS NULL);
+
+DROP POLICY IF EXISTS "Users can manage their own audits" ON public.social_audits;
 CREATE POLICY "Users can manage their own audits" 
   ON public.social_audits FOR ALL 
   USING (auth.uid() = user_id OR user_id IS NULL);
 
--- 5. Auto-create profile on signup trigger
+-- 6. Auto-create / sync profile on signup trigger
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -337,10 +560,12 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    NEW.raw_user_meta_data->>'phone'
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'phone', '')
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    updated_at = NOW();
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -349,6 +574,12 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Sync any existing users
+INSERT INTO public.profiles (id, email, full_name)
+SELECT id, email, COALESCE(raw_user_meta_data->>'full_name', raw_user_meta_data->>'name', split_part(email, '@', 1))
+FROM auth.users
+ON CONFLICT (id) DO NOTHING;
 `;
 
 /**
@@ -357,7 +588,7 @@ CREATE TRIGGER on_auth_user_created
 export async function resetPasswordForEmail(email) {
   const client = getSupabase();
   if (!client) {
-    return { success: true, message: 'Demo mode: Password reset email simulation sent.' };
+    throw new Error('Password reset ke liye Supabase database connect hona zaroori hai.');
   }
 
   const { data, error } = await client.auth.resetPasswordForEmail(email.trim(), {
@@ -375,127 +606,44 @@ export async function resetPasswordForEmail(email) {
  * Get active session
  */
 export async function getCurrentSession() {
-  const client = getSupabase();
-  if (!client) {
-    if (typeof window !== 'undefined') {
-      const mock = localStorage.getItem('sidra_mock_session');
-      if (mock) {
-        try { return JSON.parse(mock); } catch (e) {}
-      }
+  try {
+    const client = getSupabase();
+    if (!client) {
+      return null;
     }
+
+    const { data, error } = await client.auth.getSession();
+    if (error || !data?.session) return null;
+    return data.session;
+  } catch (err) {
+    console.warn('getCurrentSession error notice:', err);
     return null;
   }
-
-  const { data: { session }, error } = await client.auth.getSession();
-  if (error || !session) return null;
-  return session;
 }
 
 /**
  * Subscribe to Auth State Changes
  */
 export function onAuthChange(callback) {
-  const client = getSupabase();
-  if (!client) {
-    return { unsubscribe: () => {} };
-  }
-
-  const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
-    callback(event, session);
-  });
-
-  return subscription;
-}
-
-// ================= DEMO / MOCK FALLBACK HANDLERS =================
-// Active only when Supabase keys are not yet configured, allowing instant UI testing.
-
-function mockSignIn(email, password) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (!email || !password) {
-        return reject(new Error('Email aur Password dono zaroori hain.'));
-      }
-      if (password.length < 6) {
-        return reject(new Error('Password kam se kam 6 characters ka hona chahiye.'));
-      }
-
-      // Check if user was registered in mock store
-      const registeredUsers = getMockUsers();
-      const existing = registeredUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-      const mockUser = existing || {
-        id: 'usr_' + Math.random().toString(36).substring(2, 9),
-        email: email.trim(),
-        user_metadata: {
-          full_name: email.split('@')[0],
-          phone: '+91 98765 43210'
-        }
-      };
-
-      const session = {
-        user: mockUser,
-        access_token: 'mock_jwt_token_' + Date.now(),
-        isDemo: true
-      };
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('sidra_mock_session', JSON.stringify(session));
-      }
-
-      resolve({ user: mockUser, session });
-    }, 600);
-  });
-}
-
-function mockSignUp(email, password, metadata) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (!email || !password) {
-        return reject(new Error('Email aur Password dono required hain.'));
-      }
-      if (password.length < 6) {
-        return reject(new Error('Password kam se kam 6 characters ka hona chahiye.'));
-      }
-
-      const mockUser = {
-        id: 'usr_' + Math.random().toString(36).substring(2, 9),
-        email: email.trim(),
-        user_metadata: {
-          full_name: metadata.fullName || email.split('@')[0],
-          phone: metadata.phone || '',
-          store_name: metadata.storeName || ''
-        }
-      };
-
-      // Save to mock registry
-      const registeredUsers = getMockUsers();
-      registeredUsers.push(mockUser);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('sidra_mock_users', JSON.stringify(registeredUsers));
-      }
-
-      const session = {
-        user: mockUser,
-        access_token: 'mock_jwt_token_' + Date.now(),
-        isDemo: true
-      };
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('sidra_mock_session', JSON.stringify(session));
-      }
-
-      resolve({ user: mockUser, session });
-    }, 700);
-  });
-}
-
-function getMockUsers() {
-  if (typeof window === 'undefined') return [];
   try {
-    const data = localStorage.getItem('sidra_mock_users');
-    return data ? JSON.parse(data) : [];
-  } catch (e) {
-    return [];
+    const client = getSupabase();
+    if (!client) {
+      return { unsubscribe: () => {} };
+    }
+
+    const res = client.auth.onAuthStateChange((event, session) => {
+      try {
+        if (typeof callback === 'function') {
+          callback(event, session);
+        }
+      } catch (err) {
+        console.warn('onAuthStateChange callback notice:', err);
+      }
+    });
+
+    return res?.data?.subscription || { unsubscribe: () => {} };
+  } catch (err) {
+    console.warn('onAuthChange registration error notice:', err);
+    return { unsubscribe: () => {} };
   }
 }

@@ -238,7 +238,7 @@ export default function SeoContentDirectory({ onSwitchTab }) {
                   gap: '6px'
                 }}
               >
-                {cat.icon && <cat.icon size={14} />}
+                {cat.icon && typeof cat.icon === 'function' ? React.createElement(cat.icon, { size: 14 }) : null}
                 <span>{cat.label}</span>
               </button>
             );

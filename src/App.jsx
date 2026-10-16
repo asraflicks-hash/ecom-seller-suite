@@ -85,13 +85,18 @@ import MobileFolderMenu from './MobileFolderMenu.jsx';
 import SocialMediaAuditStudio from './SocialMediaAuditStudio.jsx';
 import DeveloperModeAlertModal, { HeaderDevModeIndicator } from './DeveloperModeAlertModal.jsx';
 import AuthModal from './AuthModal.jsx';
+import SavedWorkHistoryModal from './SavedWorkHistoryModal.jsx';
+import GuestLimitModal from './GuestLimitModal.jsx';
 import { 
   supabase, 
   isSupabaseConfigured, 
   getCurrentSession, 
   onAuthChange, 
   signOutUser,
-  saveProfileToDatabase
+  saveProfileToDatabase,
+  loadProfileFromDatabase,
+  getUserWorkHistory,
+  saveUserWork
 } from './supabaseClient.js';
 import { TopFreeIndiaTickerBanner } from './FreeIndiaCelebrationBanner.jsx';
 import { MarketplaceLogo, AmazonLogo, FlipkartLogo, MeeshoLogo, MyntraLogo } from './MarketplaceLogos.jsx';
@@ -145,63 +150,132 @@ export default function App() {
     };
   });
 
-  // Supabase Authentication State
+  // Supabase Authentication State & Cloud Work Sync
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
   const [supabaseUser, setSupabaseUser] = useState(null);
+  const [showWorkHistoryModal, setShowWorkHistoryModal] = useState(false);
+  const [savedWorkCount, setSavedWorkCount] = useState(0);
+  const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
+
+  // Strict 5% Guest Limit check: User is a guest if not authenticated via Supabase or logged-in profile
+  const isUserLoggedIn = Boolean(supabaseUser || (isAuthenticated && (userProfile?.email || localStorage.getItem('sidra_user_email'))));
+  const isGuest = !isUserLoggedIn;
+
+  // Helper to load profile and work history from Cloud Database upon login
+  const syncUserDataAndHistory = async (user) => {
+    if (!user) {
+      setSavedWorkCount(0);
+      return;
+    }
+    try {
+      // 1. Fetch Cloud Profile
+      const cloudProfile = await loadProfileFromDatabase();
+      if (cloudProfile) {
+        if (cloudProfile.full_name) localStorage.setItem('sidra_user_name', cloudProfile.full_name);
+        if (cloudProfile.phone) localStorage.setItem('sidra_user_phone', cloudProfile.phone);
+        if (cloudProfile.city) localStorage.setItem('sidra_user_city', cloudProfile.city);
+        if (cloudProfile.store_name) localStorage.setItem('sidra_store_name', cloudProfile.store_name);
+        if (cloudProfile.brand_name) localStorage.setItem('sidra_brand_name', cloudProfile.brand_name);
+        if (cloudProfile.platform) localStorage.setItem('sidra_platform', cloudProfile.platform);
+
+        setUserProfile(prev => ({
+          ...prev,
+          name: cloudProfile.full_name || prev.name,
+          phone: cloudProfile.phone || prev.phone,
+          city: cloudProfile.city || prev.city,
+          brand: cloudProfile.brand_name || cloudProfile.store_name || prev.brand
+        }));
+      }
+
+      // 2. Fetch Saved Projects / Work History
+      const historyItems = await getUserWorkHistory();
+      setSavedWorkCount(historyItems.length);
+    } catch (e) {
+      console.warn('syncUserDataAndHistory notice:', e);
+    }
+  };
 
   // Sync Supabase Authentication Session & User Profile
   useEffect(() => {
-    getCurrentSession().then(session => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        const u = session.user;
-        const uName = u.user_metadata?.full_name || u.email?.split('@')[0] || '';
-        const uPhone = u.user_metadata?.phone || '';
-        if (uName) localStorage.setItem('sidra_user_name', uName);
-        if (u.email) localStorage.setItem('sidra_user_email', u.email);
-        if (uPhone) localStorage.setItem('sidra_user_phone', uPhone);
-        localStorage.setItem('sidra_auth_type', 'supabase');
-        localStorage.setItem('sidra_auth_unlocked', 'true');
-        setIsAuthenticated(true);
-        setUserProfile(prev => ({
-          ...prev,
-          name: uName || prev.name,
-          email: u.email || prev.email,
-          phone: uPhone || prev.phone,
-          authType: 'supabase'
-        }));
-      }
-    });
+    try {
+      getCurrentSession().then(session => {
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          const u = session.user;
+          const uName = u.user_metadata?.full_name || u.email?.split('@')[0] || '';
+          const uPhone = u.user_metadata?.phone || '';
+          if (uName) localStorage.setItem('sidra_user_name', uName);
+          if (u.email) localStorage.setItem('sidra_user_email', u.email);
+          if (uPhone) localStorage.setItem('sidra_user_phone', uPhone);
+          localStorage.setItem('sidra_auth_type', 'supabase');
+          localStorage.setItem('sidra_auth_unlocked', 'true');
+          setIsAuthenticated(true);
+          setUserProfile(prev => ({
+            ...prev,
+            name: uName || prev.name,
+            email: u.email || prev.email,
+            phone: uPhone || prev.phone,
+            authType: 'supabase'
+          }));
+          syncUserDataAndHistory(u);
+        } else {
+          // Even if not logged in, check local work items
+          getUserWorkHistory().then(items => setSavedWorkCount(items.length));
+        }
+      }).catch(err => {
+        console.warn('Supabase session load notice:', err);
+      });
+    } catch (e) {
+      console.warn('getCurrentSession invocation notice:', e);
+    }
 
-    const sub = onAuthChange((event, session) => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        const u = session.user;
-        const uName = u.user_metadata?.full_name || u.email?.split('@')[0] || '';
-        const uPhone = u.user_metadata?.phone || '';
-        if (uName) localStorage.setItem('sidra_user_name', uName);
-        if (u.email) localStorage.setItem('sidra_user_email', u.email);
-        if (uPhone) localStorage.setItem('sidra_user_phone', uPhone);
-        localStorage.setItem('sidra_auth_type', 'supabase');
-        localStorage.setItem('sidra_auth_unlocked', 'true');
-        setIsAuthenticated(true);
-        setUserProfile(prev => ({
-          ...prev,
-          name: uName || prev.name,
-          email: u.email || prev.email,
-          phone: uPhone || prev.phone,
-          authType: 'supabase'
-        }));
-      } else if (event === 'SIGNED_OUT') {
-        setSupabaseUser(null);
-      }
-    });
+    let sub = null;
+    try {
+      sub = onAuthChange((event, session) => {
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          const u = session.user;
+          const uName = u.user_metadata?.full_name || u.email?.split('@')[0] || '';
+          const uPhone = u.user_metadata?.phone || '';
+          if (uName) localStorage.setItem('sidra_user_name', uName);
+          if (u.email) localStorage.setItem('sidra_user_email', u.email);
+          if (uPhone) localStorage.setItem('sidra_user_phone', uPhone);
+          localStorage.setItem('sidra_auth_type', 'supabase');
+          localStorage.setItem('sidra_auth_unlocked', 'true');
+          setIsAuthenticated(true);
+          setUserProfile(prev => ({
+            ...prev,
+            name: uName || prev.name,
+            email: u.email || prev.email,
+            phone: uPhone || prev.phone,
+            authType: 'supabase'
+          }));
+          syncUserDataAndHistory(u);
+        } else if (event === 'SIGNED_OUT') {
+          setSupabaseUser(null);
+          setSavedWorkCount(0);
+        }
+      });
+    } catch (e) {
+      console.warn('onAuthChange subscription notice:', e);
+    }
+
+    // Listen to real-time work saved events
+    const updateCount = () => {
+      getUserWorkHistory().then(items => setSavedWorkCount(items.length));
+    };
+    window.addEventListener('ssp_work_saved', updateCount);
+    window.addEventListener('ssp_work_deleted', updateCount);
 
     return () => {
       if (sub && typeof sub.unsubscribe === 'function') {
-        sub.unsubscribe();
+        try {
+          sub.unsubscribe();
+        } catch (e) {}
       }
+      window.removeEventListener('ssp_work_saved', updateCount);
+      window.removeEventListener('ssp_work_deleted', updateCount);
     };
   }, []);
 
@@ -238,12 +312,8 @@ export default function App() {
   const [showCommunityModal, setShowCommunityModal] = useState(false);
   
   // Platform Developer Mode Alert State (Session-persisted, active notice across entire site)
-  const [showDevModeModal, setShowDevModeModal] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('sidra_dismissed_dev_notice') !== 'true';
-    }
-    return true;
-  });
+  // Default to false so the entire workstation loads immediately without any blocking dark overlay
+  const [showDevModeModal, setShowDevModeModal] = useState(false);
 
   const handleCloseDevModeModal = () => {
     setShowDevModeModal(false);
@@ -371,13 +441,29 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    try {
+      signOutUser();
+    } catch (e) {}
     localStorage.removeItem('sidra_auth_unlocked');
     localStorage.removeItem('sidra_auth_type');
     localStorage.removeItem('sidra_license_key_valid');
     localStorage.removeItem('sidra_active_license_key');
+    localStorage.removeItem('sidra_mock_session');
+    localStorage.removeItem('sidra_user_name');
+    localStorage.removeItem('sidra_user_email');
+    localStorage.removeItem('sidra_user_phone');
     setIsAuthenticated(false);
     setHasFullLicense(false);
     setShowAccountModal(false);
+    setSupabaseUser(null);
+    setUserProfile({
+      name: '',
+      email: '',
+      phone: '',
+      city: '',
+      authType: 'unlocked',
+      hasCustomPassword: false
+    });
   };
 
   // If URL points to /admin or /owner, render Standalone Owner Command Center
@@ -414,21 +500,154 @@ export default function App() {
         {/* 🇮🇳 HAMESHA HEADER PE LIKHA RAHE BAS EK TITLE */}
         <TopFreeIndiaTickerBanner viewMode={viewMode} />
 
+        {/* 🔒 5% GUEST PREVIEW WARNING BAR */}
+        {isGuest && (
+          viewMode === 'mobile' ? (
+            <div style={{
+              background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%)',
+              borderBottom: '1px solid rgba(245, 158, 11, 0.35)',
+              padding: '6px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                <span style={{
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: '#050b14',
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  fontSize: '9px',
+                  fontWeight: '900',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  flexShrink: 0
+                }}>
+                  <Lock size={10} color="#050b14" /> 5% DEMO
+                </span>
+                <span style={{ color: '#fef3c7', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Login to unlock 100% Free & Cloud Save
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
+                style={{
+                  background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                  border: 'none',
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  color: '#050b14',
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 0 10px rgba(0, 210, 255, 0.4)'
+                }}
+              >
+                <LogIn size={11} /> Unlock 100%
+              </button>
+            </div>
+          ) : (
+            <div style={{
+              background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(239, 68, 68, 0.15) 100%)',
+              borderBottom: '1px solid rgba(245, 158, 11, 0.45)',
+              padding: '7px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '10px',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.4)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: '#050b14',
+                  padding: '3px 10px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: '900',
+                  letterSpacing: '0.4px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)'
+                }}>
+                  <Lock size={12} color="#050b14" /> 5% DEMO PREVIEW ACTIVE
+                </span>
+                <span style={{ color: '#fef3c7', fontSize: '12px', fontWeight: '600' }}>
+                  Bina login ke sirf 5% sample preview allowed hai. Sign In / Sign Up karte hi 100% UNLIMITED features & Cloud Saving unlock ho jayegi!
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
+                  style={{
+                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                    border: 'none',
+                    padding: '5px 14px',
+                    borderRadius: '14px',
+                    color: '#050b14',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    boxShadow: '0 0 12px rgba(0, 210, 255, 0.4)'
+                  }}
+                >
+                  <LogIn size={12} /> 1-Click Google / Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthModalMode('signup'); setShowAuthModal(true); }}
+                  style={{
+                    background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
+                    border: 'none',
+                    padding: '5px 12px',
+                    borderRadius: '14px',
+                    color: '#050b14',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    boxShadow: '0 0 10px rgba(37, 211, 102, 0.3)'
+                  }}
+                >
+                  <UserPlus size={12} /> Free Sign Up
+                </button>
+              </div>
+            </div>
+          )
+        )}
+
         {/* Main Header Content Bar */}
         <div style={{
-          padding: viewMode === 'mobile' ? '8px 14px' : '10px 28px',
+          padding: viewMode === 'mobile' ? '8px 12px' : '10px 28px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: viewMode === 'mobile' ? '10px' : '16px'
+          flexWrap: viewMode === 'mobile' ? 'nowrap' : 'wrap',
+          gap: viewMode === 'mobile' ? '8px' : '16px'
         }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: viewMode === 'mobile' ? '10px' : '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: viewMode === 'mobile' ? '8px' : '14px', minWidth: 0, flexShrink: 1 }}>
           {/* Official Sidra Motion Logo with Animated Yellow Aura */}
           <div style={{
             position: 'relative',
-            width: viewMode === 'mobile' ? '38px' : '48px',
-            height: viewMode === 'mobile' ? '38px' : '48px',
+            width: viewMode === 'mobile' ? '34px' : '48px',
+            height: viewMode === 'mobile' ? '34px' : '48px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -439,8 +658,8 @@ export default function App() {
               alt="Sidra Motion Logo" 
               className="gold-glow-animated"
               style={{
-                width: viewMode === 'mobile' ? '38px' : '48px',
-                height: viewMode === 'mobile' ? '38px' : '48px',
+                width: viewMode === 'mobile' ? '34px' : '48px',
+                height: viewMode === 'mobile' ? '34px' : '48px',
                 borderRadius: '50%',
                 objectFit: 'cover',
                 border: '2px solid #eab308',
@@ -451,57 +670,60 @@ export default function App() {
             />
             <div style={{
               position: 'absolute',
-              top: '-2px',
-              right: '-2px',
-              width: '9px',
-              height: '9px',
+              top: '-1px',
+              right: '-1px',
+              width: '7px',
+              height: '7px',
               borderRadius: '50%',
               background: '#25d366',
-              boxShadow: '0 0 8px #25d366'
+              boxShadow: '0 0 6px #25d366'
             }} />
           </div>
 
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
               <h1 style={{ 
-                fontSize: viewMode === 'mobile' ? '17px' : '20px', 
+                fontSize: viewMode === 'mobile' ? '14px' : '20px', 
                 fontWeight: '900', 
-                letterSpacing: '-0.5px',
+                letterSpacing: '-0.4px',
                 background: 'linear-gradient(135deg, #ffffff 0%, #00d2ff 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 fontFamily: "'Space Grotesk', sans-serif",
-                margin: 0
+                margin: 0,
+                whiteSpace: 'nowrap'
               }}>
                 SIDRA MOTION
               </h1>
               <span style={{
                 background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.22) 0%, rgba(168, 85, 247, 0.22) 100%)',
                 color: '#00d2ff',
-                fontSize: viewMode === 'mobile' ? '9px' : '11px',
+                fontSize: viewMode === 'mobile' ? '8px' : '11px',
                 fontWeight: '800',
-                padding: '2px 8px',
+                padding: '2px 6px',
                 borderRadius: '20px',
                 border: '1px solid rgba(0, 210, 255, 0.45)',
-                boxShadow: '0 0 10px rgba(0, 210, 255, 0.25)'
+                boxShadow: '0 0 10px rgba(0, 210, 255, 0.25)',
+                whiteSpace: 'nowrap'
               }}>
-                SELLER SUITE PRO 2026
+                {viewMode === 'mobile' ? 'PRO' : 'SELLER SUITE PRO 2026'}
               </span>
               {viewMode === 'mobile' && (
                 <div style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '3px',
                   background: 'rgba(15, 23, 42, 0.85)',
                   border: '1px solid rgba(37, 211, 102, 0.4)',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontSize: '9px',
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                  fontSize: '8px',
                   fontWeight: '800',
-                  boxShadow: '0 0 8px rgba(37, 211, 102, 0.2)'
+                  boxShadow: '0 0 6px rgba(37, 211, 102, 0.2)',
+                  whiteSpace: 'nowrap'
                 }}>
-                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 6px #25d366' }} />
-                  <span style={{ color: '#ffb74d' }}>Amazon</span> • <span style={{ color: '#60a5fa' }}>Flipkart</span> • <span style={{ color: '#f472b6' }}>Meesho</span>
+                  <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#25d366' }} />
+                  <span style={{ color: '#ffb74d' }}>Az</span> • <span style={{ color: '#60a5fa' }}>Fk</span> • <span style={{ color: '#f472b6' }}>Ms</span>
                 </div>
               )}
               {viewMode === 'desktop' && (
@@ -1130,6 +1352,44 @@ export default function App() {
               <Briefcase size={13} color="#25d366" /> 💼 Agency Services & Deals
             </button>
 
+            {/* My Saved Work Cloud Button */}
+            <button
+              type="button"
+              onClick={() => setShowWorkHistoryModal(true)}
+              style={{
+                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.18) 0%, rgba(56, 189, 248, 0.1) 100%)',
+                border: '1.5px solid rgba(0, 210, 255, 0.45)',
+                padding: '5px 13px',
+                borderRadius: '20px',
+                color: '#00d2ff',
+                fontSize: '11px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: '800',
+                boxShadow: '0 0 14px rgba(0, 210, 255, 0.25)',
+                transition: 'all 0.2s'
+              }}
+              title="View your saved listings, RTO calculations and past work"
+            >
+              <FolderOpen size={13} color="#00d2ff" />
+              <span>Saved Work</span>
+              {savedWorkCount > 0 && (
+                <span style={{
+                  background: '#00d2ff',
+                  color: '#050b14',
+                  borderRadius: '999px',
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  padding: '1px 6px',
+                  lineHeight: '1.2'
+                }}>
+                  {savedWorkCount}
+                </span>
+              )}
+            </button>
+
             {/* Supabase Authentication Header Controls */}
             {supabaseUser ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1249,89 +1509,55 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Platform Developer Mode Indicator (Mobile Header) */}
-            <HeaderDevModeIndicator onOpen={() => setShowDevModeModal(true)} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+            {/* Quick Desktop Switcher Button (Clean Pill) */}
+            <button
+              type="button"
+              onClick={() => handleSetViewMode('desktop')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '5px 8px',
+                borderRadius: '12px',
+                border: '1px solid rgba(0, 210, 255, 0.35)',
+                background: 'rgba(15, 23, 42, 0.85)',
+                color: '#38bdf8',
+                fontSize: '10px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}
+              title="Switch to Desktop View"
+            >
+              <Monitor size={12} color="#38bdf8" />
+              <span>Desktop</span>
+            </button>
 
-            {/* Desktop vs Mobile Toggle Switcher (in Mobile Mode) */}
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: 'rgba(15, 23, 42, 0.9)',
-              border: '1.5px solid rgba(168, 85, 247, 0.45)',
-              borderRadius: '22px',
-              padding: '3px',
-              gap: '2px',
-              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.4)'
-            }}>
-              <button
-                type="button"
-                onClick={() => handleSetViewMode('desktop')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  padding: '5px 10px',
-                  borderRadius: '18px',
-                  border: 'none',
-                  background: 'transparent',
-                  color: '#94a3b8',
-                  fontSize: '11px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-                title="Switch to Desktop View"
-              >
-                <Monitor size={12} color="#94a3b8" />
-                <span>Desktop</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSetViewMode('mobile')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  padding: '5px 12px',
-                  borderRadius: '18px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
-                  color: '#ffffff',
-                  fontSize: '11px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 0 12px rgba(168, 85, 247, 0.5)'
-                }}
-                title="Current View: Mobile Folder Mode"
-              >
-                <Smartphone size={12} color="#ffffff" />
-                <span>Mobile</span>
-              </button>
-            </div>
-
-            {/* Mobile Supabase Auth Trigger */}
+            {/* Mobile Auth / Profile Button */}
             {supabaseUser ? (
               <button
                 type="button"
                 onClick={() => setShowAccountModal(true)}
                 style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '5px',
+                  gap: '4px',
                   background: 'rgba(37, 211, 102, 0.15)',
                   border: '1px solid rgba(37, 211, 102, 0.4)',
                   color: '#25d366',
-                  padding: '6px 10px',
-                  borderRadius: '16px',
-                  fontSize: '11px',
+                  padding: '5px 8px',
+                  borderRadius: '12px',
+                  fontSize: '10px',
                   fontWeight: '800',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
                 }}
                 title={`Logged in as ${supabaseUser.email}`}
               >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25d366' }}></span>
+                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#25d366' }}></span>
                 <User size={12} color="#25d366" />
                 <span>{supabaseUser.user_metadata?.full_name?.split(' ')[0] || 'Seller'}</span>
               </button>
@@ -1340,52 +1566,54 @@ export default function App() {
                 type="button"
                 onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
                 style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
                   background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
                   border: 'none',
                   color: '#050b14',
-                  padding: '6px 11px',
-                  borderRadius: '16px',
-                  fontSize: '11px',
+                  padding: '5px 9px',
+                  borderRadius: '12px',
+                  fontSize: '10px',
                   fontWeight: '800',
                   cursor: 'pointer',
-                  boxShadow: '0 0 12px rgba(0, 210, 255, 0.35)'
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  boxShadow: '0 0 10px rgba(0, 210, 255, 0.35)'
                 }}
                 title="Login / Sign Up via Supabase"
               >
-                <LogIn size={12} />
+                <LogIn size={11} />
                 <span>Login</span>
               </button>
             )}
 
-            {/* Glowing Mobile Folder Menu Trigger Button */}
+            {/* Mobile Drawer Opener Menu Button */}
             <button
               type="button"
               onClick={() => setShowMobileFolderMenu(true)}
               className="kinara-glow-dynamic"
               style={{
                 '--glow-color': '#00d2ff',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '7px',
-                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.28) 0%, rgba(168, 85, 247, 0.28) 100%)',
+                gap: '4px',
+                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%)',
                 border: '1.5px solid #00d2ff',
                 color: '#ffffff',
-                padding: '7px 14px',
-                borderRadius: '18px',
-                fontSize: '12px',
+                padding: '5px 9px',
+                borderRadius: '12px',
+                fontSize: '11px',
                 fontWeight: '800',
                 cursor: 'pointer',
-                boxShadow: '0 0 18px rgba(0, 210, 255, 0.45)',
-                transition: 'all 0.2s',
-                letterSpacing: '0.3px'
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                boxShadow: '0 0 10px rgba(0, 210, 255, 0.35)'
               }}
-              title="Open Mobile Suite Folder Menu (All 8 Tools & Controls)"
+              title="Open Mobile Suite Folder Menu"
             >
-              <FolderOpen size={15} color="#00d2ff" />
-              <span>📂 Suite Menu (8) ⚡</span>
+              <FolderOpen size={13} color="#00d2ff" />
+              <span>Menu</span>
             </button>
           </div>
         )}
@@ -1534,30 +1762,30 @@ export default function App() {
 
                   <button
                     type="button"
-                    onClick={() => setShowMobileFolderMenu(true)}
+                    onClick={() => setShowSyncMonitor(true)}
                     className="kinara-glow-dynamic"
                     style={{
-                      '--glow-color': '#00d2ff',
+                      '--glow-color': '#f43f5e',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.28) 0%, rgba(168, 85, 247, 0.28) 100%)',
-                      border: '1.5px solid #00d2ff',
-                      color: '#ffffff',
-                      padding: '8px 14px',
-                      borderRadius: '14px',
+                      gap: '5px',
+                      background: 'rgba(244, 63, 94, 0.15)',
+                      border: '1.5px solid rgba(244, 63, 94, 0.45)',
+                      color: '#f43f5e',
+                      padding: '7px 11px',
+                      borderRadius: '12px',
                       fontSize: '11px',
                       fontWeight: '800',
                       cursor: 'pointer',
                       flexShrink: 0,
-                      boxShadow: '0 0 16px rgba(0, 210, 255, 0.35)',
+                      boxShadow: '0 0 14px rgba(244, 63, 94, 0.25)',
                       transition: 'all 0.2s',
                       whiteSpace: 'nowrap'
                     }}
-                    title="Open Suite Folder Menu with all 9 modules and shortcuts"
+                    title="Open Marketplace Sync & Flaws Monitor"
                   >
-                    <FolderOpen size={14} color="#00d2ff" />
-                    <span>Menu (9) ▾</span>
+                    <Bell size={13} color="#f43f5e" />
+                    <span>Alerts (5)</span>
                   </button>
                 </div>
               );
@@ -1762,31 +1990,43 @@ export default function App() {
                     copyToClipboard={copyToClipboard} 
                     copiedKey={copiedKey} 
                     isPreviewMode={false}
+                    isGuest={isGuest}
+                    onRequireAuth={() => setShowGuestLimitModal(true)}
                   />
                 )}
                 {activeTab === 'image-studio' && (
                   <ImageComplianceStudio 
                     isPreviewMode={false}
+                    isGuest={isGuest}
+                    onRequireAuth={() => setShowGuestLimitModal(true)}
                   />
                 )}
                 {activeTab === 'catalog-convert' && (
                   <CatalogConverter 
                     isPreviewMode={false}
+                    isGuest={isGuest}
+                    onRequireAuth={() => setShowGuestLimitModal(true)}
                   />
                 )}
                 {activeTab === 'buybox-repricer' && (
                   <BuyBoxRepricer 
                     isPreviewMode={false}
+                    isGuest={isGuest}
+                    onRequireAuth={() => setShowGuestLimitModal(true)}
                   />
                 )}
                 {activeTab === 'review-analyzer' && (
                   <ReviewAnalyzer 
                     isPreviewMode={false}
+                    isGuest={isGuest}
+                    onRequireAuth={() => setShowGuestLimitModal(true)}
                   />
                 )}
                 {activeTab === 'rto-calculator' && (
                   <RtoProfitCalculator 
                     isPreviewMode={false}
+                    isGuest={isGuest}
+                    onRequireAuth={() => setShowGuestLimitModal(true)}
                   />
                 )}
                 {activeTab === 'omnichannel-seo' && (
@@ -1794,6 +2034,8 @@ export default function App() {
                     copyToClipboard={copyToClipboard} 
                     copiedKey={copiedKey} 
                     isPreviewMode={false}
+                    isGuest={isGuest}
+                    onRequireAuth={() => setShowGuestLimitModal(true)}
                   />
                 )}
                 {activeTab === 'social-doctor' && (
@@ -1978,6 +2220,10 @@ export default function App() {
           setShowMobileFolderMenu(false);
           setShowAccountModal(true);
         }}
+        onOpenWorkHistory={() => {
+          setShowMobileFolderMenu(false);
+          setShowWorkHistoryModal(true);
+        }}
         onOpenUserManual={() => {
           setShowMobileFolderMenu(false);
           setShowUserManualModal(true);
@@ -2003,6 +2249,10 @@ export default function App() {
           const el = document.getElementById('seller-growth-hub');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }}
+        onSwitchToDesktop={() => {
+          handleSetViewMode('desktop');
+          setShowMobileFolderMenu(false);
+        }}
       />
 
       {/* Supabase Authentication Modal (Login / Sign Up / Forgot Password / Supabase Settings) */}
@@ -2013,6 +2263,32 @@ export default function App() {
         currentUser={supabaseUser}
         onAuthSuccess={(user) => {
           setSupabaseUser(user);
+        }}
+      />
+
+      {/* Cloud Work History Modal (Mera Pichla Kaam / Saved Work) */}
+      <SavedWorkHistoryModal 
+        isOpen={showWorkHistoryModal}
+        onClose={() => setShowWorkHistoryModal(false)}
+        currentUser={supabaseUser}
+        onRestoreWork={(item) => {
+          if (item?.tool_id) {
+            setActiveTab(item.tool_id);
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('ssp_restore_work', { detail: item }));
+            }, 100);
+          }
+        }}
+      />
+
+      {/* 5% Free Guest Limit Modal */}
+      <GuestLimitModal 
+        isOpen={showGuestLimitModal}
+        onClose={() => setShowGuestLimitModal(false)}
+        onOpenAuth={(mode) => {
+          setShowGuestLimitModal(false);
+          setAuthModalMode(mode || 'login');
+          setShowAuthModal(true);
         }}
       />
 
@@ -4617,7 +4893,7 @@ const MARKETPLACE_PRESETS = [
   }
 ];
 
-function ImageComplianceStudio({ isPreviewMode = false, onRequireKey }) {
+function ImageComplianceStudio({ isPreviewMode = false, isGuest = false, onRequireKey, onRequireAuth }) {
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const originalImgRef = useRef(null);
@@ -5859,8 +6135,9 @@ function ImageComplianceStudio({ isPreviewMode = false, onRequireKey }) {
 
   // Download Compliant JPG
   const downloadCompliantJpg = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
+    if (isPreviewMode || isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
       return;
     }
     const canvas = canvasRef.current;
@@ -5873,8 +6150,9 @@ function ImageComplianceStudio({ isPreviewMode = false, onRequireKey }) {
 
   // Download Transparent PNG
   const downloadTransparentPng = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
+    if (isPreviewMode || isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
       return;
     }
     const canvas = canvasRef.current;
@@ -6917,7 +7195,7 @@ function ImageComplianceStudio({ isPreviewMode = false, onRequireKey }) {
 // -------------------------------------------------------------
 // MODULE 3: MULTI-MARKETPLACE BULK CATALOG CONVERTER (REAL CSV EXPORT)
 // -------------------------------------------------------------
-function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
+function CatalogConverter({ isPreviewMode = false, isGuest = false, onRequireKey, onRequireAuth }) {
   const sampleTemplate = [
     { sku: 'TSH-BLK-01', title: 'Mens Solid Cotton T-Shirt Black', category: 'Apparel', price: '499', stock: '120', mappedAttr: 'Pattern: Solid | Sleeve: Half' },
     { sku: 'TSH-WHT-02', title: 'Mens Solid Cotton T-Shirt White', category: 'Apparel', price: '499', stock: '85', mappedAttr: 'Pattern: Solid | Sleeve: Half' },
@@ -6971,6 +7249,11 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
   };
 
   const handleDownloadCsv = () => {
+    if (isPreviewMode || isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
+      return;
+    }
     let headers = '';
     let rows = '';
 
@@ -7193,7 +7476,7 @@ function CatalogConverter({ isPreviewMode = false, onRequireKey }) {
 // -------------------------------------------------------------
 // MODULE 4: BUYBOX TRACKER & AUTOMATED REPRICER
 // -------------------------------------------------------------
-function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
+function BuyBoxRepricer({ isPreviewMode = false, isGuest = false, onRequireKey, onRequireAuth }) {
   const [platform, setPlatform] = useState('Amazon');
   const [asinInput, setAsinInput] = useState(() => isPreviewMode ? 'B0C74MS1L5' : '');
   const [platformMismatchWarning, setPlatformMismatchWarning] = useState(null);
@@ -7236,8 +7519,9 @@ function BuyBoxRepricer({ isPreviewMode = false, onRequireKey }) {
   };
 
   const handlePushPrice = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
+    if (isPreviewMode || isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
       return;
     }
     if (calculatedSafePrice <= 0) return;
@@ -7973,7 +8257,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
   return { isValid: true };
 }
 
-function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
+function ReviewAnalyzer({ isPreviewMode = false, isGuest = false, onRequireKey, onRequireAuth }) {
   const [platform, setPlatform] = useState('Amazon');
   const [platformMismatchWarning, setPlatformMismatchWarning] = useState(null);
   const [competitorAsin, setCompetitorAsin] = useState('https://www.amazon.in/dp/B0C74MS1L5');
@@ -8103,8 +8387,9 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
 
   // Execute Review Mining
   const handleMine = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
+    if (isPreviewMode || isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
       return;
     }
     if (!competitorAsin.trim()) {
@@ -8614,13 +8899,33 @@ function ReviewAnalyzer({ isPreviewMode = false, onRequireKey }) {
 // -------------------------------------------------------------
 // MODULE 6: RTO & NET PROFIT LOSS GUARD (REAL P&L EXPORT)
 // -------------------------------------------------------------
-function RtoProfitCalculator({ isPreviewMode = false, onRequireKey }) {
+function RtoProfitCalculator({ isPreviewMode = false, isGuest = false, onRequireKey, onRequireAuth }) {
   const [sellingPrice, setSellingPrice] = useState(() => isPreviewMode ? '899' : '');
   const [cogs, setCogs] = useState(() => isPreviewMode ? '280' : '');
   const [shippingForward, setShippingForward] = useState(() => isPreviewMode ? '65' : '');
   const [shippingReverse, setShippingReverse] = useState(() => isPreviewMode ? '75' : '');
   const [marketplaceFeePct, setMarketplaceFeePct] = useState(() => isPreviewMode ? '18' : '');
   const [rtoPercentage, setRtoPercentage] = useState(() => isPreviewMode ? 22 : 20);
+  const [savedToCloud, setSavedToCloud] = useState(false);
+
+  // Restore previous work from Cloud Work History
+  useEffect(() => {
+    const handleRestore = (e) => {
+      if (e.detail?.tool_id === 'rto-calculator' && e.detail.work_data) {
+        const wd = e.detail.work_data;
+        if (wd.sellingPrice !== undefined) setSellingPrice(wd.sellingPrice);
+        if (wd.cogs !== undefined) setCogs(wd.cogs);
+        if (wd.shippingForward !== undefined) setShippingForward(wd.shippingForward);
+        if (wd.shippingReverse !== undefined) setShippingReverse(wd.shippingReverse);
+        if (wd.marketplaceFeePct !== undefined) setMarketplaceFeePct(wd.marketplaceFeePct);
+        if (wd.rtoPercentage !== undefined) setRtoPercentage(wd.rtoPercentage);
+        setSavedToCloud(true);
+        setTimeout(() => setSavedToCloud(false), 3000);
+      }
+    };
+    window.addEventListener('ssp_restore_work', handleRestore);
+    return () => window.removeEventListener('ssp_restore_work', handleRestore);
+  }, []);
 
   const sp = Number(sellingPrice) || 0;
   const cg = Number(cogs) || 0;
@@ -8647,9 +8952,39 @@ function RtoProfitCalculator({ isPreviewMode = false, onRequireKey }) {
 
   const hasData = sp > 0;
 
+  const handleSaveCalculation = () => {
+    if (isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
+      return;
+    }
+    if (!hasData) return;
+    try {
+      saveUserWork({
+        toolId: 'rto-calculator',
+        toolName: '6. RTO & Net Profit Calculator',
+        title: `RTO Calculation (SP: ₹${sp})`,
+        summary: `Net Profit: ₹${netProfitPerOrder}/order • Break-even: ₹${breakEvenPrice} • Return Rate: ${rto}%`,
+        workData: {
+          sellingPrice,
+          cogs,
+          shippingForward,
+          shippingReverse,
+          marketplaceFeePct,
+          rtoPercentage
+        }
+      });
+      setSavedToCloud(true);
+      setTimeout(() => setSavedToCloud(false), 4000);
+    } catch (e) {
+      console.warn('RTO save error:', e);
+    }
+  };
+
   const downloadPlReport = () => {
-    if (isPreviewMode) {
-      if (onRequireKey) onRequireKey();
+    if (isPreviewMode || isGuest) {
+      if (onRequireAuth) onRequireAuth();
+      else if (onRequireKey) onRequireKey();
       return;
     }
     if (!hasData) return;
@@ -8811,6 +9146,25 @@ SUPPORT CONTACT: contact@sidramotion.com
               }}>
                 {netEarnings100Orders > 0 ? 'PROFITABLE SKU 💰' : 'LOSS MAKING SKU 🛑'}
               </span>
+              <button
+                type="button"
+                onClick={handleSaveCalculation}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  borderRadius: '10px',
+                  background: savedToCloud ? 'rgba(37, 211, 102, 0.25)' : 'rgba(0, 210, 255, 0.15)',
+                  border: `1.5px solid ${savedToCloud ? '#25d366' : '#00d2ff'}`,
+                  color: savedToCloud ? '#86efac' : '#00d2ff',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                <Database size={13} /> {savedToCloud ? '✓ Saved to Account!' : 'Save Work'}
+              </button>
               <button
                 onClick={downloadPlReport}
                 className="glow-btn-cyan"

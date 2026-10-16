@@ -27,7 +27,8 @@ import {
   LogIn,
   UserPlus,
   LogOut,
-  Database
+  Database,
+  Monitor
 } from 'lucide-react';
 import { AmazonLogo, FlipkartLogo, MeeshoLogo } from './MarketplaceLogos.jsx';
 
@@ -44,13 +45,15 @@ export default function MobileFolderMenu({
   onOpenSyncMonitor,
   onOpenCommunity,
   onOpenProfile,
+  onOpenWorkHistory,
   onOpenUserManual,
   onOpenTerms,
   onOpenAbout,
   onOpenContact,
   onOpenServicesHub,
   onOpenFreeCelebration,
-  onOpenDevMode
+  onOpenDevMode,
+  onSwitchToDesktop
 }) {
   if (!isOpen) return null;
 
@@ -358,6 +361,34 @@ export default function MobileFolderMenu({
                 </div>
               </div>
 
+              {/* My Saved Work Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenWorkHistory && onOpenWorkHistory();
+                  onClose();
+                }}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.2) 0%, rgba(56, 189, 248, 0.1) 100%)',
+                  border: '1.5px solid rgba(0, 210, 255, 0.45)',
+                  color: '#00d2ff',
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  marginBottom: '8px'
+                }}
+              >
+                <FolderOpen size={14} color="#00d2ff" />
+                <span>My Saved Work History</span>
+              </button>
+
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   type="button"
@@ -663,6 +694,36 @@ export default function MobileFolderMenu({
                   <span style={{ fontSize: '12px', fontWeight: '800' }}>Dev Mode Notice</span>
                 </div>
                 <span style={{ fontSize: '10px', color: '#94a3b8' }}>Active Maintenance</span>
+              </button>
+            )}
+
+            {/* 8. Switch to Desktop View */}
+            {onSwitchToDesktop && (
+              <button
+                type="button"
+                onClick={() => {
+                  onSwitchToDesktop();
+                  onClose();
+                }}
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
+                  border: '1px solid rgba(0, 210, 255, 0.45)',
+                  color: '#00d2ff',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  boxShadow: '0 0 12px rgba(0, 210, 255, 0.2)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Monitor size={15} color="#00d2ff" />
+                  <span style={{ fontSize: '12px', fontWeight: '800' }}>Desktop View 💻</span>
+                </div>
+                <span style={{ fontSize: '10px', color: '#cbd5e1' }}>Switch to PC Layout</span>
               </button>
             )}
           </div>
