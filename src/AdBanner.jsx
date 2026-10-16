@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ExternalLink, X, ChevronUp, ChevronDown, Sparkles, DollarSign, Info } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { getAdConfig, FALLBACK_SPONSORS } from './adConfig.js';
 
 export default function AdBanner({ position = 'top-leaderboard', onOpenAdSettings }) {
+  if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+    return null;
+  }
   const [config, setConfig] = useState(getAdConfig);
   const [isAdBlockActive, setIsAdBlockActive] = useState(false);
   const [adSenseLoaded, setAdSenseLoaded] = useState(false);
+  const [isAdFilled, setIsAdFilled] = useState(false);
   const [isFooterMinimized, setIsFooterMinimized] = useState(false);
   const [sponsorIndex, setSponsorIndex] = useState(() => {
     if (position === 'in-feed') return 1;
@@ -13,6 +18,7 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
     return 0;
   });
   const adRef = useRef(null);
+  const insRef = useRef(null);
 
   // Sync config updates
   useEffect(() => {
@@ -21,11 +27,61 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
     return () => window.removeEventListener('ad-config-updated', handleUpdate);
   }, []);
 
-  const hasRealPubId = config.pubId && !config.pubId.includes('XXXX') && config.pubId.startsWith('ca-pub-');
-
-  // Push to AdSense if real pubId is present
+  // Monitor if Google AdSense has filled the ad slot or if it is pending/unfilled
   useEffect(() => {
-    if (hasRealPubId && config.adsEnabled) {
+    const el = insRef.current;
+    if (!el) return;
+
+    const checkFilled = () => {
+      const status = el.getAttribute('data-ad-status');
+      const hasIframe = el.querySelector('iframe');
+      if (status === 'filled' || hasIframe) {
+        setIsAdFilled(true);
+      }
+    };
+
+    checkFilled();
+
+    const observer = new MutationObserver(() => {
+      checkFilled();
+    });
+
+    observer.observe(el, { attributes: true, childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  const hasRealPubId = config.pubId && !config.pubId.includes('XXXX') && config.pubId.startsWith('ca-pub-');
+  const [hasConsent, setHasConsent] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && localStorage.getItem('sidra_privacy_consent') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  // Listen for consent acceptance and rejection/withdrawal
+  useEffect(() => {
+    const onConsentAccepted = () => setHasConsent(true);
+    const onConsentRejected = () => setHasConsent(false);
+    window.addEventListener('sidra_privacy_consent_accepted', onConsentAccepted);
+    window.addEventListener('sidra_privacy_consent_rejected', onConsentRejected);
+    return () => {
+      window.removeEventListener('sidra_privacy_consent_accepted', onConsentAccepted);
+      window.removeEventListener('sidra_privacy_consent_rejected', onConsentRejected);
+    };
+  }, []);
+
+  // Dynamically load AdSense script ONLY after user grants explicit privacy consent
+  useEffect(() => {
+    if (hasConsent && hasRealPubId && config.adsEnabled) {
+      if (!document.querySelector('script[src*="pagead2.googlesyndication.com"]')) {
+        const script = document.createElement('script');
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${config.pubId}`;
+        script.async = true;
+        script.crossOrigin = 'anonymous';
+        document.head.appendChild(script);
+      }
+
       try {
         if (typeof window !== 'undefined') {
           (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -36,7 +92,7 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
         setIsAdBlockActive(true);
       }
     }
-  }, [hasRealPubId, config.adsEnabled, position]);
+  }, [hasConsent, hasRealPubId, config.adsEnabled, position]);
 
   if (!config.adsEnabled) return null;
 
@@ -111,16 +167,20 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
 
         {/* Ad Body */}
         <div style={{ padding: '8px 16px', maxWidth: '1200px', margin: '0 auto' }}>
-          {hasRealPubId ? (
-            <ins 
-              className="adsbygoogle"
-              style={{ display: 'block', height: '60px', width: '100%' }}
-              data-ad-client={config.pubId}
-              data-ad-slot={config.footerSlotId || undefined}
-              data-ad-format="horizontal"
-              data-full-width-responsive="true"
-            />
-          ) : (
+          {hasRealPubId && (
+            <div style={{ display: isAdFilled ? 'block' : 'none' }}>
+              <ins 
+                ref={insRef}
+                className="adsbygoogle"
+                style={{ display: 'block', height: '60px', width: '100%' }}
+                data-ad-client={config.pubId}
+                data-ad-slot={config.footerSlotId || undefined}
+                data-ad-format="horizontal"
+                data-full-width-responsive="true"
+              />
+            </div>
+          )}
+          {(!hasRealPubId || !isAdFilled) && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -203,6 +263,7 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
         style={{
           width: '100%',
           maxWidth: '1240px',
+          boxSizing: 'border-box',
           margin: '12px auto 6px auto',
           padding: '0 16px'
         }}
@@ -245,9 +306,10 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
           </div>
 
           {/* Ad Container */}
-          {hasRealPubId ? (
-            <div style={{ minHeight: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {hasRealPubId && (
+            <div style={{ display: isAdFilled ? 'flex' : 'none', minHeight: '90px', alignItems: 'center', justifyContent: 'center' }}>
               <ins 
+                ref={insRef}
                 className="adsbygoogle"
                 style={{ display: 'block', width: '100%', minHeight: '90px' }}
                 data-ad-client={config.pubId}
@@ -256,7 +318,8 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
                 data-full-width-responsive="true"
               />
             </div>
-          ) : (
+          )}
+          {(!hasRealPubId || !isAdFilled) && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -378,9 +441,10 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
           </span>
         </div>
 
-        {hasRealPubId ? (
-          <div style={{ minHeight: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {hasRealPubId && (
+          <div style={{ display: isAdFilled ? 'flex' : 'none', minHeight: '120px', alignItems: 'center', justifyContent: 'center' }}>
             <ins 
+              ref={insRef}
               className="adsbygoogle"
               style={{ display: 'block', width: '100%', minHeight: '120px' }}
               data-ad-client={config.pubId}
@@ -389,7 +453,8 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
               data-full-width-responsive="true"
             />
           </div>
-        ) : (
+        )}
+        {(!hasRealPubId || !isAdFilled) && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
