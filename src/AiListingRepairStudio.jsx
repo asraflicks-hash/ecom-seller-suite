@@ -303,7 +303,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
   if (isSocial) {
     return {
       isValid: false,
-      message: `⚠️ Yeh social media link hai! ${selectedPlatform.toUpperCase()} Marketplace ka valid product link ya ID enter karein.`,
+      message: `⚠️ This is a social media link! Please enter a valid ${selectedPlatform.toUpperCase()} product URL or ASIN/FSN identifier.`,
       detectedPlatform: 'Social Media',
       suggestedPlatform: null
     };
@@ -320,7 +320,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (isMeesho) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Meesho ka product link hai! Amazon me Meesho link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Amazon", but entered a Meesho product link. Please enter a valid Amazon URL or ASIN.',
         detectedPlatform: 'Meesho',
         suggestedPlatform: 'meesho'
       };
@@ -328,7 +328,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (isFlipkart) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Flipkart ka product link hai! Amazon me Flipkart link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Amazon", but entered a Flipkart product link. Please enter a valid Amazon URL or ASIN.',
         detectedPlatform: 'Flipkart',
         suggestedPlatform: 'flipkart'
       };
@@ -336,7 +336,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (hasUrlStructure && !isAmazon) {
       return {
         isValid: false,
-        message: '⚠️ Invalid URL: Please enter a valid Amazon product link (e.g. https://www.amazon.in/dp/...) ya ASIN (e.g. B0...).',
+        message: '⚠️ Invalid URL: Please enter a valid Amazon product link (e.g. https://www.amazon.in/dp/...) or ASIN (e.g. B0...).',
         detectedPlatform: 'Non-Amazon URL',
         suggestedPlatform: null
       };
@@ -348,7 +348,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (isAmazon) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Amazon ka product link hai! Flipkart me Amazon link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Flipkart", but entered an Amazon product link. Please enter a valid Flipkart URL or FSN.',
         detectedPlatform: 'Amazon',
         suggestedPlatform: 'amazon'
       };
@@ -356,7 +356,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (isMeesho) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Meesho ka product link hai! Flipkart me Meesho link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Flipkart", but entered a Meesho product link. Please enter a valid Flipkart URL or FSN.',
         detectedPlatform: 'Meesho',
         suggestedPlatform: 'meesho'
       };
@@ -364,7 +364,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (hasUrlStructure && !isFlipkart) {
       return {
         isValid: false,
-        message: '⚠️ Invalid URL: Please enter a valid Flipkart product link (e.g. https://www.flipkart.com/p/...) ya FSN.',
+        message: '⚠️ Invalid URL: Please enter a valid Flipkart product link (e.g. https://www.flipkart.com/p/...) or FSN.',
         detectedPlatform: 'Non-Flipkart URL',
         suggestedPlatform: null
       };
@@ -376,7 +376,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (isAmazon) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Amazon ka product link hai! Meesho me Amazon link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Meesho", but entered an Amazon product link. Please enter a valid Meesho product URL.',
         detectedPlatform: 'Amazon',
         suggestedPlatform: 'amazon'
       };
@@ -384,7 +384,7 @@ export function validateMarketplaceLink(selectedPlatform, rawInput) {
     if (isFlipkart) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Flipkart ka product link hai! Meesho me Flipkart link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Meesho", but entered a Flipkart product link. Please enter a valid Meesho product URL.',
         detectedPlatform: 'Flipkart',
         suggestedPlatform: 'flipkart'
       };
@@ -409,7 +409,8 @@ export default function AiListingRepairStudio({
   isPreviewMode = false,
   isGuest = false,
   onRequireKey,
-  onRequireAuth
+  onRequireAuth,
+  onOpenCreateListing
 }) {
   // Guest 5% limit tracker
   const [guestUsedGenerations, setGuestUsedGenerations] = useState(() => {
@@ -971,7 +972,7 @@ ${output.description}`;
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Database size={16} color="#00d2ff" />
-            <span>✓ <b>Work Saved to Cloud!</b> Aapka kaam account me safe ho gaya hai — sign out karne ke baad bhi wapas aane par milega.</span>
+            <span>✓ <b>Work Saved to Cloud!</b> Your work has been saved to your account — accessible anytime even after signing out.</span>
           </div>
           <button 
             type="button" 
@@ -983,6 +984,7 @@ ${output.description}`;
         </div>
       )}
 
+
       {/* LEFT PANEL: URL IMPORTER & AUDIT CONTROLS */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Module Header */}
@@ -992,15 +994,69 @@ ${output.description}`;
           </div>
           <div>
             <h2 style={{ fontSize: '17px', fontWeight: '800', color: '#fff' }}>
-              AI Listing & Repair Generator
+              AI Listing &amp; SEO Studio
             </h2>
             <p style={{ fontSize: '11px', color: '#94a3b8' }}>
-              {platform === 'amazon' 
-                ? 'Amazon URL & ASIN Score Check, Error Diagnostic & 1-Click Seller Central Fix'
-                : platform === 'flipkart'
-                ? 'Flipkart FSN & URL Score Check, Error Diagnostic & 1-Click Seller Hub Fix'
-                : 'Meesho Product URL Score Check, Error Diagnostic & 1-Click Supplier Panel Fix'}
+              Create brand new multi-marketplace listings or repair &amp; optimize existing ASINs / URLs
             </p>
+          </div>
+        </div>
+
+        {/* Primary Category Selector: Both Tools Unified Inside This Single Category */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '8px',
+          padding: '5px',
+          background: 'rgba(0, 0, 0, 0.35)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 255, 255, 0.08)'
+        }}>
+          {/* Option 1: Create New Listing Wizard */}
+          <button
+            type="button"
+            onClick={() => onOpenCreateListing && onOpenCreateListing()}
+            title="Launch 6-Step Multi-Marketplace Listing Creator"
+            style={{
+              padding: '9px 12px',
+              borderRadius: '8px',
+              border: '1px solid rgba(0, 210, 255, 0.4)',
+              background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.18) 0%, rgba(168, 85, 247, 0.18) 100%)',
+              color: '#00d2ff',
+              fontSize: '12px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s',
+              boxShadow: '0 0 10px rgba(0, 210, 255, 0.15)'
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>➕</span>
+            <span>Create New Listing (AI Wizard)</span>
+          </button>
+
+          {/* Option 2: Repair & Optimize Existing Listing */}
+          <div
+            style={{
+              padding: '9px 12px',
+              borderRadius: '8px',
+              border: '1px solid #00d2ff',
+              background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+              color: '#ffffff',
+              fontSize: '12px',
+              fontWeight: '800',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 10px rgba(0, 210, 255, 0.35)'
+            }}
+          >
+            <Sparkles size={13} />
+            <span>Repair Existing Listing (Active)</span>
           </div>
         </div>
 

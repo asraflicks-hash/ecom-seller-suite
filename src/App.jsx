@@ -6,6 +6,7 @@ import {
   TrendingUp, 
   RefreshCw, 
   CheckCircle2, 
+  ArrowRight,
   ArrowRightLeft, 
   DollarSign, 
   Zap, 
@@ -87,6 +88,10 @@ import DeveloperModeAlertModal, { HeaderDevModeIndicator } from './DeveloperMode
 import AuthModal from './AuthModal.jsx';
 import SavedWorkHistoryModal from './SavedWorkHistoryModal.jsx';
 import GuestLimitModal from './GuestLimitModal.jsx';
+import LegalAndPrivacyModal from './LegalAndPrivacyModal.jsx';
+import PrivacyConsentBanner from './PrivacyConsentBanner.jsx';
+import CreateListingWizardModal from './CreateListingWizard/CreateListingWizardModal.jsx';
+import { Capacitor } from '@capacitor/core';
 import { 
   supabase, 
   isSupabaseConfigured, 
@@ -118,6 +123,13 @@ import {
   hashPassword,
   verifyPassword
 } from './securityUtils.js';
+import {
+  sanitizeHtml,
+  sanitizeCsvCell,
+  validateImageFile,
+  validateCatalogFile,
+  purgeAllUserData
+} from './securitySanitizer.js';
 
 const checkIsAdmin = () => {
   const path = window.location.pathname.toLowerCase();
@@ -279,30 +291,14 @@ export default function App() {
     };
   }, []);
 
-  // Authorized License Keys - Synchronized live via localStorage
-  const OFFICIAL_ACTIVE_KEYS = [
-    'SM26-MASTER-ADMIN-KEY',
-    'SM26-TRY-COMMERCIAL-2026'
-  ];
 
-  const [authorizedKeys, setAuthorizedKeys] = useState(() => {
-    const saved = localStorage.getItem('sidra_authorized_keys');
-    if (saved) {
-      try { 
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return Array.from(new Set([...OFFICIAL_ACTIVE_KEYS, ...parsed]));
-        }
-      } catch (e) {}
-    }
-    return OFFICIAL_ACTIVE_KEYS;
-  });
 
   // Modals Visibility
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showUserManualModal, setShowUserManualModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState('privacy');
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showWorkstationSecurityModal, setShowWorkstationSecurityModal] = useState(false);
   const [showDocsFolder, setShowDocsFolder] = useState(false);
@@ -310,6 +306,7 @@ export default function App() {
   const [showLockModal, setShowLockModal] = useState(false);
   const [showSyncMonitor, setShowSyncMonitor] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
+  const [showCreateListingWizard, setShowCreateListingWizard] = useState(false);
   
   // Platform Developer Mode Alert State (Session-persisted, active notice across entire site)
   // Default to false so the entire workstation loads immediately without any blocking dark overlay
@@ -324,21 +321,16 @@ export default function App() {
     }
   };
   const docsFolderRef = useRef(null);
+  const [showProfileFolder, setShowProfileFolder] = useState(false);
+  const [idCopiedNotice, setIdCopiedNotice] = useState(false);
+  const profileFolderRef = useRef(null);
 
-  // Desktop vs Mobile View Mode State
-  const [viewMode, setViewMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidra_view_mode');
-      if (saved === 'desktop' || saved === 'mobile') return saved;
-      return window.innerWidth <= 840 ? 'mobile' : 'desktop';
-    }
-    return 'desktop';
-  });
+  // Universal View Mode: 100% Identical Full Desktop Experience on Web, Mobile & APK
+  const [viewMode, setViewMode] = useState('desktop');
   const [showMobileFolderMenu, setShowMobileFolderMenu] = useState(false);
 
   const handleSetViewMode = (mode) => {
-    setViewMode(mode);
-    localStorage.setItem('sidra_view_mode', mode);
+    setViewMode('desktop');
   };
 
   const getModuleName = (tabId) => {
@@ -375,23 +367,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('listing-ai');
   const [copiedKey, setCopiedKey] = useState('');
 
-  // Persist authorized keys securely in localStorage
-  useEffect(() => {
-    localStorage.setItem('sidra_authorized_keys', JSON.stringify(authorizedKeys));
-  }, [authorizedKeys]);
 
-  // Sync keys across tabs and window instances
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'sidra_authorized_keys' && e.newValue) {
-        try {
-          setAuthorizedKeys(JSON.parse(e.newValue));
-        } catch (err) {}
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   // Listen to browser navigation (back/forward, URL hash)
   useEffect(() => {
@@ -420,6 +396,21 @@ export default function App() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDocsFolder]);
+
+  // Close Profile Folder dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutsideProfile = (e) => {
+      if (profileFolderRef.current && !profileFolderRef.current.contains(e.target)) {
+        setShowProfileFolder(false);
+      }
+    };
+    if (showProfileFolder) {
+      document.addEventListener('mousedown', handleClickOutsideProfile);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideProfile);
+    };
+  }, [showProfileFolder]);
 
   // Secret Owner Hotkey (Ctrl + Shift + O) to open Standalone Owner Portal
   useEffect(() => {
@@ -484,6 +475,19 @@ export default function App() {
     );
   }
 
+  // Configure Android Status Bar & Native App Support for Capacitor APK
+  useEffect(() => {
+    if (typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform()) return;
+    try {
+      import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: '#0c182e' }).catch(() => {});
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('Native status bar notice:', e);
+    }
+  }, []);
+
   return (
     <div style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', overflowX: 'hidden', display: 'flex', flexDirection: 'column', background: 'radial-gradient(circle at 50% 0%, #173359 0%, #0c182e 45%, #070d19 100%)' }}>
       {/* Top Glass Header (Sticky Container) */}
@@ -500,147 +504,17 @@ export default function App() {
         {/* 🇮🇳 HAMESHA HEADER PE LIKHA RAHE BAS EK TITLE */}
         <TopFreeIndiaTickerBanner viewMode={viewMode} />
 
-        {/* 🔒 5% GUEST PREVIEW WARNING BAR */}
-        {isGuest && (
-          viewMode === 'mobile' ? (
-            <div style={{
-              background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%)',
-              borderBottom: '1px solid rgba(245, 158, 11, 0.35)',
-              padding: '6px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-                <span style={{
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                  color: '#050b14',
-                  padding: '2px 7px',
-                  borderRadius: '6px',
-                  fontSize: '9px',
-                  fontWeight: '900',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  flexShrink: 0
-                }}>
-                  <Lock size={10} color="#050b14" /> 5% DEMO
-                </span>
-                <span style={{ color: '#fef3c7', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Login to unlock 100% Free & Cloud Save
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
-                style={{
-                  background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
-                  border: 'none',
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  color: '#050b14',
-                  fontSize: '10px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  flexShrink: 0,
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 0 10px rgba(0, 210, 255, 0.4)'
-                }}
-              >
-                <LogIn size={11} /> Unlock 100%
-              </button>
-            </div>
-          ) : (
-            <div style={{
-              background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(239, 68, 68, 0.15) 100%)',
-              borderBottom: '1px solid rgba(245, 158, 11, 0.45)',
-              padding: '7px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '10px',
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.4)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <span style={{
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                  color: '#050b14',
-                  padding: '3px 10px',
-                  borderRadius: '8px',
-                  fontSize: '11px',
-                  fontWeight: '900',
-                  letterSpacing: '0.4px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)'
-                }}>
-                  <Lock size={12} color="#050b14" /> 5% DEMO PREVIEW ACTIVE
-                </span>
-                <span style={{ color: '#fef3c7', fontSize: '12px', fontWeight: '600' }}>
-                  Bina login ke sirf 5% sample preview allowed hai. Sign In / Sign Up karte hi 100% UNLIMITED features & Cloud Saving unlock ho jayegi!
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
-                  style={{
-                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
-                    border: 'none',
-                    padding: '5px 14px',
-                    borderRadius: '14px',
-                    color: '#050b14',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    boxShadow: '0 0 12px rgba(0, 210, 255, 0.4)'
-                  }}
-                >
-                  <LogIn size={12} /> 1-Click Google / Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setAuthModalMode('signup'); setShowAuthModal(true); }}
-                  style={{
-                    background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
-                    border: 'none',
-                    padding: '5px 12px',
-                    borderRadius: '14px',
-                    color: '#050b14',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    boxShadow: '0 0 10px rgba(37, 211, 102, 0.3)'
-                  }}
-                >
-                  <UserPlus size={12} /> Free Sign Up
-                </button>
-              </div>
-            </div>
-          )
-        )}
+        {/* 🔒 5% Demo Warning Removed per User Request */}
 
         {/* Main Header Content Bar */}
         <div style={{
           padding: viewMode === 'mobile' ? '8px 12px' : '10px 28px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: viewMode === 'mobile' ? 'nowrap' : 'wrap',
-          gap: viewMode === 'mobile' ? '8px' : '16px'
+          justifyContent: viewMode === 'mobile' ? 'space-between' : 'center',
+          flexWrap: 'wrap',
+          gap: viewMode === 'mobile' ? '8px' : '16px',
+          width: '100%'
         }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: viewMode === 'mobile' ? '8px' : '14px', minWidth: 0, flexShrink: 1 }}>
           {/* Official Sidra Motion Logo with Animated Yellow Aura */}
@@ -894,110 +768,39 @@ export default function App() {
         )}
 
         {/* Real-time Status Pills, Navigation & Auth Controls */}
-        {viewMode === 'desktop' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {/* Desktop vs Mobile Toggle Switcher */}
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: 'rgba(15, 23, 42, 0.9)',
-              border: '1.5px solid rgba(0, 210, 255, 0.45)',
-              borderRadius: '22px',
-              padding: '3px',
-              gap: '2px',
-              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.4)'
-            }}>
-              <button
-                type="button"
-                onClick={() => handleSetViewMode('desktop')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  padding: '5px 12px',
-                  borderRadius: '18px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #00d2ff 0%, #0077ff 100%)',
-                  color: '#ffffff',
-                  fontSize: '11px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 0 12px rgba(0, 210, 255, 0.5)'
-                }}
-                title="Current View: Full Desktop Multi-Pill Layout"
-              >
-                <Monitor size={12} color="#ffffff" />
-                <span>Desktop</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSetViewMode('mobile')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  padding: '5px 10px',
-                  borderRadius: '18px',
-                  border: 'none',
-                  background: 'transparent',
-                  color: '#94a3b8',
-                  fontSize: '11px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-                title="Switch to Mobile Folder View"
-              >
-                <Smartphone size={12} color="#94a3b8" />
-                <span>Mobile</span>
-              </button>
-            </div>
-
-            {/* RGB Listing Score Shortcut Button */}
-            <button
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          flexWrap: 'wrap'
+        }}>
+          {/* RGB Listing Score Shortcut Button with Authentic Rainbow RGB Animation */}
+          <button
             onClick={() => setActiveTab('listing-audit')}
-            className="kinara-glow-dynamic"
+            className={`kinara-glow-dynamic ${activeTab === 'listing-audit' ? 'rgb-rainbow-animated' : ''}`}
             style={{
               '--glow-color': activeTab === 'listing-audit' ? '#00d2ff' : '#c084fc',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               background: activeTab === 'listing-audit' ? 'rgba(0, 210, 255, 0.25)' : 'rgba(168, 85, 247, 0.12)',
-              border: activeTab === 'listing-audit' ? '1px solid #00d2ff' : '1px solid rgba(168, 85, 247, 0.35)',
+              border: activeTab === 'listing-audit' ? '1.5px solid #00d2ff' : '1px solid rgba(168, 85, 247, 0.35)',
               color: activeTab === 'listing-audit' ? '#00d2ff' : '#c084fc',
               padding: '6px 12px',
               borderRadius: '16px',
               fontSize: '11px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            <Gauge size={13} color={activeTab === 'listing-audit' ? '#00d2ff' : '#c084fc'} /> RGB Listing Score
-          </button>
-
-          {/* Customer ID Badge */}
-          <div 
-            className="kinara-glow-dynamic"
-            style={{
-              '--glow-color': '#38bdf8',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'rgba(56, 189, 248, 0.1)',
-              border: '1px solid rgba(56, 189, 248, 0.45)',
-              padding: '5px 12px',
-              borderRadius: '16px',
-              fontSize: '11px',
               fontWeight: '800',
-              color: '#38bdf8',
-              fontFamily: 'monospace'
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'listing-audit' ? '0 0 16px rgba(0, 210, 255, 0.4)' : 'none',
+              flexShrink: 0
             }}
+            title="Open RGB Live Listing Score & A9 Audit"
           >
-            <span style={{ color: '#94a3b8' }}>ID:</span>
-            <span>{currentCustomerId}</span>
-          </div>
+            <Gauge size={13} color={activeTab === 'listing-audit' ? '#00d2ff' : '#c084fc'} />
+            <span className={activeTab === 'listing-audit' ? 'rgb-rainbow-text' : ''}>RGB Listing Score</span>
+          </button>
 
           {/* Platform Developer Mode Active Indicator & Alert Opener */}
           <HeaderDevModeIndicator onOpen={() => setShowDevModeModal(true)} />
@@ -1008,309 +811,14 @@ export default function App() {
           {/* Official Community Join & App Updates Button */}
           <HeaderCommunityButton onClick={() => setShowCommunityModal(true)} />
 
-          {/* Docs & Guides Folder Dropdown (Contains User Manual, Terms & Policy, About Suite) */}
-          <div style={{ position: 'relative' }} ref={docsFolderRef}>
-            <button
-              type="button"
-              onClick={() => setShowDocsFolder(prev => !prev)}
-              className="kinara-glow-dynamic"
-              title="Documentation, Policies & Suite Details Folder"
-              style={{
-                '--glow-color': showDocsFolder ? '#00d2ff' : '#a855f7',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: showDocsFolder ? 'linear-gradient(135deg, rgba(0, 210, 255, 0.22) 0%, rgba(168, 85, 247, 0.22) 100%)' : 'rgba(255, 255, 255, 0.06)',
-                border: showDocsFolder ? '1px solid #00d2ff' : '1px solid rgba(168, 85, 247, 0.35)',
-                color: showDocsFolder ? '#00d2ff' : '#e2e8f0',
-                padding: '6px 13px',
-                borderRadius: '16px',
-                fontSize: '11px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              {showDocsFolder ? <FolderOpen size={14} color="#00d2ff" /> : <Folder size={14} color="#00d2ff" />}
-              <span>Docs & Guides</span>
-              <ChevronDown size={12} style={{ transform: showDocsFolder ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            </button>
-
-            {/* Folder Dropdown Menu */}
-            {showDocsFolder && (
-              <div style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: 0,
-                width: '270px',
-                background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 15, 30, 0.98) 100%)',
-                border: '1px solid rgba(0, 210, 255, 0.35)',
-                borderRadius: '14px',
-                padding: '8px',
-                boxShadow: '0 12px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 210, 255, 0.2)',
-                zIndex: 1000,
-                backdropFilter: 'blur(20px)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px'
-              }}>
-                <div style={{
-                  padding: '6px 10px',
-                  fontSize: '10px',
-                  fontWeight: '800',
-                  color: '#94a3b8',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.6px',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  marginBottom: '4px'
-                }}>
-                  <Folder size={12} color="#00d2ff" />
-                  <span>Suite Resources & Docs</span>
-                </div>
-
-                {/* 1. User Manual */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDocsFolder(false);
-                    setShowUserManualModal(true);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    width: '100%'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0, 210, 255, 0.12)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 210, 255, 0.12)',
-                    border: '1px solid rgba(0, 210, 255, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#00d2ff',
-                    flexShrink: 0
-                  }}>
-                    <BookOpen size={15} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
-                      User Manual
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      Step-by-step operations handbook
-                    </div>
-                  </div>
-                </button>
-
-                {/* 2. Terms & Policy */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDocsFolder(false);
-                    setShowTermsModal(true);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    width: '100%'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(245, 158, 11, 0.12)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '8px',
-                    background: 'rgba(245, 158, 11, 0.12)',
-                    border: '1px solid rgba(245, 158, 11, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fbbf24',
-                    flexShrink: 0
-                  }}>
-                    <FileText size={15} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
-                      Terms & Policy
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      Seller compliance & safety terms
-                    </div>
-                  </div>
-                </button>
-
-                {/* 3. About Suite */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDocsFolder(false);
-                    setShowAboutModal(true);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    width: '100%'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.12)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '8px',
-                    background: 'rgba(16, 185, 129, 0.12)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#34d399',
-                    flexShrink: 0
-                  }}>
-                    <Info size={15} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
-                      About Suite
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      Platform models & system version
-                    </div>
-                  </div>
-                </button>
-
-                {/* 4. Contact & Support */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDocsFolder(false);
-                    setShowContactSupportModal(true);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    width: '100%'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0, 210, 255, 0.12)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 210, 255, 0.15)',
-                    border: '1px solid rgba(0, 210, 255, 0.35)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#00d2ff',
-                    flexShrink: 0
-                  }}>
-                    <Headphones size={15} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
-                      Contact & Support
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      contact@sidramotion.com • 24/7 Helpdesk
-                    </div>
-                  </div>
-                </button>
-
-                {/* 5. Official Sellers Community & Updates */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDocsFolder(false);
-                    setShowCommunityModal(true);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    width: '100%'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(37, 211, 102, 0.12)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '8px',
-                    background: 'rgba(37, 211, 102, 0.15)',
-                    border: '1px solid rgba(37, 211, 102, 0.35)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#25d366',
-                    flexShrink: 0
-                  }}>
-                    <Users size={15} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>
-                      Join Seller Community
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      Official WhatsApp & Broadcast feed
-                    </div>
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* Header Action Badges: 100% Free All Modules Unlocked */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            flexWrap: 'wrap'
+          }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -1324,7 +832,7 @@ export default function App() {
               fontWeight: '800',
               boxShadow: '0 0 14px rgba(37, 211, 102, 0.2)'
             }}>
-              <CheckCircle size={13} /> 🟢 100% FREE • ALL 8 MODULES UNLOCKED
+              <CheckCircle size={13} /> 🟢 100% FREE • ALL 9 MODULES UNLOCKED
             </div>
 
             <button
@@ -1352,293 +860,533 @@ export default function App() {
               <Briefcase size={13} color="#25d366" /> 💼 Agency Services & Deals
             </button>
 
-            {/* My Saved Work Cloud Button */}
-            <button
-              type="button"
-              onClick={() => setShowWorkHistoryModal(true)}
-              style={{
-                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.18) 0%, rgba(56, 189, 248, 0.1) 100%)',
-                border: '1.5px solid rgba(0, 210, 255, 0.45)',
-                padding: '5px 13px',
-                borderRadius: '20px',
-                color: '#00d2ff',
-                fontSize: '11px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontWeight: '800',
-                boxShadow: '0 0 14px rgba(0, 210, 255, 0.25)',
-                transition: 'all 0.2s'
-              }}
-              title="View your saved listings, RTO calculations and past work"
-            >
-              <FolderOpen size={13} color="#00d2ff" />
-              <span>Saved Work</span>
-              {savedWorkCount > 0 && (
-                <span style={{
-                  background: '#00d2ff',
-                  color: '#050b14',
-                  borderRadius: '999px',
-                  fontSize: '10px',
+            {/* 👤 UNIFIED SELLER PROFILE & ACCOUNT FOLDER (All Profile, ID, Terms & Auth in One Place) */}
+            <div style={{ position: 'relative' }} ref={profileFolderRef}>
+              <button
+                type="button"
+                onClick={() => setShowProfileFolder(prev => !prev)}
+                className="kinara-glow-dynamic"
+                style={{
+                  '--glow-color': showProfileFolder ? '#00d2ff' : (supabaseUser ? '#25d366' : '#38bdf8'),
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  background: showProfileFolder
+                    ? 'linear-gradient(135deg, rgba(0, 210, 255, 0.25) 0%, rgba(37, 211, 102, 0.2) 100%)'
+                    : (supabaseUser
+                        ? 'linear-gradient(135deg, rgba(37, 211, 102, 0.15) 0%, rgba(0, 210, 255, 0.12) 100%)'
+                        : 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(2, 6, 23, 0.95) 100%)'),
+                  border: showProfileFolder 
+                    ? '1.5px solid #00d2ff' 
+                    : (supabaseUser ? '1.5px solid rgba(37, 211, 102, 0.5)' : '1.5px solid rgba(56, 189, 248, 0.45)'),
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  color: '#ffffff',
+                  fontSize: '11px',
                   fontWeight: '800',
-                  padding: '1px 6px',
-                  lineHeight: '1.2'
-                }}>
-                  {savedWorkCount}
-                </span>
-              )}
-            </button>
+                  cursor: 'pointer',
+                  boxShadow: showProfileFolder 
+                    ? '0 0 16px rgba(0, 210, 255, 0.4)' 
+                    : (supabaseUser ? '0 0 12px rgba(37, 211, 102, 0.25)' : '0 0 12px rgba(56, 189, 248, 0.2)'),
+                  transition: 'all 0.2s'
+                }}
+                title="Open Unified Seller Profile, Customer ID, Cloud Account & Terms"
+              >
+                {supabaseUser ? (
+                  <>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 8px #25d366' }} />
+                    <User size={13} color="#25d366" />
+                    <span>{supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0]}</span>
+                  </>
+                ) : (
+                  <>
+                    <User size={13} color="#38bdf8" />
+                    <span>👤 Seller Profile & Account</span>
+                  </>
+                )}
+                <ChevronDown size={12} style={{ transform: showProfileFolder ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
 
-            {/* Supabase Authentication Header Controls */}
-            {supabaseUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAccountModal(true)}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.15) 0%, rgba(37, 211, 102, 0.15) 100%)',
-                    border: '1.5px solid rgba(0, 210, 255, 0.4)',
-                    padding: '5px 12px',
-                    borderRadius: '20px',
-                    color: '#f8fafc',
-                    fontSize: '11px',
-                    cursor: 'pointer',
+              {/* Unified Dropdown Menu Card */}
+              {showProfileFolder && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 10px)',
+                  right: 0,
+                  width: '320px',
+                  background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(8, 14, 28, 0.99) 100%)',
+                  border: '1.5px solid rgba(0, 210, 255, 0.4)',
+                  borderRadius: '16px',
+                  padding: '12px',
+                  boxShadow: '0 16px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.25)',
+                  zIndex: 2000,
+                  backdropFilter: 'blur(25px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  {/* 1. SELLER IDENTITY & STATUS */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '10px 12px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    fontWeight: '700',
-                    boxShadow: '0 0 12px rgba(0, 210, 255, 0.2)'
-                  }}
-                  title={`Logged in as ${supabaseUser.email} (Supabase Auth)`}
-                >
-                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#25d366', boxShadow: '0 0 6px #25d366' }}></span>
-                  <User size={12} color="#00d2ff" />
-                  <span>{supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0]}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await signOutUser();
-                    setSupabaseUser(null);
-                  }}
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    padding: '5px 10px',
-                    borderRadius: '16px',
-                    color: '#f87171',
-                    fontSize: '11px',
-                    cursor: 'pointer',
+                    gap: '10px'
+                  }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: supabaseUser ? 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)' : 'rgba(56, 189, 248, 0.15)',
+                      border: supabaseUser ? '1.5px solid #25d366' : '1.5px solid rgba(56, 189, 248, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: supabaseUser ? '#050b14' : '#38bdf8',
+                      fontWeight: '900',
+                      fontSize: '14px',
+                      flexShrink: 0
+                    }}>
+                      {supabaseUser ? (supabaseUser.user_metadata?.full_name?.[0]?.toUpperCase() || supabaseUser.email?.[0]?.toUpperCase() || 'S') : <User size={18} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '800', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {supabaseUser ? (supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0]) : 'Guest Seller'}
+                        </span>
+                        <span style={{
+                          fontSize: '9px',
+                          padding: '1px 6px',
+                          borderRadius: '8px',
+                          background: supabaseUser ? 'rgba(37, 211, 102, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+                          color: supabaseUser ? '#25d366' : '#38bdf8',
+                          fontWeight: '800',
+                          border: supabaseUser ? '1px solid rgba(37, 211, 102, 0.4)' : '1px solid rgba(56, 189, 248, 0.4)'
+                        }}>
+                          {supabaseUser ? 'PRO CLOUD' : 'FREE ACCESS'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {supabaseUser ? supabaseUser.email : 'Local Indian Seller Session'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. CUSTOMER ID (Consolidated in Profile Folder - NO LONGER SEPARATE AT TOP) */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                    border: '1px solid rgba(56, 189, 248, 0.35)',
+                    borderRadius: '10px',
+                    padding: '8px 10px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
-                    fontWeight: '700'
-                  }}
-                  title="Logout from Supabase"
-                >
-                  <LogOut size={11} /> Logout
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
-                  style={{
-                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
-                    border: 'none',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    color: '#050b14',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    fontWeight: '800',
-                    boxShadow: '0 0 14px rgba(0, 210, 255, 0.35)'
-                  }}
-                  title="Login with Supabase"
-                >
-                  <LogIn size={12} /> Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setAuthModalMode('signup'); setShowAuthModal(true); }}
-                  style={{
-                    background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
-                    border: 'none',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    color: '#050b14',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    fontWeight: '800',
-                    boxShadow: '0 0 14px rgba(37, 211, 102, 0.3)'
-                  }}
-                  title="Sign Up with Supabase"
-                >
-                  <UserPlus size={12} /> Sign Up
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAccountModal(true)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    color: '#cbd5e1',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    fontWeight: '700'
-                  }}
-                  title="Seller Profile & Workstation Settings"
-                >
-                  <User size={12} color="#00d2ff" /> Profile
-                </button>
-              </div>
-            )}
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>CUSTOMER ID:</span>
+                      <span style={{ fontSize: '12px', fontWeight: '900', color: '#38bdf8', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                        {currentCustomerId}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                          navigator.clipboard.writeText(currentCustomerId);
+                          setIdCopiedNotice(true);
+                          setTimeout(() => setIdCopiedNotice(false), 2000);
+                        }
+                      }}
+                      style={{
+                        background: idCopiedNotice ? 'rgba(37, 211, 102, 0.2)' : 'rgba(56, 189, 248, 0.15)',
+                        border: idCopiedNotice ? '1px solid #25d366' : '1px solid rgba(56, 189, 248, 0.4)',
+                        color: idCopiedNotice ? '#25d366' : '#38bdf8',
+                        fontSize: '10px',
+                        fontWeight: '800',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.2s'
+                      }}
+                      title="Copy Customer ID"
+                    >
+                      {idCopiedNotice ? <CheckCircle size={11} /> : <Copy size={11} />}
+                      <span>{idCopiedNotice ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
+
+                  {/* 3. AUTHENTICATION (LOGIN / SIGN UP / LOGOUT CONSOLIDATED HERE) */}
+                  {supabaseUser ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setShowProfileFolder(false);
+                        await signOutUser();
+                        setSupabaseUser(null);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: '10px',
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(239, 68, 68, 0.4)',
+                        color: '#f87171',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <LogOut size={13} />
+                      <span>Logout from Cloud Account</span>
+                    </button>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProfileFolder(false);
+                          setAuthModalMode('login');
+                          setShowAuthModal(true);
+                        }}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '10px',
+                          background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                          border: 'none',
+                          color: '#050b14',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          boxShadow: '0 0 12px rgba(0, 210, 255, 0.35)'
+                        }}
+                      >
+                        <LogIn size={13} />
+                        <span>Login</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProfileFolder(false);
+                          setAuthModalMode('signup');
+                          setShowAuthModal(true);
+                        }}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '10px',
+                          background: 'linear-gradient(135deg, #25d366 0%, #00d2ff 100%)',
+                          border: 'none',
+                          color: '#050b14',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          boxShadow: '0 0 12px rgba(37, 211, 102, 0.3)'
+                        }}
+                      >
+                        <UserPlus size={13} />
+                        <span>Sign Up</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Subtle Separator */}
+                  <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', margin: '2px 0' }} />
+
+                  {/* 4. ACCOUNT SETTINGS & SAVED WORK */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileFolder(false);
+                        setShowAccountModal(true);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: 'transparent',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        width: '100%',
+                        color: '#f8fafc'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0, 210, 255, 0.12)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '8px',
+                        background: 'rgba(0, 210, 255, 0.12)',
+                        border: '1px solid rgba(0, 210, 255, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#00d2ff',
+                        flexShrink: 0
+                      }}>
+                        <Settings size={14} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '11px', fontWeight: '700' }}>Seller Profile & Settings</div>
+                        <div style={{ fontSize: '9px', color: '#94a3b8' }}>Business name, phone & password</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileFolder(false);
+                        setShowWorkHistoryModal(true);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: 'transparent',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        width: '100%',
+                        color: '#f8fafc'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.12)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '8px',
+                        background: 'rgba(56, 189, 248, 0.12)',
+                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#38bdf8',
+                        flexShrink: 0
+                      }}>
+                        <FolderOpen size={14} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '11px', fontWeight: '700' }}>Saved Work & Cloud History</div>
+                        <div style={{ fontSize: '9px', color: '#94a3b8' }}>Saved listings, RTO & audit records</div>
+                      </div>
+                      {savedWorkCount > 0 && (
+                        <span style={{
+                          background: '#00d2ff',
+                          color: '#050b14',
+                          borderRadius: '999px',
+                          fontSize: '9px',
+                          fontWeight: '900',
+                          padding: '1px 6px'
+                        }}>
+                          {savedWorkCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Subtle Separator */}
+                  <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', margin: '2px 0' }} />
+
+                  {/* 5. LEGAL TERMS & COMPLIANCE (TERMS CONSOLIDATED HERE - NO LONGER SEPARATE) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <div style={{ fontSize: '9px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 4px 2px 4px' }}>
+                      Terms & Compliance
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileFolder(false);
+                        setLegalModalTab('terms');
+                        setShowTermsModal(true);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        background: 'transparent',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        color: '#cbd5e1',
+                        fontSize: '11px',
+                        fontWeight: '600'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; e.currentTarget.style.color = '#ffffff'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; }}
+                    >
+                      <FileText size={13} color="#f59e0b" />
+                      <span>Terms of Use (Terms)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileFolder(false);
+                        setLegalModalTab('privacy');
+                        setShowTermsModal(true);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        background: 'transparent',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        color: '#cbd5e1',
+                        fontSize: '11px',
+                        fontWeight: '600'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; e.currentTarget.style.color = '#ffffff'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; }}
+                    >
+                      <ShieldCheck size={13} color="#25d366" />
+                      <span>Privacy Policy</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileFolder(false);
+                        setLegalModalTab('data-purge');
+                        setShowTermsModal(true);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        background: 'transparent',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        color: '#cbd5e1',
+                        fontSize: '11px',
+                        fontWeight: '600'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; e.currentTarget.style.color = '#ffffff'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; }}
+                    >
+                      <Trash2 size={13} color="#f43f5e" />
+                      <span>Data Purge & Grievance</span>
+                    </button>
+                  </div>
+
+                  {/* Subtle Separator */}
+                  <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', margin: '2px 0' }} />
+
+                  {/* 6. USER MANUAL & ABOUT SUITE */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileFolder(false);
+                        setShowUserManualModal(true);
+                      }}
+                      style={{
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        color: '#94a3b8',
+                        fontSize: '10px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <BookOpen size={11} color="#00d2ff" />
+                      <span>User Manual</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileFolder(false);
+                        setShowAboutModal(true);
+                      }}
+                      style={{
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        color: '#94a3b8',
+                        fontSize: '10px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <Info size={11} color="#34d399" />
+                      <span>About Suite</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-            {/* Quick Desktop Switcher Button (Clean Pill) */}
-            <button
-              type="button"
-              onClick={() => handleSetViewMode('desktop')}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '5px 8px',
-                borderRadius: '12px',
-                border: '1px solid rgba(0, 210, 255, 0.35)',
-                background: 'rgba(15, 23, 42, 0.85)',
-                color: '#38bdf8',
-                fontSize: '10px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}
-              title="Switch to Desktop View"
-            >
-              <Monitor size={12} color="#38bdf8" />
-              <span>Desktop</span>
-            </button>
-
-            {/* Mobile Auth / Profile Button */}
-            {supabaseUser ? (
-              <button
-                type="button"
-                onClick={() => setShowAccountModal(true)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: 'rgba(37, 211, 102, 0.15)',
-                  border: '1px solid rgba(37, 211, 102, 0.4)',
-                  color: '#25d366',
-                  padding: '5px 8px',
-                  borderRadius: '12px',
-                  fontSize: '10px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0
-                }}
-                title={`Logged in as ${supabaseUser.email}`}
-              >
-                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#25d366' }}></span>
-                <User size={12} color="#25d366" />
-                <span>{supabaseUser.user_metadata?.full_name?.split(' ')[0] || 'Seller'}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
-                  border: 'none',
-                  color: '#050b14',
-                  padding: '5px 9px',
-                  borderRadius: '12px',
-                  fontSize: '10px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  boxShadow: '0 0 10px rgba(0, 210, 255, 0.35)'
-                }}
-                title="Login / Sign Up via Supabase"
-              >
-                <LogIn size={11} />
-                <span>Login</span>
-              </button>
-            )}
-
-            {/* Mobile Drawer Opener Menu Button */}
-            <button
-              type="button"
-              onClick={() => setShowMobileFolderMenu(true)}
-              className="kinara-glow-dynamic"
-              style={{
-                '--glow-color': '#00d2ff',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%)',
-                border: '1.5px solid #00d2ff',
-                color: '#ffffff',
-                padding: '5px 9px',
-                borderRadius: '12px',
-                fontSize: '11px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                boxShadow: '0 0 10px rgba(0, 210, 255, 0.35)'
-              }}
-              title="Open Mobile Suite Folder Menu"
-            >
-              <FolderOpen size={13} color="#00d2ff" />
-              <span>Menu</span>
-            </button>
-          </div>
-        )}
+        </div>
         </div>
       </header>
 
       {/* Main Suite Content - DIRECT OPEN (Zero sign-in barrier) */}
-      {viewMode === 'desktop' ? (
-        <nav style={{
-            background: 'rgba(8, 17, 33, 0.75)',
+      <nav style={{
+            background: 'rgba(8, 17, 33, 0.85)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '10px 24px',
-            overflowX: 'auto',
+            padding: '10px 20px',
             display: 'flex',
-            gap: '10px'
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            width: '100%'
           }}>
+
             {[
               { id: 'listing-ai', label: '1. AI Listing & SEO', icon: Sparkles, tag: 'Smart Repair', glowColor: '#00d2ff' },
-              { id: 'image-studio', label: '2. Image & #FFFFFF White BG', icon: ImageIcon, tag: 'Amazon Pure White', glowColor: '#38bdf8' },
-              { id: 'catalog-convert', label: '3. Bulk Catalog Converter', icon: ArrowRightLeft, tag: 'Az ⇄ Fk ⇄ Ms', glowColor: '#f97316' },
-              { id: 'buybox-repricer', label: '4. BuyBox & Auto Repricer', icon: Zap, tag: 'Profit Guard', glowColor: '#f59e0b' },
-              { id: 'review-analyzer', label: '5. Review & Gap Mining', icon: TrendingUp, tag: 'Outperform Rivals', glowColor: '#f43f5e' },
-              { id: 'rto-calculator', label: '6. RTO & Net Profit Calculator', icon: DollarSign, tag: 'Stop Loss', glowColor: '#10b981' },
-              { id: 'listing-audit', label: '7. Sync & RGB Listing Score', icon: Gauge, tag: 'RGB Live Audit', glowColor: '#25d366' },
-              { id: 'omnichannel-seo', label: '8. 360° Omnichannel SEO & Marketing', icon: Globe, tag: '8 Kits & 76 Types', glowColor: '#a855f7' },
+              { id: 'image-studio', label: '2. Image & #FFFFFF BG', icon: ImageIcon, tag: 'Pure White', glowColor: '#38bdf8' },
+              { id: 'catalog-convert', label: '3. Catalog Converter', icon: ArrowRightLeft, tag: 'Az ⇄ Fk ⇄ Ms', glowColor: '#f97316' },
+              { id: 'buybox-repricer', label: '4. BuyBox & Repricer', icon: Zap, tag: 'Profit Guard', glowColor: '#f59e0b' },
+              { id: 'review-analyzer', label: '5. Review Mining', icon: TrendingUp, tag: 'Outperform Rivals', glowColor: '#f43f5e' },
+              { id: 'rto-calculator', label: '6. RTO Calculator', icon: DollarSign, tag: 'Stop Courier Loss', glowColor: '#10b981' },
+              { id: 'listing-audit', label: '7. RGB Listing Score', icon: Gauge, tag: 'Live A9 Audit', glowColor: '#25d366' },
+              { id: 'omnichannel-seo', label: '8. Omnichannel Marketing', icon: Globe, tag: '8 Kits • 76 Types', glowColor: '#a855f7' },
               { id: 'social-doctor', label: '9. Social Doctor & Audit', icon: Share2, tag: 'Live Audit', glowColor: '#ec4899' },
             ].map(item => {
               const Icon = item.icon;
@@ -1651,29 +1399,31 @@ export default function App() {
                   className="kinara-glow-dynamic"
                   style={{
                     '--glow-color': item.glowColor,
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '9px 18px',
+                    gap: '6px',
+                    padding: '7px 12px',
                     borderRadius: '12px',
                     border: `1.5px solid ${isActive ? item.glowColor : item.glowColor + '40'}`,
                     background: isActive 
                       ? `linear-gradient(135deg, ${item.glowColor}38 0%, ${item.glowColor}18 100%)` 
-                      : 'rgba(15, 31, 56, 0.55)',
+                      : 'rgba(15, 31, 56, 0.65)',
                     color: isActive ? item.glowColor : '#e2e8f0',
-                    fontWeight: isActive ? '700' : '500',
-                    fontSize: '13px',
+                    fontWeight: isActive ? '800' : '600',
+                    fontSize: '12px',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
-                    transition: 'all 0.25s'
+                    transition: 'all 0.2s',
+                    boxShadow: isActive ? `0 0 16px ${item.glowColor}40` : 'none',
+                    flexShrink: 0
                   }}
                 >
-                  <Icon size={16} color={item.glowColor} />
-                  {item.label}
+                  <Icon size={14} color={item.glowColor} />
+                  <span>{item.label}</span>
                   <span style={{
-                    fontSize: '10px',
-                    padding: '2px 7px',
-                    borderRadius: '10px',
+                    fontSize: '9px',
+                    padding: '1px 6px',
+                    borderRadius: '8px',
                     border: `1px solid ${item.glowColor}80`,
                     background: isActive ? `${item.glowColor}30` : 'rgba(255, 255, 255, 0.08)',
                     color: isActive ? '#ffffff' : '#cbd5e1',
@@ -1685,294 +1435,13 @@ export default function App() {
               );
             })}
           </nav>
-        ) : (
-          <div style={{
-            background: 'linear-gradient(180deg, rgba(11, 23, 44, 0.98) 0%, rgba(7, 15, 30, 0.98) 100%)',
-            borderBottom: '1px solid rgba(0, 210, 255, 0.25)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            padding: '12px 14px'
-          }}>
-            {/* Row 1: Active Tool Hero Showcase & Menu Button */}
-            {(() => {
-              const activeMeta = getActiveToolMeta(activeTab);
-              const ActiveIcon = activeMeta.icon;
-              return (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  background: 'rgba(15, 23, 42, 0.75)',
-                  border: `1.5px solid ${activeMeta.color}45`,
-                  borderRadius: '16px',
-                  padding: '10px 14px',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px ${activeMeta.color}20`
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                    <div style={{
-                      width: '38px',
-                      height: '38px',
-                      borderRadius: '12px',
-                      background: `linear-gradient(135deg, ${activeMeta.color}35 0%, rgba(15, 23, 42, 0.9) 100%)`,
-                      border: `1.5px solid ${activeMeta.color}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: activeMeta.color,
-                      boxShadow: `0 0 14px ${activeMeta.color}40`,
-                      flexShrink: 0
-                    }}>
-                      <ActiveIcon size={20} />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{
-                          fontSize: '9px',
-                          fontWeight: '800',
-                          color: '#25d366',
-                          background: 'rgba(37, 211, 102, 0.15)',
-                          border: '1px solid rgba(37, 211, 102, 0.4)',
-                          padding: '1px 6px',
-                          borderRadius: '8px',
-                          letterSpacing: '0.4px',
-                          textTransform: 'uppercase'
-                        }}>
-                          ⚡ ACTIVE TOOL
-                        </span>
-                        <span style={{ fontSize: '9px', color: '#94a3b8' }}>{activeMeta.tag}</span>
-                      </div>
-                      <div style={{
-                        fontSize: '13px',
-                        fontWeight: '800',
-                        color: '#ffffff',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        marginTop: '2px',
-                        fontFamily: "'Space Grotesk', sans-serif"
-                      }}>
-                        {getModuleName(activeTab)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowSyncMonitor(true)}
-                    className="kinara-glow-dynamic"
-                    style={{
-                      '--glow-color': '#f43f5e',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      background: 'rgba(244, 63, 94, 0.15)',
-                      border: '1.5px solid rgba(244, 63, 94, 0.45)',
-                      color: '#f43f5e',
-                      padding: '7px 11px',
-                      borderRadius: '12px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      boxShadow: '0 0 14px rgba(244, 63, 94, 0.25)',
-                      transition: 'all 0.2s',
-                      whiteSpace: 'nowrap'
-                    }}
-                    title="Open Marketplace Sync & Flaws Monitor"
-                  >
-                    <Bell size={13} color="#f43f5e" />
-                    <span>Alerts (5)</span>
-                  </button>
-                </div>
-              );
-            })()}
-
-            {/* Row 2: Swipeable Horizontal Tool Switcher Chips */}
-            <div style={{
-              display: 'flex',
-              gap: '7px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch'
-            }}>
-              {[
-                { id: 'listing-ai', label: '1. AI Listing', icon: Sparkles, color: '#00d2ff', tag: 'Smart' },
-                { id: 'image-studio', label: '2. White BG', icon: ImageIcon, color: '#38bdf8', tag: '#FFF' },
-                { id: 'catalog-convert', label: '3. Converter', icon: ArrowRightLeft, color: '#f97316', tag: 'Az⇄Fk⇄Ms' },
-                { id: 'buybox-repricer', label: '4. Repricer', icon: Zap, color: '#f59e0b', tag: 'Profit' },
-                { id: 'review-analyzer', label: '5. Gap Mining', icon: TrendingUp, color: '#f43f5e', tag: 'Rivals' },
-                { id: 'rto-calculator', label: '6. RTO Calc', icon: DollarSign, color: '#10b981', tag: 'Stop Loss' },
-                { id: 'listing-audit', label: '7. RGB Audit', icon: Gauge, color: '#25d366', tag: 'Score' },
-                { id: 'omnichannel-seo', label: '8. 360° SEO', icon: Globe, color: '#a855f7', tag: 'Omni' },
-                { id: 'social-doctor', label: '9. Social Doctor', icon: Share2, color: '#ec4899', tag: 'Soon' },
-              ].map(chip => {
-                const Icon = chip.icon;
-                const isActive = activeTab === chip.id;
-                return (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    onClick={() => setActiveTab(chip.id)}
-                    className="kinara-glow-dynamic"
-                    style={{
-                      '--glow-color': chip.color,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '6px 11px',
-                      borderRadius: '12px',
-                      border: `1px solid ${isActive ? chip.color : 'rgba(255, 255, 255, 0.12)'}`,
-                      background: isActive 
-                        ? `linear-gradient(135deg, ${chip.color}35 0%, rgba(15, 23, 42, 0.95) 100%)` 
-                        : 'rgba(15, 23, 42, 0.65)',
-                      color: isActive ? chip.color : '#cbd5e1',
-                      fontSize: '11px',
-                      fontWeight: isActive ? '800' : '600',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      boxShadow: isActive ? `0 0 12px ${chip.color}40` : 'none',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <Icon size={12} color={chip.color} />
-                    <span>{chip.label}</span>
-                    <span style={{
-                      fontSize: '8px',
-                      fontWeight: '800',
-                      padding: '1px 4px',
-                      borderRadius: '6px',
-                      background: isActive ? `${chip.color}30` : 'rgba(255, 255, 255, 0.08)',
-                      color: isActive ? '#ffffff' : '#94a3b8',
-                      border: `1px solid ${chip.color}40`
-                    }}>
-                      {chip.tag}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Row 3: 4 Decorated Cyber Quick-Pill Widgets (RGB Score, Live Sync Alerts, Community, Agency Deals) */}
-            <div className="responsive-header-pills">
-              {/* Tile 1: RGB Listing Score */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('listing-audit')}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
-                  border: '1px solid rgba(168, 85, 247, 0.4)',
-                  borderRadius: '10px',
-                  padding: '7px 6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '2px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#c084fc' }}>
-                  <Gauge size={12} />
-                  <span style={{ fontSize: '10px', fontWeight: '800' }}>RGB Audit</span>
-                </div>
-                <span style={{ fontSize: '8px', color: '#94a3b8' }}>A9 Engine</span>
-              </button>
-
-              {/* Tile 2: Sync & Alerts Monitor */}
-              <button
-                type="button"
-                onClick={() => setShowSyncMonitor(true)}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
-                  border: '1px solid rgba(244, 63, 94, 0.4)',
-                  borderRadius: '10px',
-                  padding: '7px 6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '2px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f43f5e' }}>
-                  <Bell size={12} />
-                  <span style={{ fontSize: '10px', fontWeight: '800' }}>Alerts</span>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 6px #f43f5e' }} />
-                </div>
-                <span style={{ fontSize: '8px', color: '#94a3b8' }}>3 Channels</span>
-              </button>
-
-              {/* Tile 3: Join Community */}
-              <button
-                type="button"
-                onClick={() => setShowCommunityModal(true)}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
-                  border: '1px solid rgba(37, 211, 102, 0.4)',
-                  borderRadius: '10px',
-                  padding: '7px 6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '2px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#25d366' }}>
-                  <Users size={12} />
-                  <span style={{ fontSize: '10px', fontWeight: '800' }}>Community</span>
-                </div>
-                <span style={{ fontSize: '8px', color: '#94a3b8' }}>WhatsApp Feed</span>
-              </button>
-
-              {/* Tile 4: Agency Deals & Services */}
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('seller-growth-hub');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.16) 0%, rgba(15, 23, 42, 0.8) 100%)',
-                  border: '1px solid rgba(0, 210, 255, 0.4)',
-                  borderRadius: '10px',
-                  padding: '7px 6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '2px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#38bdf8' }}>
-                  <Briefcase size={12} />
-                  <span style={{ fontSize: '10px', fontWeight: '800' }}>Agency</span>
-                </div>
-                <span style={{ fontSize: '8px', color: '#94a3b8' }}>Growth Hub</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Top Leaderboard High-Viewability Ad Unit (728x90 / Responsive) */}
         <AdBanner position="top-leaderboard" />
 
         {/* Main Content Area - 100% FREE AND UNLOCKED SUITE */}
-        <main style={{ flex: 1, padding: viewMode === 'mobile' ? '16px 10px' : '28px', maxWidth: '1440px', margin: '0 auto', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+        <main style={{ flex: 1, padding: 'clamp(10px, 2.5vw, 24px)', maxWidth: '1440px', margin: '0 auto', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+
             {activeTab === 'listing-audit' && (
               <MarketplaceSyncAndLqsAudit 
                 copyToClipboard={copyToClipboard} 
@@ -1992,6 +1461,7 @@ export default function App() {
                     isPreviewMode={false}
                     isGuest={isGuest}
                     onRequireAuth={() => setShowGuestLimitModal(true)}
+                    onOpenCreateListing={() => setShowCreateListingWizard(true)}
                   />
                 )}
                 {activeTab === 'image-studio' && (
@@ -2093,10 +1563,12 @@ export default function App() {
         <UserManualModal onClose={() => setShowUserManualModal(false)} />
       )}
 
-      {/* Terms & Compliance Modal */}
-      {showTermsModal && (
-        <TermsComplianceModal onClose={() => setShowTermsModal(false)} />
-      )}
+      {/* Legal & Privacy Compliance Suite (India DPDP Act 2023) */}
+      <LegalAndPrivacyModal 
+        isOpen={showTermsModal} 
+        onClose={() => setShowTermsModal(false)} 
+        initialTab={legalModalTab} 
+      />
 
       {/* About Seller Suite Pro 2026 Modal */}
       {showAboutModal && (
@@ -2113,7 +1585,7 @@ export default function App() {
           copyToClipboard={copyToClipboard}
           copiedKey={copiedKey}
           onOpenUserManual={() => { setShowContactSupportModal(false); setShowUserManualModal(true); }}
-          onOpenTerms={() => { setShowContactSupportModal(false); setShowTermsModal(true); }}
+          onOpenTerms={() => { setShowContactSupportModal(false); setLegalModalTab('terms'); setShowTermsModal(true); }}
           onOpenAbout={() => { setShowContactSupportModal(false); setShowAboutModal(true); }}
         />
       )}
@@ -2152,7 +1624,7 @@ export default function App() {
 
 
 
-      {/* Amazon, Flipkart & Meesho Live Sync & Flaw Monitor Modal */}
+      {/* Amazon, Flipkart & Meesho Compliance & Flaw Monitor Modal */}
       <MarketplaceSyncMonitor 
         isOpen={showSyncMonitor}
         onClose={() => setShowSyncMonitor(false)}
@@ -2175,6 +1647,16 @@ export default function App() {
           setActiveTab(tab);
         }}
         isAdmin={false}
+      />
+
+      {/* Flagship Feature: Create New Listing Multi-Marketplace Wizard Modal */}
+      <CreateListingWizardModal
+        isOpen={showCreateListingWizard}
+        onClose={() => setShowCreateListingWizard(false)}
+        onNavigateToStudio={() => {
+          setShowCreateListingWizard(false);
+          setActiveTab('pure-white-studio');
+        }}
       />
 
       {/* Platform Developer Mode & Continuous Maintenance Alert Modal */}
@@ -2230,6 +1712,7 @@ export default function App() {
         }}
         onOpenTerms={() => {
           setShowMobileFolderMenu(false);
+          setLegalModalTab('terms');
           setShowTermsModal(true);
         }}
         onOpenAbout={() => {
@@ -2292,119 +1775,6 @@ export default function App() {
         }}
       />
 
-      {/* Floating Mobile Bottom Navigation Dock */}
-      {viewMode === 'mobile' && (
-        <div style={{
-          position: 'fixed',
-          bottom: '68px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 45,
-          background: 'rgba(11, 23, 44, 0.94)',
-          backdropFilter: 'blur(20px)',
-          border: '1.5px solid rgba(0, 210, 255, 0.45)',
-          borderRadius: '30px',
-          padding: '6px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 12px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 210, 255, 0.3)',
-          maxWidth: '92vw'
-        }}>
-          {/* 1. Open Folder Menu Button */}
-          <button
-            type="button"
-            onClick={() => setShowMobileFolderMenu(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'linear-gradient(135deg, #00d2ff 0%, #0077ff 100%)',
-              color: '#ffffff',
-              border: 'none',
-              padding: '7px 14px',
-              borderRadius: '20px',
-              fontSize: '11px',
-              fontWeight: '800',
-              cursor: 'pointer',
-              boxShadow: '0 0 12px rgba(0, 210, 255, 0.5)',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <FolderOpen size={14} />
-            <span>📂 Suite Menu</span>
-          </button>
-
-          {/* 2. Fast Jump: RGB Audit */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('listing-audit')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              background: activeTab === 'listing-audit' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.08)',
-              border: activeTab === 'listing-audit' ? '1px solid #c084fc' : '1px solid rgba(255, 255, 255, 0.12)',
-              color: activeTab === 'listing-audit' ? '#c084fc' : '#cbd5e1',
-              padding: '6px 10px',
-              borderRadius: '16px',
-              fontSize: '11px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <Gauge size={13} color="#c084fc" />
-            <span>Audit</span>
-          </button>
-
-          {/* 3. Sync Alerts */}
-          <button
-            type="button"
-            onClick={() => setShowSyncMonitor(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              background: 'rgba(244, 63, 94, 0.15)',
-              border: '1px solid rgba(244, 63, 94, 0.35)',
-              color: '#f43f5e',
-              padding: '6px 10px',
-              borderRadius: '16px',
-              fontSize: '11px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <Bell size={13} color="#f43f5e" />
-            <span>Alerts</span>
-          </button>
-
-          {/* 4. Seller Profile */}
-          <button
-            type="button"
-            onClick={() => setShowAccountModal(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#94a3b8',
-              padding: '6px 10px',
-              borderRadius: '16px',
-              fontSize: '11px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <User size={13} color="#00d2ff" />
-            <span>Profile</span>
-          </button>
-        </div>
-      )}
 
       {/* Footer / Copyright (100% Public Customer View - Zero Owner Leaks) */}
       <footer style={{
@@ -2415,14 +1785,68 @@ export default function App() {
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '12px',
+        gap: '14px',
         fontSize: '12px',
         color: '#64748b'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img src="/sidra-logo.png" alt="Logo" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
-          <span><strong style={{ color: '#00d2ff' }}>SIDRA MOTION</strong> • Visuals That Matter | E-Commerce Suite</span>
+          <span><strong style={{ color: '#00d2ff' }}>SIDRA MOTIONS</strong> • Visuals That Matter | E-Commerce Suite</span>
         </div>
+
+        {/* Legal & Compliance Links (India DPDP Act 2023) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', fontSize: '11px' }}>
+          <button 
+            type="button" 
+            onClick={() => { setLegalModalTab('privacy'); setShowTermsModal(true); }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+          >
+            Privacy Policy
+          </button>
+          <span>•</span>
+          <button 
+            type="button" 
+            onClick={() => { setLegalModalTab('terms'); setShowTermsModal(true); }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+          >
+            Terms of Use
+          </button>
+          <span>•</span>
+          <button 
+            type="button" 
+            onClick={() => { setLegalModalTab('disclaimer'); setShowTermsModal(true); }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+          >
+            Marketplace Disclaimer
+          </button>
+          <span>•</span>
+          <button 
+            type="button" 
+            onClick={() => { setLegalModalTab('grievance'); setShowTermsModal(true); }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+          >
+            Grievance Officer (DPDP)
+          </button>
+          <span>•</span>
+          <button 
+            type="button" 
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('sidra_open_consent_banner'));
+            }}
+            style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', padding: 0 }}
+          >
+            Cookie Preferences / Withdraw Consent
+          </button>
+          <span>•</span>
+          <button 
+            type="button" 
+            onClick={() => { setLegalModalTab('data-purge'); setShowTermsModal(true); }}
+            style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', padding: 0, fontWeight: '700' }}
+          >
+            Delete All My Data
+          </button>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <a
             href="https://sellersuitepro.online"
@@ -2441,6 +1865,14 @@ export default function App() {
           </a>
         </div>
       </footer>
+
+      {/* India DPDP Act 2023 Cookie & Privacy Consent Banner */}
+      <PrivacyConsentBanner 
+        onOpenPrivacyPolicy={() => {
+          setLegalModalTab('privacy');
+          setShowTermsModal(true);
+        }}
+      />
 
       {/* Floating Sticky Bottom Anchor Ad (High CPM / Mobile & Desktop) */}
       <AdBanner position="sticky-footer" />
@@ -3479,6 +2911,50 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout,
               </form>
             </div>
 
+            {/* DPDP Act 2023 Right to Erasure / Purge */}
+            <div style={{
+              background: 'rgba(244, 63, 94, 0.08)',
+              border: '1px solid rgba(244, 63, 94, 0.25)',
+              borderRadius: '14px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f43f5e', fontSize: '12px', fontWeight: '800' }}>
+                <Trash2 size={14} /> Right to Erasure (India DPDP Act 2023)
+              </div>
+              <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.45', margin: 0 }}>
+                Permanently purge all your local saved listings, credentials, auth cache, and store settings from this browser. This action cannot be reversed.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to permanently delete all your local data, saved history, and credentials from this browser? This action cannot be undone.')) {
+                    purgeAllUserData();
+                    window.location.reload();
+                  }
+                }}
+                style={{
+                  background: 'rgba(244, 63, 94, 0.2)',
+                  border: '1px solid #f43f5e',
+                  color: '#fff',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  alignSelf: 'flex-start',
+                  marginTop: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Trash2 size={12} /> Delete All My Data (Purge Storage)
+              </button>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>Lock Workstation</div>
@@ -3531,7 +3007,7 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout,
               {supabaseUser ? (
                 <div>
                   <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 12px 0' }}>
-                    Aap currently Supabase cloud database se connected aur logged in hain:
+                    You are currently authenticated and connected to the Supabase cloud database:
                   </p>
                   <div style={{
                     background: 'rgba(15, 23, 42, 0.7)',
@@ -3595,7 +3071,7 @@ function AccountSettingsModal({ userProfile, onClose, onUpdateProfile, onLogout,
               ) : (
                 <div>
                   <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 14px 0', lineHeight: '1.5' }}>
-                    Supabase ek high-speed PostgreSQL cloud database aur auth engine hai. Aap yahan se apna account bana sakte hain ya login kar sakte hain:
+                    Connect to our high-speed PostgreSQL cloud database to safely back up your listings, audit history, and workstation settings:
                   </p>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
@@ -3911,8 +3387,8 @@ function UserManualModal({ onClose }) {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div style={{ background: 'rgba(244, 63, 94, 0.08)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
-                    <span style={{ color: '#f43f5e', fontWeight: '700', fontSize: '12px', display: 'block' }}>🔒 Automatic Fix (Locked)</span>
-                    <p style={{ fontSize: '10px', color: '#94a3b8', margin: '4px 0 0' }}>Requires Amazon SP-API / Flipkart API push tokens. Locked to prevent accidental overwrites.</p>
+                    <span style={{ color: '#f43f5e', fontWeight: '700', fontSize: '12px', display: 'block' }}>Direct API Push (Disabled)</span>
+                    <p style={{ fontSize: '10px', color: '#94a3b8', margin: '4px 0 0' }}>Seller Suite Pro operates client-side without storing credentials. Copy your data pack and paste directly into your seller portal.</p>
                   </div>
                   <div style={{ background: 'rgba(37, 211, 102, 0.08)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(37, 211, 102, 0.3)' }}>
                     <span style={{ color: '#25d366', fontWeight: '700', fontSize: '12px', display: 'block' }}>🟢 Manual Fix (Active)</span>
@@ -4990,9 +4466,14 @@ function ImageComplianceStudio({ isPreviewMode = false, isGuest = false, onRequi
     }
   };
 
-  // Process image file (from input or drag & drop)
-  const processImageFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return;
+  // Process image file (from input or drag & drop) with strict validation
+  const processImageFile = async (file) => {
+    if (!file) return;
+    const validation = await validateImageFile(file, 15);
+    if (!validation.isValid) {
+      alert(validation.error);
+      return;
+    }
     const fileSizeStr = (file.size / 1024).toFixed(0) + ' KB';
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -7214,6 +6695,12 @@ function CatalogConverter({ isPreviewMode = false, isGuest = false, onRequireKey
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const validation = validateCatalogFile(file, 5);
+    if (!validation.isValid) {
+      alert(validation.error);
+      if (e.target) e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target.result;
@@ -7259,13 +6746,13 @@ function CatalogConverter({ isPreviewMode = false, isGuest = false, onRequireKey
 
     if (target === 'Flipkart') {
       headers = 'Seller SKU,Flipkart Listing Title,Flipkart Selling Price,MRP,Stock,Attributes,Status\n';
-      rows = catalogRows.map(r => `"${r.sku}","${r.title}",${r.price},${Number(r.price) * 1.5},${r.stock},"${r.mappedAttr}","ACTIVE"`).join('\n');
+      rows = catalogRows.map(r => `${sanitizeCsvCell(r.sku)},${sanitizeCsvCell(r.title)},${Number(r.price) || 0},${Math.round(Number(r.price) * 1.5) || 0},${Number(r.stock) || 0},${sanitizeCsvCell(r.mappedAttr)},"ACTIVE"`).join('\n');
     } else if (target === 'Meesho') {
       headers = 'Product ID,Meesho Catalog Name,Meesho Wholesale Price,Inventory,Key Attributes\n';
-      rows = catalogRows.map(r => `"${r.sku}","${r.title}",${Math.round(Number(r.price) * 0.85)},${r.stock},"${r.mappedAttr}"`).join('\n');
+      rows = catalogRows.map(r => `${sanitizeCsvCell(r.sku)},${sanitizeCsvCell(r.title)},${Math.round(Number(r.price) * 0.85) || 0},${Number(r.stock) || 0},${sanitizeCsvCell(r.mappedAttr)}`).join('\n');
     } else {
       headers = 'sku,item_name,standard_price,quantity,bullet_point1\n';
-      rows = catalogRows.map(r => `"${r.sku}","${r.title}",${r.price},${r.stock},"${r.mappedAttr}"`).join('\n');
+      rows = catalogRows.map(r => `${sanitizeCsvCell(r.sku)},${sanitizeCsvCell(r.title)},${Number(r.price) || 0},${Number(r.stock) || 0},${sanitizeCsvCell(r.mappedAttr)}`).join('\n');
     }
 
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8' });
@@ -7742,13 +7229,13 @@ function BuyBoxRepricer({ isPreviewMode = false, isGuest = false, onRequireKey, 
           }}
         >
           {updateSuccess ? <Check size={16} /> : <Zap size={16} />}
-          {updateSuccess ? 'Price Updated to ₹' + calculatedSafePrice : (hasData ? `Push Optimal Price (₹${calculatedSafePrice})` : 'Enter Prices to Calculate')}
+          {updateSuccess ? 'Price Updated to ₹' + calculatedSafePrice : (hasData ? `Apply Optimal Price (₹${calculatedSafePrice})` : 'Enter Prices to Calculate')}
         </button>
       </div>
 
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#00d2ff' }}>Real-Time BuyBox Diagnostics</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#00d2ff' }}>Algorithmic BuyBox Simulator</h3>
           <span style={{
             padding: '6px 14px',
             borderRadius: '20px',
@@ -7833,7 +7320,7 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'RAM Slot 2 not recognizing 8GB/16GB DDR4 stick; random memory crashes (Reported by 2 buyers)',
         fix: 'Put in your listing: "100% Dual-Channel Quality Tested: Engineered with Gold-Plated DIMM Pins to prevent RAM disconnection and BSOD memory drops."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: 'Dated BIOS revision requires manual flash update to boot 7th Gen Intel Core CPUs (Reported by 3 buyers)',
@@ -7843,7 +7330,7 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'M.2 NVMe slot throttles under continuous heavy gaming due to lack of thermal dissipation (Reported by 1 buyer)',
         fix: 'Highlight: "Dedicated High-Speed PCIe 3.0 x4 Ultra M.2 Interface with high-conductivity thermal layout keeps read speeds stable at 2400MB/s."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       }
     ]
   },
@@ -7861,12 +7348,12 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'Hex nut threads crack or slip when tightened with standard wrench (Reported by 5 buyers)',
         fix: 'Put in your listing: "Brass-Reinforced Hex Nut insert withstands up to 25 Nm torque without cracking or thread stripping."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: 'Slow water dripping from geyser connection due to thin rubber washer (Reported by 4 buyers)',
         fix: 'Highlight: "Includes 2x Dual-Seal Heavy EPDM Washers for a 100% leak-proof airtight seal."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       },
       {
         issue: 'Narrow internal diameter reduces hot water pressure from geyser (Reported by 3 buyers)',
@@ -7889,7 +7376,7 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'Earbuds charging pins get loose after 3 weeks (Reported by 78 buyers)',
         fix: 'Put in your listing: "Gold-Plated Magnetic Pogo Pins ensure 10,000+ snap-fit charging cycles."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: 'Mic quality is noisy during outdoor traffic (Reported by 115 buyers)',
@@ -7899,7 +7386,7 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'Bluetooth disconnects when phone in pocket (Reported by 54 buyers)',
         fix: 'Highlight: "Bluetooth 5.3 Ceramic Antennas guarantee unbreakable 15-meter range."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       }
     ]
   },
@@ -7945,12 +7432,12 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'Pull cord string snapped while chopping hard carrots (Reported by 45 buyers)',
         fix: 'Put in your listing: "Reinforced Kevlar-Infused Pull Cord tested for 20,000+ continuous pulls without fraying."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       },
       {
         issue: 'Plastic lid lock snaps if twisted too hard (Reported by 31 buyers)',
         fix: 'Highlight: "Heavy-Duty Food-Grade Polycarbonate Lid with double-thick twist-lock tabs."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: 'Blades get dull after 2 months of onion slicing (Reported by 26 buyers)',
@@ -7973,7 +7460,7 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'Pillow covers are small standard size, do not fit large memory foam pillows (Reported by 42 buyers)',
         fix: 'Put in your listing: "Jumbo Envelope Pillow Covers (18x28 inch) with 4-inch deep flap overlap."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: 'Corner elastic stitches pop when stretching over 8-inch mattress (Reported by 28 buyers)',
@@ -8006,7 +7493,7 @@ const REVIEW_MINING_DATABASE = {
       {
         issue: 'Zari lace border thread coming off at the pallu edge (Reported by 24 buyers)',
         fix: 'Highlight: "Machine-Interlocked Double-Stitched Zari Lace Hemming prevents thread unraveling."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: 'Saree color appears darker than Meesho app catalog picture (Reported by 19 buyers)',
@@ -8028,7 +7515,7 @@ function generateCategoryFlaws(category, count, title) {
       {
         issue: `RAM Slot 2 not recognizing 8GB/16GB DDR4 stick; random memory crashes (Reported by ${flaw1Count} buyer${flaw1Count > 1 ? 's' : ''})`,
         fix: 'Put in your listing: "100% Dual-Channel Quality Tested: Engineered with Gold-Plated DIMM Pins to prevent RAM disconnection and BSOD memory drops."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: `Dated BIOS revision requires manual flash update to boot 7th Gen Intel Core CPUs (Reported by ${flaw2Count} buyer${flaw2Count > 1 ? 's' : ''})`,
@@ -8038,7 +7525,7 @@ function generateCategoryFlaws(category, count, title) {
       {
         issue: `M.2 NVMe slot throttles under continuous heavy gaming (Reported by ${flaw3Count} buyer${flaw3Count > 1 ? 's' : ''})`,
         fix: 'Highlight: "Dedicated High-Speed PCIe 3.0 x4 Ultra M.2 Interface with high-conductivity thermal layout keeps read speeds stable at 2400MB/s."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       }
     ];
   }
@@ -8048,12 +7535,12 @@ function generateCategoryFlaws(category, count, title) {
       {
         issue: `Hex nut threads crack or slip when tightened with standard wrench (Reported by ${flaw1Count} buyer${flaw1Count > 1 ? 's' : ''})`,
         fix: 'Put in your listing: "Brass-Reinforced Hex Nut insert withstands up to 25 Nm torque without cracking or thread stripping."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: `Slow water dripping from geyser connection due to thin washer (Reported by ${flaw2Count} buyer${flaw2Count > 1 ? 's' : ''})`,
         fix: 'Highlight: "Includes 2x Dual-Seal Heavy EPDM Washers for a 100% leak-proof airtight seal."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       },
       {
         issue: `Narrow internal diameter reduces hot water pressure from geyser (Reported by ${flaw3Count} buyer${flaw3Count > 1 ? 's' : ''})`,
@@ -8088,12 +7575,12 @@ function generateCategoryFlaws(category, count, title) {
       {
         issue: `Pull cord string snapped while chopping hard vegetables (Reported by ${flaw1Count} buyer${flaw1Count > 1 ? 's' : ''})`,
         fix: 'Put in your listing: "Reinforced Kevlar-Infused Pull Cord tested for 20,000+ continuous pulls without fraying."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       },
       {
         issue: `Plastic lid lock snaps if twisted too hard (Reported by ${flaw2Count} buyer${flaw2Count > 1 ? 's' : ''})`,
         fix: 'Highlight: "Heavy-Duty Food-Grade Polycarbonate Lid with double-thick twist-lock tabs."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: `Blades get dull after 2 months of onion slicing (Reported by ${flaw3Count} buyer${flaw3Count > 1 ? 's' : ''})`,
@@ -8108,7 +7595,7 @@ function generateCategoryFlaws(category, count, title) {
       {
         issue: `Earbuds charging pins get loose after 3 weeks (Reported by ${flaw1Count} buyer${flaw1Count > 1 ? 's' : ''})`,
         fix: 'Put in your listing: "Gold-Plated Magnetic Pogo Pins ensure 10,000+ snap-fit charging cycles."',
-        impact: 'Eliminates 1-Star Rating'
+        impact: 'Reduces 1-Star Negative Feedback'
       },
       {
         issue: `Mic quality is noisy during outdoor traffic (Reported by ${flaw2Count} buyer${flaw2Count > 1 ? 's' : ''})`,
@@ -8118,7 +7605,7 @@ function generateCategoryFlaws(category, count, title) {
       {
         issue: `Bluetooth disconnects when phone in pocket (Reported by ${flaw3Count} buyer${flaw3Count > 1 ? 's' : ''})`,
         fix: 'Highlight: "Bluetooth 5.3 Ceramic Antennas guarantee unbreakable 15-meter range."',
-        impact: 'Zero Return Guarantee'
+        impact: 'High Return Reduction'
       }
     ];
   }
@@ -8156,7 +7643,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
   if (isSocial) {
     return {
       isValid: false,
-      message: `⚠️ Yeh social media link hai! ${selectedPlatform} ka valid product link ya ID enter karein.`,
+      message: `⚠️ This is a social media link! Please enter a valid ${selectedPlatform} product URL or identifier.`,
       detectedPlatform: 'Social Media',
       suggestedPlatform: null
     };
@@ -8174,7 +7661,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
     if (isMeesho) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Meesho ka product link hai! Amazon me Meesho link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Amazon", but entered a Meesho product link. Please enter a valid Amazon URL or ASIN.',
         detectedPlatform: 'Meesho',
         suggestedPlatform: 'Meesho'
       };
@@ -8182,7 +7669,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
     if (isFlipkart) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Flipkart ka product link hai! Amazon me Flipkart link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Amazon", but entered a Flipkart product link. Please enter a valid Amazon URL or ASIN.',
         detectedPlatform: 'Flipkart',
         suggestedPlatform: 'Flipkart'
       };
@@ -8202,7 +7689,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
     if (isAmazon) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Amazon ka product link hai! Flipkart me Amazon link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Flipkart", but entered an Amazon product link. Please enter a valid Flipkart URL or FSN.',
         detectedPlatform: 'Amazon',
         suggestedPlatform: 'Amazon'
       };
@@ -8210,7 +7697,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
     if (isMeesho) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Meesho ka product link hai! Flipkart me Meesho link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Flipkart", but entered a Meesho product link. Please enter a valid Flipkart URL or FSN.',
         detectedPlatform: 'Meesho',
         suggestedPlatform: 'Meesho'
       };
@@ -8230,7 +7717,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
     if (isAmazon) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Amazon ka product link hai! Meesho me Amazon link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Meesho", but entered an Amazon product link. Please enter a valid Meesho product URL.',
         detectedPlatform: 'Amazon',
         suggestedPlatform: 'Amazon'
       };
@@ -8238,7 +7725,7 @@ function validateReviewPlatformLink(selectedPlatform, rawInput) {
     if (isFlipkart) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Flipkart ka product link hai! Meesho me Flipkart link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Meesho", but entered a Flipkart product link. Please enter a valid Meesho product URL.',
         detectedPlatform: 'Flipkart',
         suggestedPlatform: 'Flipkart'
       };
@@ -8737,6 +8224,24 @@ function ReviewAnalyzer({ isPreviewMode = false, isGuest = false, onRequireKey, 
             {analyzing ? <RefreshCw className="pulse-radar-dot" size={16} /> : <Sparkles size={16} />}
             {analyzing ? 'Mining Customer Reviews...' : `⚡ Mine ${reviewsCountInput || 12} Reviews & Extract Gaps`}
           </button>
+
+          {/* Marketplace ToS Compliance Notice */}
+          <div style={{
+            background: 'rgba(37, 211, 102, 0.08)',
+            border: '1px solid rgba(37, 211, 102, 0.25)',
+            borderRadius: '10px',
+            padding: '10px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '11px',
+            color: '#86efac'
+          }}>
+            <ShieldCheck size={16} color="#25d366" style={{ flexShrink: 0 }} />
+            <span>
+              <strong>100% ToS-Safe & Privacy First:</strong> Works strictly on user-pasted inputs & text. Zero automated scraping bots against marketplaces, zero account risk.
+            </span>
+          </div>
 
           {/* SENTIMENT BREAKDOWN CARD */}
           <div className="glass-card" style={{ padding: '16px' }}>

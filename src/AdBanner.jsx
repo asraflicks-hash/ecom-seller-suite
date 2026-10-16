@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ExternalLink, X, ChevronUp, ChevronDown, Sparkles, DollarSign, Info } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { getAdConfig, FALLBACK_SPONSORS } from './adConfig.js';
+import AdsterraBanner from './AdsterraBanner';
 
 export default function AdBanner({ position = 'top-leaderboard', onOpenAdSettings }) {
   if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
@@ -306,8 +307,8 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
           </div>
 
           {/* Ad Container */}
-          {hasRealPubId && (
-            <div style={{ display: isAdFilled ? 'flex' : 'none', minHeight: '90px', alignItems: 'center', justifyContent: 'center' }}>
+          {hasRealPubId && isAdFilled ? (
+            <div style={{ display: 'flex', minHeight: '90px', alignItems: 'center', justifyContent: 'center' }}>
               <ins 
                 ref={insRef}
                 className="adsbygoogle"
@@ -318,78 +319,59 @@ export default function AdBanner({ position = 'top-leaderboard', onOpenAdSetting
                 data-full-width-responsive="true"
               />
             </div>
-          )}
-          {(!hasRealPubId || !isAdFilled) && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '16px',
-              flexWrap: 'wrap',
-              padding: '6px 4px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  fontSize: '26px',
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: `1px solid ${currentSponsor.themeColor}60`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  {currentSponsor.logo}
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', margin: 0 }}>
-                      {currentSponsor.title}
-                    </h3>
-                    <span style={{
-                      fontSize: '10px',
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      background: `${currentSponsor.themeColor}20`,
-                      color: currentSponsor.themeColor,
-                      border: `1px solid ${currentSponsor.themeColor}50`,
-                      fontWeight: '700'
-                    }}>
-                      {currentSponsor.badge}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '11px', color: '#cbd5e1', margin: '3px 0 0 0', maxWidth: '720px' }}>
-                    {currentSponsor.desc}
-                  </p>
-                </div>
-              </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '100%' }}>
+              {/* Live Adsterra 728x90 Banner */}
+              <AdsterraBanner />
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <a
-                  href={currentSponsor.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 18px',
-                    borderRadius: '10px',
-                    background: `linear-gradient(135deg, ${currentSponsor.themeColor} 0%, #00d2ff 100%)`,
-                    color: '#ffffff',
-                    fontSize: '12px',
-                    fontWeight: '800',
-                    textDecoration: 'none',
-                    boxShadow: '0 4px 15px rgba(0, 210, 255, 0.25)',
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <span>{currentSponsor.cta}</span>
-                  <ExternalLink size={13} />
-                </a>
+              {/* Hidden AdSense node keeps Google review crawler active */}
+              {hasRealPubId && (
+                <ins 
+                  ref={insRef}
+                  className="adsbygoogle"
+                  style={{ display: 'none' }}
+                  data-ad-client={config.pubId}
+                  data-ad-slot={config.topSlotId || undefined}
+                  data-ad-format="horizontal"
+                  data-full-width-responsive="true"
+                />
+              )}
+
+              {/* Clean Sponsor Footer Bar */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                gap: '12px',
+                flexWrap: 'wrap',
+                paddingTop: '6px',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Partner Network:</span>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#00d2ff' }}>Adsterra Premium Publisher (ID: 6128040)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Featured:</span>
+                  <a
+                    href={currentSponsor.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: currentSponsor.themeColor,
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <span>{currentSponsor.title}</span>
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
               </div>
             </div>
           )}

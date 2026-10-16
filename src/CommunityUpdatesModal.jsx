@@ -36,14 +36,14 @@ import {
 export const INITIAL_OFFICIAL_UPDATES = [
   {
     id: 'upd-01',
-    title: '🚀 Seller Suite Pro v2.6 Released: Live Multi-Marketplace Sync & Flaw Watcher Active',
+    title: '🚀 Seller Suite Pro v2.6 Released: Heuristic Marketplace Compliance & Flaw Watcher Active',
     category: 'RELEASE UPDATE',
     categoryColor: '#00d2ff',
     date: 'Today, 2:30 PM',
     pinned: true,
-    author: 'Sidra Motion Product Engineering',
-    content: 'We have launched the automated background catalog watcher for Amazon SP-API, Flipkart Hub & Meesho. Any listing suppression or grey background policy violation now triggers an acoustic chime and instant toast notification.',
-    actionLabel: 'View Sync & Alerts',
+    author: 'Seller Suite Pro Engineering',
+    content: 'We have launched the heuristic catalog rule inspector for Amazon, Flipkart & Meesho listing policies. Any listing suppression or background color violation is flagged client-side with an acoustic chime and instant notification.',
+    actionLabel: 'View Rules & Flaws',
     actionTab: 'listing-audit'
   },
   {

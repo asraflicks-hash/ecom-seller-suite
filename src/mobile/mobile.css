@@ -1,0 +1,766 @@
+/* src/mobile/mobile.css - Mobile Shell & Motion System */
+
+:root {
+  --mobile-bg: #0c182e;
+  --mobile-surface: #13223f;
+  --mobile-surface-2: #1a2d52;
+  --mobile-border: rgba(255, 255, 255, 0.08);
+  --mobile-primary: #38bdf8;
+  --mobile-text: #e2e8f0;
+  --mobile-muted: #94a3b8;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile Base Container */
+.mobile-shell-root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--mobile-bg);
+  color: var(--mobile-text);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+}
+
+/* Touch targets >= 48dp */
+.mobile-shell-root button,
+.mobile-shell-root a,
+.mobile-shell-root [role="button"] {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Top App Bar (56dp + status bar) */
+.mobile-top-bar {
+  height: calc(56px + var(--sat));
+  padding-top: var(--sat);
+  padding-left: 16px;
+  padding-right: 16px;
+  background: rgba(12, 24, 46, 0.96);
+  border-bottom: 1px solid var(--mobile-border);
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Scroll Content Layer */
+.mobile-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 16px 84px 16px; /* 84px accounts for bottom nav + padding */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bottom Navigation Bar (64dp + safe area) */
+.mobile-bottom-nav {
+  height: calc(64px + var(--sab));
+  padding-bottom: var(--sab);
+  background: rgba(15, 27, 49, 0.98);
+  border-top: 1px solid var(--mobile-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 200ms ease-out;
+}
+
+.mobile-bottom-nav.nav-hidden {
+  transform: translateY(100%);
+}
+
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justifyContent: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--mobile-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 0;
+  position: relative;
+  transition: color 180ms ease-out;
+}
+
+.mobile-nav-item.active {
+  color: var(--mobile-primary);
+  font-weight: 700;
+}
+
+/* Active Nav Indicator (Single subtle RGB dot/line) */
+.mobile-nav-indicator {
+  position: absolute;
+  top: 2px;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+}
+
+/* Sticky Primary Action Bar (52dp above bottom nav) */
+.mobile-sticky-action-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(12, 24, 46, 0) 0%, rgba(12, 24, 46, 0.95) 20%, rgba(12, 24, 46, 1) 100%);
+  z-index: 90;
+  display: flex;
+  gap: 10px;
+}
+
+/* =========================================================================
+   MOBILE MOTION SYSTEM (PHASE 2 - MAX 2 CONTINUOUS ANIMATIONS, TRANSFORMS ONLY)
+   ========================================================================= */
+
+/* Primary Action Button RGB Border */
+.mobile-btn-rgb {
+  position: relative;
+  background: #38bdf8;
+  color: #070d19;
+  font-weight: 800;
+  font-size: 14px;
+  border-radius: 12px;
+  border: none;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.mobile-btn-rgb:active {
+  transform: scale(0.98);
+}
+
+/* Rotating RGB Border on Pseudo-Element using transform: rotate() only */
+.mobile-btn-rgb::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, #38bdf8, #a855f7, #22c55e, #f59e0b, #38bdf8);
+  opacity: 0.75;
+  z-index: 0;
+  animation: mobileRgbRotate 4.5s linear infinite;
+  pointer-events: none;
+}
+
+.mobile-btn-rgb-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+@keyframes mobileRgbRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Logo Mark Pulse (Calm >= 4s cycle) */
+.mobile-logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  animation: mobileLogoBreath 4.2s ease-in-out infinite;
+}
+
+@keyframes mobileLogoBreath {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
+/* Pause animations when paused class is present or app is backgrounded */
+.motion-paused .mobile-btn-rgb::before,
+.motion-paused .mobile-logo-mark,
+.motion-paused .mobile-nav-indicator {
+  animation-play-state: paused !important;
+}
+
+/* Reduced Motion Mode (Accessible / Battery Saver) */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-btn-rgb::before {
+    animation: none !important;
+    background: #38bdf8 !important;
+    opacity: 1 !important;
+  }
+  .mobile-logo-mark {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+.reduced-effects-mode .mobile-btn-rgb::before {
+  animation: none !important;
+  background: #38bdf8 !important;
+}
+
+.reduced-effects-mode .mobile-logo-mark {
+  animation: none !important;
+}
+
+/* Segmented Control (Pill Tabs) */
+.mobile-segmented-control {
+  display: flex;
+  background: rgba(19, 34, 63, 0.85);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--mobile-border);
+  margin-bottom: 16px;
+  gap: 4px;
+}
+
+.mobile-segment-pill {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--mobile-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms ease-out;
+  text-align: center;
+}
+
+.mobile-segment-pill.active {
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+/* Clean Cards */
+.mobile-card {
+  background: var(--mobile-surface);
+  border: 1px solid var(--mobile-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Clean Inputs */
+.mobile-input-group {
+  margin-bottom: 14px;
+}
+
+.mobile-input-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mobile-muted);
+  margin-bottom: 6px;
+}
+
+.mobile-input {
+  width: 100%;
+  background: var(--mobile-surface-2) !important;
+  border: 1px solid var(--mobile-border) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+  box-sizing: border-box;
+}
+
+.mobile-input:focus {
+  border-color: var(--mobile-primary) !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Bottom Sheet Overlay */
+.mobile-bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 180ms ease-out;
+}
+
+.mobile-bottom-sheet {
+  background: var(--mobile-surface);
+  border-top: 1px solid var(--mobile-border);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px calc(20px + var(--sab)) 20px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 220ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* AdMob Banner Area (Clean, strictly separated, no glowing elements within 24dp) */
+.mobile-admob-slot {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  min-height: 50px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 2x3 Quick Tools Grid */
+.mobile-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.mobile-tool-card {
+  background: var(--mobile-surface);
+  border: 1px solid var(--mobile-border);
+  border-radius: 16px;
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 120ms ease-out, border-color 150ms ease-out, background 150ms ease-out;
+  min-height: 104px;
+}
+
+.mobile-tool-card:active {
+  transform: scale(0.97);
+  background: var(--mobile-surface-2);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.mobile-tool-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(56, 189, 248, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mobile-primary);
+}
+
+.mobile-tool-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.3;
+}
+
+/* Recent Tasks Section */
+.mobile-section-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  letter-spacing: 0.2px;
+}
+
+.mobile-recent-card {
+  background: var(--mobile-surface);
+  border: 1px solid var(--mobile-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform 120ms ease-out, border-color 150ms ease-out;
+}
+
+.mobile-recent-card:active {
+  transform: scale(0.98);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.mobile-recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mobile-recent-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.mobile-recent-sub {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Two-column Input Row */
+.mobile-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* Title Preview Card with Byte Progress Bar */
+.mobile-preview-card {
+  background: rgba(19, 34, 63, 0.6);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.mobile-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.mobile-preview-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.mobile-icon-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 150ms, background 150ms;
+}
+
+.mobile-icon-btn:active {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.mobile-preview-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.mobile-byte-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.mobile-byte-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.mobile-byte-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 200ms ease-out;
+}
+
+/* Before / After Split Comparison Slider */
+.mobile-split-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #0f1b31;
+  border: 1px solid var(--mobile-border);
+  touch-action: none;
+  user-select: none;
+  margin-bottom: 14px;
+}
+
+.mobile-split-after-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-split-before-layer {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #25334c;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.mobile-split-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mobile-split-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #38bdf8;
+  z-index: 20;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+.mobile-split-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #38bdf8;
+  color: #070d19;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  cursor: ew-resize;
+}
+
+.mobile-badge-pill {
+  position: absolute;
+  top: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  z-index: 25;
+}
+
+.mobile-badge-before {
+  left: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #e2e8f0;
+  backdrop-filter: blur(8px);
+}
+
+.mobile-badge-after {
+  right: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Device Protection Shield Banner */
+.mobile-shield-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #22c55e;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 16px 0;
+}
+
+/* Compliance Checklist */
+.mobile-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--mobile-surface);
+  border: 1px solid var(--mobile-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.mobile-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.mobile-check-icon {
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+/* Action Bar with Share Button */
+.mobile-studio-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.mobile-studio-actions .mobile-btn-rgb {
+  flex: 1;
+}
+
+.mobile-share-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--mobile-surface-2);
+  border: 1px solid var(--mobile-border);
+  color: var(--mobile-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 120ms ease-out, background 150ms ease-out;
+}
+
+.mobile-share-btn:active {
+  transform: scale(0.95);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+/* Overflow Menu */
+.mobile-overflow-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: transparent;
+}
+
+.mobile-overflow-menu {
+  position: absolute;
+  top: calc(52px + var(--sat));
+  right: 16px;
+  background: var(--mobile-surface-2);
+  border: 1px solid var(--mobile-border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  padding: 6px;
+  min-width: 190px;
+  z-index: 160;
+  animation: fadeIn 120ms ease-out;
+}
+
+.mobile-overflow-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mobile-overflow-item:active {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+/* Toast Snack */
+.mobile-toast {
+  position: fixed;
+  bottom: calc(76px + var(--sab));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 300;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 150ms ease-out;
+  pointer-events: none;
+  white-space: nowrap;
+}

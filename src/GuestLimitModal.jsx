@@ -109,10 +109,10 @@ export default function GuestLimitModal({
           </div>
 
           <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: '800', color: '#ffffff' }}>
-            Bina Login Ke Sirf 5% Demo Allowed Hai
+            Guest Mode 5% Demo Limit Reached
           </h3>
           <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' }}>
-            Lekin pareshan mat ho! Poora software <b>100% FREE</b> hai. Bas apna free seller account banayein ya Google se sign in karein aur turant full access unlock karein!
+            The entire suite is <b>100% FREE</b>! Simply create your free account or sign in with Google to unlock full access immediately.
           </p>
         </div>
 
@@ -132,7 +132,7 @@ export default function GuestLimitModal({
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #f59e0b 0%, #ef4444 100%)', borderRadius: '999px' }} />
           </div>
           <div style={{ fontSize: '10px', color: '#64748b', marginTop: '6px', textAlign: 'center' }}>
-            Login karne par ye limit <b>100% UNLIMITED</b> ho jayegi (Zero cost).
+            Signing in upgrades your account to <b>100% UNLIMITED</b> usage at zero cost.
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export default function GuestLimitModal({
         }}>
           <div style={{ fontSize: '12px', fontWeight: '800', color: '#86efac', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={14} color="#25d366" />
-            <span>Login / Sign Up Karte Hi Kya Milega (100% Free):</span>
+            <span>What You Unlock on Free Sign Up (100% Free):</span>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#e2e8f0' }}>
@@ -159,7 +159,7 @@ export default function GuestLimitModal({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle2 size={15} color="#25d366" style={{ flexShrink: 0 }} />
-              <span><b>Unlimited Usage:</b> Jitni marzi listings optimize karein, koi limit nahi</span>
+              <span><b>Unlimited Usage:</b> Optimize unlimited listings with zero artificial limits</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle2 size={15} color="#25d366" style={{ flexShrink: 0 }} />
@@ -167,7 +167,7 @@ export default function GuestLimitModal({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle2 size={15} color="#25d366" style={{ flexShrink: 0 }} />
-              <span><b>Cloud Work History:</b> Aapka kaam cloud me safe rahega (kabhi delete nahi hoga)</span>
+              <span><b>Cloud Work History:</b> Your optimization history is safely stored in cloud database</span>
             </div>
           </div>
         </div>

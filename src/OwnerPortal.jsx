@@ -51,10 +51,7 @@ import { getStoredOfficialUpdates, saveOfficialUpdates } from './CommunityUpdate
 import { getAdConfig, saveAdConfig } from './adConfig.js';
 import SocialMediaAuditStudio from './SocialMediaAuditStudio.jsx';
 
-const OFFICIAL_PRESEED_KEYS = [
-  'SM26-MASTER-ADMIN-KEY',
-  'SM26-TRY-COMMERCIAL-2026'
-];
+const OFFICIAL_PRESEED_KEYS = [];
 
 export default function OwnerPortal({ onNavigateToPublic }) {
   const [isUnlocked, setIsUnlocked] = useState(() => {
@@ -439,18 +436,18 @@ All 7 modules are now unlocked for your store! 🚀
     {
       id: 1,
       name: 'Template 1: Official 14-Day Commercial Access Key',
-      key: 'SM26-TRY-COMMERCIAL-2026',
+      key: 'DYNAMIC_KEY',
       tag: '14 Days Access',
       text: `Hello! 👋 Thank you for choosing Sidra Motion Seller Suite Pro (https://sellersuitepro.online).
 
 We have reviewed your store profile and approved your Pro Commercial Access! Here is your official license key:
 
-🔑 License Key: SM26-TRY-COMMERCIAL-2026
+🔑 License Key: DYNAMIC_KEY
 
 📌 How to activate:
 1. Open https://sellersuitepro.online/ in your browser
 2. Select "License Key" tab
-3. Enter: SM26-TRY-COMMERCIAL-2026
+3. Enter: DYNAMIC_KEY
 4. Click "Verify License & Unlock Suite"
 
 All modules are now unlocked for your store. Happy Selling! 🚀
@@ -459,17 +456,17 @@ All modules are now unlocked for your store. Happy Selling! 🚀
     {
       id: 2,
       name: 'Template 2: 14-Day Growth Seller Key',
-      key: 'SM26-TRY-COMMERCIAL-2026',
+      key: 'DYNAMIC_KEY',
       tag: '14 Days Pro',
       text: `Greetings from Sidra Motion! 🌟
 
 Thank you for registering your store and requesting access. Your Full Commercial License Key has been activated:
 
-🔑 License Key: SM26-TRY-COMMERCIAL-2026
+🔑 License Key: DYNAMIC_KEY
 
 📌 Quick Start Steps:
 1. Go to https://sellersuitepro.online/
-2. Enter your key: SM26-TRY-COMMERCIAL-2026
+2. Enter your key: DYNAMIC_KEY
 3. Enjoy instant AI SEO Listings, #FFFFFF Pure White Studio, RGB Listing Score & Cross-Platform Catalog Converter!
 
 For enterprise upgrades or queries, reply here. Have a profitable week! 💼`
@@ -477,19 +474,19 @@ For enterprise upgrades or queries, reply here. Have a profitable week! 💼`
     {
       id: 3,
       name: 'Template 3: VIP Marketplace Seller Key',
-      key: 'SM26-TRY-COMMERCIAL-2026',
+      key: 'DYNAMIC_KEY',
       tag: 'VIP Commercial',
       text: `Hi there! Thank you for connecting with Sidra Motion Support. 💎
 
 Your VIP Commercial Seller Pass is ready for activation:
 
-🔑 License Key: SM26-TRY-COMMERCIAL-2026
+🔑 License Key: DYNAMIC_KEY
 
 ✅ Included Features:
 • Amazon, Flipkart & Meesho High-CTR SEO Generator
-• 100% Compliant #FFFFFF Pure White Studio
-• Real-time BuyBox Repricer & RTO Stop-Loss Guard
-• Marketplace Sync & RGB Listing Quality Score (LQS)
+• Pure White Background Studio (#FFFFFF Canvas)
+• Algorithmic BuyBox Repricer & RTO Stop-Loss Guard
+• Marketplace Compliance & RGB Listing Quality Score (LQS)
 
 Launch now at https://sellersuitepro.online/ and start boosting your marketplace conversions today! 🔥
 — Best regards, Sidra Motion Team`
@@ -497,14 +494,14 @@ Launch now at https://sellersuitepro.online/ and start boosting your marketplace
     {
       id: 4,
       name: 'Template 4: E-Commerce Catalog Boost Key',
-      key: 'SM26-TRY-COMMERCIAL-2026',
+      key: 'DYNAMIC_KEY',
       tag: 'Catalog Boost',
       text: `Hello Seller Partner! 📦
 
 Thank you for submitting your store details for Sidra Motion Seller Suite Pro. We are excited to support your growth!
 
 Here is your Access License Key:
-🔑 License Key: SM26-TRY-COMMERCIAL-2026
+🔑 License Key: DYNAMIC_KEY
 
 Enter this key on the login screen at https://sellersuitepro.online/ to access all modules.
 WhatsApp Help: Available 24/7.`
@@ -512,13 +509,13 @@ WhatsApp Help: Available 24/7.`
     {
       id: 5,
       name: 'Template 5: All-Access Commercial Pass Key',
-      key: 'SM26-TRY-COMMERCIAL-2026',
+      key: 'DYNAMIC_KEY',
       tag: 'All-Access Pass',
       text: `Welcome to Sidra Motion - Visuals That Matter! ✨
 
 Thank you for applying for access. Here is your Official Access Pass:
 
-🔑 License Key: SM26-TRY-COMMERCIAL-2026
+🔑 License Key: DYNAMIC_KEY
 
 👉 Access Portal: https://sellersuitepro.online/
 Unlock high-converting titles, clean white product images, and cross-platform listing tools in seconds!

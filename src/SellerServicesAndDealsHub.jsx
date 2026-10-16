@@ -658,7 +658,7 @@ Please share the onboarding details, required product info, and payment process!
                 <a
                   href={deal.url}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   style={{
                     width: '100%',
                     padding: '12px',

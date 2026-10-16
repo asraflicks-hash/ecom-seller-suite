@@ -26,3 +26,14 @@ dist-ssr
 .vercel
 .env*
 scratch/
+
+# Android Keystores and Local Config
+*.keystore
+*.jks
+keystore.properties
+local.properties
+android/keystore.properties
+android/local.properties
+
+.vercel
+.env*

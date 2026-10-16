@@ -295,7 +295,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
   if (isSocial) {
     return {
       isValid: false,
-      message: `⚠️ Yeh social media link hai! ${selectedPlatform} ka valid product link ya ID enter karein.`,
+      message: `⚠️ This is a social media link! Please enter a valid ${selectedPlatform} product URL or identifier.`,
       detectedPlatform: 'Social Media',
       suggestedPlatform: null
     };
@@ -313,7 +313,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
     if (isMeesho) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Meesho ka product link hai! Amazon me Meesho link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Amazon", but entered a Meesho product link. Please enter a valid Amazon URL or ASIN.',
         detectedPlatform: 'Meesho',
         suggestedPlatform: 'Meesho'
       };
@@ -321,7 +321,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
     if (isFlipkart) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Amazon" select kiya hai, lekin yeh Flipkart ka product link hai! Amazon me Flipkart link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Amazon", but entered a Flipkart product link. Please enter a valid Amazon URL or ASIN.',
         detectedPlatform: 'Flipkart',
         suggestedPlatform: 'Flipkart'
       };
@@ -341,7 +341,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
     if (isAmazon) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Amazon ka product link hai! Flipkart me Amazon link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Flipkart", but entered an Amazon product link. Please enter a valid Flipkart URL or FSN.',
         detectedPlatform: 'Amazon',
         suggestedPlatform: 'Amazon'
       };
@@ -349,7 +349,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
     if (isMeesho) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Flipkart" select kiya hai, lekin yeh Meesho ka product link hai! Flipkart me Meesho link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Flipkart", but entered a Meesho product link. Please enter a valid Flipkart URL or FSN.',
         detectedPlatform: 'Meesho',
         suggestedPlatform: 'Meesho'
       };
@@ -369,7 +369,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
     if (isAmazon) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Amazon ka product link hai! Meesho me Amazon link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Meesho", but entered an Amazon product link. Please enter a valid Meesho product URL.',
         detectedPlatform: 'Amazon',
         suggestedPlatform: 'Amazon'
       };
@@ -377,7 +377,7 @@ export function validateSyncMarketplaceLink(selectedPlatform, rawInput) {
     if (isFlipkart) {
       return {
         isValid: false,
-        message: '⚠️ Platform Mismatch Detected: Aapne "Meesho" select kiya hai, lekin yeh Flipkart ka product link hai! Meesho me Flipkart link accept nahi hoga.',
+        message: '⚠️ Platform Mismatch Detected: You selected "Meesho", but entered a Flipkart product link. Please enter a valid Meesho product URL.',
         detectedPlatform: 'Flipkart',
         suggestedPlatform: 'Flipkart'
       };
@@ -513,7 +513,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
         setLiveRating(r);
         setTotalReviews(rev);
 
-        setLiveScanStatus(`✓ Live Synced: ⭐ ${r} Rating • 💬 ${rev} Reviews (${data.asin || 'ASIN'})`);
+        setLiveScanStatus(`✓ Parsed Metadata: ⭐ ${r} Rating • 💬 ${rev} Reviews (${data.asin || 'ASIN'})`);
 
         if (forceAudit) {
           runAuditLogic({
@@ -587,7 +587,7 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
     const rev = sample.totalReviews || 25;
     setLiveRating(r);
     setTotalReviews(rev);
-    setLiveScanStatus(`✓ Live Synced: ⭐ ${r} Rating • 💬 ${rev} Reviews (${sample.asin})`);
+    setLiveScanStatus(`✓ Sample Loaded: ⭐ ${r} Rating • 💬 ${rev} Reviews (${sample.asin})`);
 
     runAuditLogic({
       platform: sample.platform,
@@ -1021,16 +1021,16 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
             </div>
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#fff' }}>
-                Marketplace Sync & RGB Listing Quality Score (LQS)
+                Marketplace Compliance & RGB Listing Quality Score (LQS)
               </h2>
               <p style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Real-time Amazon, Flipkart & Meesho sync • Instant Error Diagnostic • Locked Auto-Push vs Active Manual Copy Pack
+                Local Amazon, Flipkart & Meesho rule audit • Heuristic Error Diagnostic • Safe Manual Copy Pack
               </p>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Sync Protocol:</span>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Compliance Guide:</span>
             {['Amazon', 'Flipkart', 'Meesho'].map(p => {
               const brandColor = p === 'Amazon' ? '#ff9900' : (p === 'Flipkart' ? '#2874f0' : '#d946ef');
               const isSelected = platform === p;
@@ -1860,13 +1860,13 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
                       textAlign: 'center',
                       transition: 'all 0.2s'
                     }}
-                    title="Click for Auto-Fix SP-API Push details"
+                    title="Direct marketplace push is not supported"
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800' }}>
-                      <Lock size={15} color="#fbbf24" /> 🔒 Automatic 1-Click Fix
+                      <Lock size={15} color="#fbbf24" /> 🔒 Automatic Push (Disabled)
                     </div>
                     <span style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      (LOCKED • Requires Enterprise SP-API Push Token)
+                      (Direct API Push Not Supported — Use Copy Pack)
                     </span>
                   </button>
 
@@ -2403,10 +2403,10 @@ export default function MarketplaceSyncAndLqsAudit({ copyToClipboard, copiedKey,
                 <Lock size={26} color="#eab308" />
               </div>
               <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff' }}>
-                Automatic 1-Click SP-API Push is Locked 🔒
+                Direct Marketplace API Push Disabled 🔒
               </h3>
               <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px', lineHeight: '1.5' }}>
-                Direct API push to Amazon Seller Central & Flipkart Seller Hub requires official SP-API Developer Authorization tokens.
+                Seller Suite Pro operates entirely client-side without storing your marketplace passwords or SP-API developer keys. To protect your store credentials, direct catalog writing is not enabled.
               </p>
             </div>
 

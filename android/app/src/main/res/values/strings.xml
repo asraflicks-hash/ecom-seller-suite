@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Seller Suite Pro - Seller Toolkit</string>
+    <string name="title_activity_main">Seller Suite Pro - Seller Toolkit</string>
+    <string name="package_name">com.sidramotions.sellersuitepro</string>
+    <string name="custom_url_scheme">com.sidramotions.sellersuitepro</string>
+</resources>

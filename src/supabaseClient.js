@@ -545,12 +545,12 @@ CREATE POLICY "Users can manage their own profile"
 DROP POLICY IF EXISTS "Users can manage their own work history" ON public.user_work_history;
 CREATE POLICY "Users can manage their own work history" 
   ON public.user_work_history FOR ALL 
-  USING (auth.uid() = user_id OR user_id IS NULL);
+  USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can manage their own audits" ON public.social_audits;
 CREATE POLICY "Users can manage their own audits" 
   ON public.social_audits FOR ALL 
-  USING (auth.uid() = user_id OR user_id IS NULL);
+  USING (auth.uid() = user_id);
 
 -- 6. Auto-create / sync profile on signup trigger
 CREATE OR REPLACE FUNCTION public.handle_new_user()

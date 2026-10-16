@@ -71,7 +71,7 @@ export default function SavedWorkHistoryModal({
   if (!isOpen) return null;
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Kya aap "${item.title}" ko apne history se delete karna chahte hain?`)) {
+    if (!window.confirm(`Are you sure you want to delete "${item.title}" from your saved history?`)) {
       return;
     }
     setDeletingId(item.id || item.db_id);

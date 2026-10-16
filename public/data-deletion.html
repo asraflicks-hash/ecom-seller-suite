@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Data Deletion &amp; Account Erasure Policy — Seller Suite Pro</title>
+  <meta name="description" content="Official User Account and Data Deletion request instructions for Seller Suite Pro in compliance with Google Play Developer Policy and India DPDP Act 2023.">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <style>
+    body {
+      background-color: #070d19;
+      color: #cbd5e1;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 32px 16px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #0c182e;
+      border: 1px solid rgba(0, 210, 255, 0.3);
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    h1 { color: #ffffff; font-size: 26px; margin-top: 0; }
+    h2 { color: #38bdf8; font-size: 18px; margin-top: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+    .badge { display: inline-block; background: rgba(37, 211, 102, 0.15); color: #25d366; border: 1px solid #25d366; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
+    .step-box { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin: 12px 0; }
+    a { color: #00d2ff; text-decoration: none; font-weight: 600; }
+    a:hover { text-decoration: underline; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">DPDP Act 2023 &amp; Google Play Store Policy Compliant</div>
+    <h1>Seller Suite Pro — User Account &amp; Data Deletion Policy</h1>
+    <p>Last Updated: October 2026 | Publisher: <strong>Sidra Motions</strong></p>
+
+    <h2>1. Right to Erasure Overview</h2>
+    <p>Under India's Digital Personal Data Protection Act, 2023 (Section 12) and international app store guidelines (including Google Play Store User Data Policy), every user has the absolute right to permanently delete their account and associated personal data.</p>
+
+    <h2>2. Types of Data Deleted vs Retained</h2>
+    <ul>
+      <li><strong>Permanently Deleted:</strong> User profile records (name, email, phone number, store name), saved listing drafts, catalog conversions, P&amp;L history records in PostgreSQL database, browser session tokens, local storage cache, and IndexedDB files.</li>
+      <li><strong>Retention Period:</strong> Deletion takes effect immediately. Temporary system access logs (anonymized IP addresses and HTTP status codes) are retained for 30 days strictly for DDOS mitigation and security monitoring, after which they are permanently overwritten.</li>
+    </ul>
+
+    <h2>3. How to Request Deletion (2 Methods)</h2>
+    
+    <div class="step-box">
+      <strong style="color: #25d366;">Method 1: Instant In-App Deletion (Self-Service)</strong>
+      <ol style="margin: 8px 0 0 0; padding-left: 20px;">
+        <li>Open <a href="https://www.sellersuitepro.online/">https://www.sellersuitepro.online/</a> in any web browser.</li>
+        <li>Scroll down to the page footer and click <strong>"Delete All My Data"</strong> (or open the Legal &amp; Compliance Hub &gt; Tab 4 "Delete All My Data").</li>
+        <li>Click <strong>"YES, PERMANENTLY ERASE EVERYTHING"</strong>.</li>
+        <li>The system immediately invokes our authenticated deletion API (<code>/api/delete-account</code>), purges all database rows in Supabase, terminates your authentication session, and clears all browser cache and storage.</li>
+      </ol>
+    </div>
+
+    <div class="step-box">
+      <strong style="color: #38bdf8;">Method 2: Email Request to Designated Grievance Officer</strong>
+      <p style="margin: 8px 0 0 0;">If you are unable to access the web application, you may submit a formal deletion request via email:</p>
+      <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+        <li><strong>Grievance &amp; Data Deletion Officer:</strong> Sidra Motions Data Protection Cell</li>
+        <li><strong>Official Email:</strong> <a href="mailto:grievance@sidramotion.com">grievance@sidramotion.com</a> (cc: <a href="mailto:contact@sidramotion.com">contact@sidramotion.com</a>)</li>
+        <li><strong>Required Information:</strong> The registered email address associated with your Seller Suite Pro account.</li>
+        <li><strong>Resolution SLA:</strong> Requests are acknowledged within 24 hours and verified accounts are fully purged within 72 business hours.</li>
+      </ul>
+    </div>
+
+    <h2>4. Contact &amp; Grievance Redressal</h2>
+    <p>
+      Entity: Sidra Motions<br>
+      Location: Lucknow, Uttar Pradesh, India<br>
+      Website: <a href="https://www.sellersuitepro.online/">https://www.sellersuitepro.online</a><br>
+      Support Contact: <a href="mailto:contact@sidramotion.com">contact@sidramotion.com</a>
+    </p>
+  </div>
+</body>
+</html>

@@ -34,17 +34,17 @@ import {
 import { AmazonLogo, FlipkartLogo, MeeshoLogo, MarketplaceLogo } from './MarketplaceLogos.jsx';
 
 // -------------------------------------------------------------
-// DEFAULT CONNECTED MARKETPLACE CHANNELS
+// SAMPLE MARKETPLACE CHANNEL PRESETS (NO LIVE APIS CONNECTED)
 // -------------------------------------------------------------
 export const DEFAULT_CONNECTED_CHANNELS = [
   {
     id: 'amazon',
     name: 'Amazon India (IN)',
-    status: 'connected', // 'connected' | 'syncing' | 'error' | 'disconnected'
-    storeName: 'Apex Electronics & Gear Store',
-    merchantId: 'A2K9L99X82P',
-    marketplaceId: 'A21TJRUUN4KGV',
-    lastSyncTime: 'Just now',
+    status: 'sample_preset', // 'sample_preset' | 'offline_rules'
+    storeName: 'Sample Seller Catalog (Offline Template)',
+    merchantId: 'DEMO-AMZ-RULES',
+    marketplaceId: 'RULE-HEURISTIC-PRESET',
+    lastSyncTime: 'Offline Rule Model Active',
     totalListings: 142,
     activeFlawsCount: 2,
     healthScore: 78
@@ -52,11 +52,11 @@ export const DEFAULT_CONNECTED_CHANNELS = [
   {
     id: 'flipkart',
     name: 'Flipkart Seller Hub',
-    status: 'connected',
-    storeName: 'Apex Retail Enterprises',
-    merchantId: 'FK-SELLER-9842',
-    marketplaceId: 'FLIPKART_IN',
-    lastSyncTime: '3 mins ago',
+    status: 'sample_preset',
+    storeName: 'Sample Seller Catalog (Offline Template)',
+    merchantId: 'DEMO-FK-RULES',
+    marketplaceId: 'RULE-HEURISTIC-PRESET',
+    lastSyncTime: 'Offline Rule Model Active',
     totalListings: 89,
     activeFlawsCount: 2,
     healthScore: 65
@@ -64,11 +64,11 @@ export const DEFAULT_CONNECTED_CHANNELS = [
   {
     id: 'meesho',
     name: 'Meesho Supplier Panel',
-    status: 'connected',
-    storeName: 'Apex Direct Factory Hub',
-    merchantId: 'MEES-IND-4421',
-    marketplaceId: 'MEESHO_SUPPLIER',
-    lastSyncTime: '5 mins ago',
+    status: 'sample_preset',
+    storeName: 'Sample Seller Catalog (Offline Template)',
+    merchantId: 'DEMO-MEES-RULES',
+    marketplaceId: 'RULE-HEURISTIC-PRESET',
+    lastSyncTime: 'Offline Rule Model Active',
     totalListings: 116,
     activeFlawsCount: 1,
     healthScore: 82
@@ -76,7 +76,7 @@ export const DEFAULT_CONNECTED_CHANNELS = [
 ];
 
 // -------------------------------------------------------------
-// LIVE CATALOG LISTINGS WITH DETECTED FLAWS
+// SAMPLE CATALOG LISTINGS WITH DETECTED FLAWS (DEMO DATA)
 // -------------------------------------------------------------
 export const INITIAL_SYNCED_FLAWS = [
   {
@@ -84,14 +84,15 @@ export const INITIAL_SYNCED_FLAWS = [
     channel: 'amazon',
     channelName: 'Amazon',
     asin: 'B0BNBYWXLL',
-    title: 'Geonix 8GB DDR4 Desktop RAM | 8IC | (5 Years Warranty)',
+    title: '[Sample Data] Geonix 8GB DDR4 Desktop RAM | 8IC | (5 Years Warranty)',
     severity: 'critical', // 'critical' | 'warning' | 'info'
     flawType: 'Non-White Background & Title Length Flaw',
     flawMessage: 'Main image has grey background (#E2E8F0) violating Amazon #FFFFFF pure white policy. Title is only 52 characters (under 80 chars minimum).',
     impact: '🚨 Imminent Amazon Search Suppression Risk within 24 Hours',
-    detectedAt: '2 mins ago',
+    detectedAt: 'Sample demo timestamp',
     currentLqsScore: 31,
     resolved: false,
+    isSampleData: true,
     recommendedFix: 'Run AI Background Remover to generate #FFFFFF canvas and expand title to 120+ characters with technical memory frequency specs.'
   },
   {
@@ -99,14 +100,15 @@ export const INITIAL_SYNCED_FLAWS = [
     channel: 'flipkart',
     channelName: 'Flipkart',
     asin: 'FSN-KURT89201F',
-    title: 'Women Printed Cotton Blend Straight Kurta (Blue)',
+    title: '[Sample Data] Women Printed Cotton Blend Straight Kurta (Blue)',
     severity: 'critical',
     flawType: 'Missing Fabric Percentage & Sleeve Spec',
     flawMessage: 'Flipkart search algorithm penalizes listings missing exact blend percentage and sleeve type attributes in title and specification table.',
     impact: '📉 Organic Flipkart Search Impressions dropped by 45%',
-    detectedAt: '5 mins ago',
+    detectedAt: 'Sample demo timestamp',
     currentLqsScore: 56,
     resolved: false,
+    isSampleData: true,
     recommendedFix: 'Update title to include "100% Pure Combed Cotton, 3/4th Sleeve, Calf Length" and populate exact fabric blend specs.'
   },
   {
@@ -114,14 +116,15 @@ export const INITIAL_SYNCED_FLAWS = [
     channel: 'amazon',
     channelName: 'Amazon',
     asin: 'B0C74MS1L5',
-    title: 'EVM H110 DDR4 Motherboard | LGA1151 Socket | Intel 6th/7th Gen Support (EVMH110NEL)',
+    title: '[Sample Data] EVM H110 DDR4 Motherboard | LGA1151 Socket | Intel 6th/7th Gen Support (EVMH110NEL)',
     severity: 'warning',
     flawType: 'Backend Search Terms Comma-Separation',
     flawMessage: 'Generic keywords contain commas (e.g. "motherboard, evm, h110"), wasting valuable bytes and confusing Amazon A10 indexer.',
     impact: '⚠️ Amazon A10 ignores all terms following invalid punctuation',
-    detectedAt: '12 mins ago',
+    detectedAt: 'Sample demo timestamp',
     currentLqsScore: 54,
     resolved: false,
+    isSampleData: true,
     recommendedFix: 'Strip all commas and redundant terms to create a 249-byte space-separated keyword stream.'
   },
   {
@@ -129,14 +132,15 @@ export const INITIAL_SYNCED_FLAWS = [
     channel: 'meesho',
     channelName: 'Meesho',
     asin: 'MEES-CHOP-772',
-    title: 'ChefMaster 450ml Manual Plastic Vegetable Chopper with 3 Blades',
+    title: '[Sample Data] ChefMaster 450ml Manual Plastic Vegetable Chopper with 3 Blades',
     severity: 'warning',
     flawType: 'Insufficient Catalog Images (2 of 4)',
     flawMessage: 'Listing only contains 2 product photos. Meesho top-ranking requirement mandates minimum 4 photos (Packaging, In-Use & Blade Detail).',
     impact: '🛒 Conversion rate is 60% lower than top category competitors',
-    detectedAt: '18 mins ago',
+    detectedAt: 'Sample demo timestamp',
     currentLqsScore: 48,
     resolved: false,
+    isSampleData: true,
     recommendedFix: 'Upload high-resolution blade mechanism close-up and packaging box photos to unlock Meesho Trust Badge.'
   },
   {
@@ -144,14 +148,15 @@ export const INITIAL_SYNCED_FLAWS = [
     channel: 'flipkart',
     channelName: 'Flipkart',
     asin: 'FSN-BT-HEAD89A',
-    title: 'Wireless Bluetooth Headset with Microphone',
+    title: '[Sample Data] Wireless Bluetooth Headset with Microphone',
     severity: 'warning',
     flawType: 'Only 2 Bullet Points Detected',
     flawMessage: 'Flipkart requires 5 descriptive bullet points highlighting battery life, driver size, warranty, and noise cancellation.',
     impact: '⚠️ FSN Trust Score reduced to 2.8/5.0 in Electronics index',
-    detectedAt: '25 mins ago',
+    detectedAt: 'Sample demo timestamp',
     currentLqsScore: 42,
     resolved: false,
+    isSampleData: true,
     recommendedFix: 'Generate 5 benefit-driven capital-anchor bullet points using AI Listing Generator.'
   }
 ];
@@ -272,10 +277,10 @@ export default function MarketplaceSyncMonitor({
     return () => clearInterval(interval);
   }, [isAutoScanActive]);
 
-  // Trigger Manual Full Sync across Amazon, Flipkart, Meesho
+  // Trigger Manual Full Audit across Amazon, Flipkart, Meesho
   const handleSyncAllMarketplaces = () => {
     setIsSyncingAll(true);
-    setSyncStatusToast('Syncing catalogs with Amazon SP-API, Flipkart Hub & Meesho Panel...');
+    setSyncStatusToast('Auditing local listings against Amazon, Flipkart & Meesho compliance rules...');
 
     if (soundEnabled) playAlertChime();
 
@@ -289,7 +294,7 @@ export default function MarketplaceSyncMonitor({
         lastSyncTime: `Today at ${nowTime}`
       })));
 
-      setSyncStatusToast(`✓ Sync Complete! 347 listings scanned across Amazon, Flipkart & Meesho.`);
+      setSyncStatusToast(`✓ Audit Complete! Local listing flaws checked against compliance standards.`);
       setTimeout(() => setSyncStatusToast(''), 4500);
     }, 1800);
   };
@@ -403,7 +408,7 @@ export default function MarketplaceSyncMonitor({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: 0 }}>
-                  Multi-Marketplace Sync & Listing Health Monitor
+                  Marketplace Compliance & Listing Flaw Inspector
                 </h2>
                 <span style={{
                   fontSize: '10px',
@@ -414,11 +419,11 @@ export default function MarketplaceSyncMonitor({
                   borderRadius: '12px',
                   border: '1px solid rgba(37, 211, 102, 0.4)'
                 }}>
-                  LIVE SYNC ACTIVE
+                  HEURISTIC AUDIT MODE
                 </span>
               </div>
               <p style={{ fontSize: '11px', color: '#94a3b8', margin: '3px 0 0' }}>
-                Automated background flaw watcher for Amazon SP-API, Flipkart Hub & Meesho Supplier Panel
+                Sample listing flaw watcher for Amazon, Flipkart & Meesho compliance rules (Zero marketplace credentials or API tokens stored)
               </p>
             </div>
           </div>
@@ -441,7 +446,7 @@ export default function MarketplaceSyncMonitor({
               }}
             >
               <RefreshCw size={13} className={isSyncingAll ? 'pulse-radar-dot' : ''} />
-              {isSyncingAll ? 'Syncing...' : 'Sync All 3 Marketplaces'}
+              {isSyncingAll ? 'Auditing...' : 'Run Rules Audit'}
             </button>
 
             <button
@@ -756,6 +761,19 @@ export default function MarketplaceSyncMonitor({
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{
+                            fontSize: '9px',
+                            fontWeight: '800',
+                            color: '#94a3b8',
+                            background: 'rgba(148, 163, 184, 0.15)',
+                            padding: '2px 7px',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(148, 163, 184, 0.3)',
+                            letterSpacing: '0.5px'
+                          }}>
+                            SAMPLE DATA
+                          </span>
+
+                          <span style={{
                             fontSize: '10px',
                             fontWeight: '800',
                             color: badgeCol,
@@ -857,7 +875,7 @@ export default function MarketplaceSyncMonitor({
                             gap: '6px'
                           }}
                         >
-                          <Zap size={13} /> 1-Click Auto-Fix & Push to {flaw.channelName}
+                          <Zap size={13} /> Open in AI Repair Studio (Local Edit)
                         </button>
                       </div>
                     </div>
@@ -871,7 +889,7 @@ export default function MarketplaceSyncMonitor({
           {activeTab === 'channels' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.5' }}>
-                All 3 major Indian e-commerce channels are synchronized. You can test live API pings or update SP-API credentials below.
+                Marketplace compliance rule templates. <em>Note: Seller Suite Pro does not connect to marketplace APIs or store credentials.</em>
               </div>
 
               {channels.map(ch => (
@@ -905,14 +923,14 @@ export default function MarketplaceSyncMonitor({
                           borderRadius: '10px',
                           border: '1px solid rgba(37, 211, 102, 0.4)'
                         }}>
-                          CONNECTED • SP-API v2026
+                          OFFLINE RULE PRESET
                         </span>
                       </div>
                       <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>
-                        Store: <strong>{ch.storeName}</strong> • ID: <span style={{ fontFamily: 'monospace', color: '#00d2ff' }}>{ch.merchantId}</span>
+                        Profile: <strong>{ch.storeName}</strong> • Mode: <span style={{ fontFamily: 'monospace', color: '#00d2ff' }}>{ch.merchantId}</span>
                       </div>
                       <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                        {ch.totalListings} Active Listings in Synchronized Catalog • Last Ping: {ch.lastSyncTime}
+                        {ch.totalListings} Sample Listings in Benchmark Catalog • Status: {ch.lastSyncTime}
                       </div>
                     </div>
                   </div>
@@ -921,7 +939,7 @@ export default function MarketplaceSyncMonitor({
                     <button
                       type="button"
                       onClick={() => {
-                        setSyncStatusToast(`✓ Testing API Ping for ${ch.name}... Handshake verified in 42ms.`);
+                        setSyncStatusToast(`✓ Offline Heuristic Verified: ${ch.name} policy rules active in browser memory.`);
                         if (soundEnabled) playAlertChime();
                         setTimeout(() => setSyncStatusToast(''), 3500);
                       }}
@@ -939,7 +957,7 @@ export default function MarketplaceSyncMonitor({
                         gap: '6px'
                       }}
                     >
-                      <Radio size={13} /> Test Ping
+                      <Radio size={13} /> Check Preset
                     </button>
                   </div>
                 </div>
@@ -1031,7 +1049,7 @@ export default function MarketplaceSyncMonitor({
                 color: '#94a3b8',
                 lineHeight: '1.5'
               }}>
-                <strong style={{ color: '#00d2ff' }}>How Real-Time Sync Works:</strong> The app connects directly to the Indian seller portals via SP-API and Webhooks. Whenever a buyer places a return, Amazon suppresses an image, or Flipkart flags a specification defect, you receive an instant alert right here in your dashboard with a 1-click auto-fix button.
+                <strong style={{ color: '#00d2ff' }}>How Heuristic Audits Work:</strong> The app inspects your listings locally in your browser against Indian marketplace policies. No account credentials or SP-API tokens are required or collected. Suppressions and title/image defects are flagged using client-side heuristics so you can fix them before uploading.
               </div>
             </div>
           )}
@@ -1049,10 +1067,10 @@ export default function MarketplaceSyncMonitor({
           color: '#64748b'
         }}>
           <div>
-            Connected Channels: <strong>Amazon, Flipkart, Meesho</strong> (3/3 Synced)
+            Rule Presets: <strong>Amazon, Flipkart, Meesho</strong> (3 Marketplace Guides)
           </div>
           <div>
-            Active Flaws Monitored: <strong style={{ color: '#f43f5e' }}>{criticalCount} Critical</strong>, <strong style={{ color: '#fbbf24' }}>{warningCount} Warnings</strong>
+            Sample Flaws Monitored: <strong style={{ color: '#f43f5e' }}>{criticalCount} Critical</strong>, <strong style={{ color: '#fbbf24' }}>{warningCount} Warnings</strong>
           </div>
         </div>
       </div>
@@ -1061,7 +1079,7 @@ export default function MarketplaceSyncMonitor({
 }
 
 // -------------------------------------------------------------
-// COMPACT HEADER ALERT BUTTON COMPONENT WITH REAL-TIME BADGE
+// COMPACT HEADER ALERT BUTTON COMPONENT WITH HEURISTIC BADGE
 // -------------------------------------------------------------
 export function HeaderSyncAlertButton({ onClick }) {
   const [flawCount, setFlawCount] = useState(() => {
@@ -1093,7 +1111,7 @@ export function HeaderSyncAlertButton({ onClick }) {
       type="button"
       onClick={onClick}
       className="kinara-glow-dynamic"
-      title="Amazon, Flipkart & Meesho Live Sync & Listing Health Monitor"
+      title="Amazon, Flipkart & Meesho Compliance & Listing Flaw Inspector"
       style={{
         '--glow-color': flawCount > 0 ? '#f43f5e' : '#25d366',
         position: 'relative',
@@ -1121,7 +1139,7 @@ export function HeaderSyncAlertButton({ onClick }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <Bell size={13} color={flawCount > 0 ? '#f43f5e' : '#00d2ff'} className={flawCount > 0 ? 'pulse-radar-dot' : ''} />
-        <span style={{ color: flawCount > 0 ? '#fff' : '#e2e8f0' }}>Sync & Alerts</span>
+        <span style={{ color: flawCount > 0 ? '#fff' : '#e2e8f0' }}>Rules &amp; Flaws</span>
       </div>
 
       {flawCount > 0 && (

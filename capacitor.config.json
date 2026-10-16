@@ -1,0 +1,32 @@
+{
+  "appId": "com.sidramotions.sellersuitepro",
+  "appName": "Seller Suite Pro - Seller Toolkit",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "sellersuitepro.online",
+      "*.sellersuitepro.online",
+      "kitjqhhbsqusqmofabzq.supabase.co"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1800,
+      "launchAutoHide": true,
+      "backgroundColor": "#0c182e",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_INSIDE",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0c182e"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK",
+      "resizeOnFullScreen": true
+    }
+  }
+}

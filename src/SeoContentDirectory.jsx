@@ -35,6 +35,16 @@ export default function SeoContentDirectory({ onSwitchTab }) {
 
   const SEO_CARDS = [
     {
+      id: 'create-listing-wizard',
+      category: 'all',
+      badge: 'Flagship AI • Multi-Marketplace Generator',
+      title: 'E-Commerce Product Listing Generator India (Amazon, Flipkart, Meesho)',
+      keywords: ['e-commerce product listing generator India', 'Amazon listing creator', 'Flipkart listing optimizer', 'Meesho product description generator', 'marketplace listing compliance checker'],
+      desc: 'Generate 100% marketplace-compliant listings across Amazon India, Flipkart, and Meesho. Built for Indian sellers with dual-language English/Hinglish support, Amazon 249-byte limit validation, #FFFFFF pure white image checks, and competitor flaw audits.',
+      actionTab: 'create-wizard',
+      actionLabel: 'Launch Create New Listing Wizard'
+    },
+    {
       id: 'amazon-listing-seo',
       category: 'amazon',
       badge: 'Amazon India • A9 Algorithm',
@@ -77,12 +87,12 @@ export default function SeoContentDirectory({ onSwitchTab }) {
     {
       id: 'buybox-repricing',
       category: 'repricer',
-      badge: 'Price Warfare • Profit Guard',
-      title: 'Amazon & Flipkart Real-Time BuyBox Repricer',
-      keywords: ['amazon buybox repricer', 'auto repricer ecommerce', 'flipkart buybox win', 'dynamic price adjustment', 'profit margin stops'],
-      desc: 'Win the BuyBox at the highest possible selling price. Automate penny-undercutting with strict minimum floor and ceiling stops to protect gross profit margins against price-war algorithms.',
+      badge: 'Price Strategy • Profit Guard',
+      title: 'Amazon & Flipkart Algorithmic BuyBox Calculator',
+      keywords: ['amazon buybox repricer', 'repricer calculator ecommerce', 'flipkart buybox win', 'dynamic price adjustment', 'profit margin stops'],
+      desc: 'Calculate optimal selling prices to win the BuyBox. Simulate penny-undercutting with strict minimum floor and ceiling stops to protect gross profit margins.',
       actionTab: 'buybox-repricer',
-      actionLabel: 'Run Auto BuyBox Repricer'
+      actionLabel: 'Run BuyBox Calculator'
     },
     {
       id: 'rto-profit-guard',
@@ -117,6 +127,18 @@ export default function SeoContentDirectory({ onSwitchTab }) {
   ];
 
   const SEO_FAQS = [
+    {
+      q: 'What is the best e-commerce product listing generator for Indian sellers?',
+      a: 'Seller Suite Pro provides the most advanced multi-marketplace listing generator tailored specifically for Indian sellers across Amazon India, Flipkart, and Meesho. It generates compliant titles following official marketplace formulas, 5 bracketed benefit bullet points, strictly validates Amazon 249-byte backend search terms, checks pure white (#FFFFFF) images, and provides an end-to-end copy-paste checklist matching your Seller Portal.'
+    },
+    {
+      q: 'What is Amazon India\'s 249-byte backend search terms rule?',
+      a: 'Amazon India strictly limits generic backend search terms to 249 UTF-8 bytes (not characters). Exceeding 249 bytes causes Amazon\'s A9 algorithm to completely ignore and drop the entire search term field. Seller Suite Pro features a live byte counter that ensures duplicate-free, comma-free search terms safely under the 249-byte limit.'
+    },
+    {
+      q: 'Is my product data or images stored on your servers?',
+      a: 'No. Your product data and images stay in your browser. We never store your listings on our servers without your permission. All processing and draft persistence take place inside your local browser session.'
+    },
     {
       q: 'How to optimize Amazon product listings to rank on Page 1?',
       a: 'To rank on Page 1 of Amazon India search results, follow the A9 algorithm formula: 1) Include Brand + Model + Top 3 Features in under 200 characters in the Title. 2) Capitalize the first 3-5 words of every bullet point as a benefit hook. 3) Maximize 249 bytes in backend search terms without commas or duplicate words. 4) Ensure your main image is RGB (255,255,255) pure white.'

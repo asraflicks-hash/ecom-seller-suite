@@ -46,6 +46,7 @@ import {
   Radio,
   FileSpreadsheet
 } from 'lucide-react';
+import { isValidUrlProtocol } from './securitySanitizer.js';
 
 const InstagramIcon = ({ size = 18, color = 'currentColor' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1812,7 +1813,7 @@ export default function OmnichannelSeoSuite({
                             </div>
 
                             {/* Direct Open Link Button */}
-                            {currentAudit.profileCard.url && (
+                            {currentAudit.profileCard.url && isValidUrlProtocol(currentAudit.profileCard.url) && (
                               <a
                                 href={currentAudit.profileCard.url}
                                 target="_blank"
@@ -1876,13 +1877,13 @@ export default function OmnichannelSeoSuite({
                           }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
-                              <span style={{ fontWeight: '800', color: '#10b981' }}>Live Synced Engine:</span>
+                              <span style={{ fontWeight: '800', color: '#10b981' }}>Heuristic Rule Engine:</span>
                               <span style={{ color: '#fff', fontWeight: '700' }}>
-                                {currentAudit.syncSource?.software || 'AISEOGIC 2026 Engine + Google Lighthouse v12'}
+                                {currentAudit.syncSource?.software || 'AISEOGIC Engine + Google Lighthouse Heuristics'}
                               </span>
                             </div>
                             <div style={{ color: '#94a3b8', fontSize: '10px' }}>
-                              Protocol: <strong>{currentAudit.syncSource?.protocol || 'Live Algorithmic Telemetry'}</strong> • Latency: <strong>&lt;240ms</strong>
+                              Model: <strong>{currentAudit.syncSource?.protocol || 'Local Algorithmic Heuristics'}</strong> • Latency: <strong>&lt;240ms</strong>
                             </div>
                           </div>
                         </div>
@@ -2315,7 +2316,7 @@ export default function OmnichannelSeoSuite({
                     </div>
 
                     <p style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '16px', lineHeight: '1.5' }}>
-                      Jo cheezein online auto-generate ho sakti thi wo upar code blocks me ready hain. Baki jo image alt tags, H1 keyword placement, aur code installation aapko apne WordPress / Shopify admin me manually karni hain, unka complete step-by-step tareeqa neeche diya gaya hai:
+                      Automated code snippets and structured data schemas have been generated above. For remaining manual tasks such as image alt tags, H1 keyword placement, and CMS code deployment (WordPress / Shopify), follow the step-by-step action plan below:
                     </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -2463,7 +2464,7 @@ export default function OmnichannelSeoSuite({
                       </span>
                     </div>
                     <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0' }}>
-                      Automated direct crawler sync and real-time algorithmic ranking verification pipeline.
+                      Automated crawler simulation and heuristic ranking verification pipeline.
                     </p>
                   </div>
                 </div>

@@ -305,12 +305,7 @@ export function generateBoundKeyForCustomer(customerId, phone) {
     boundMap[`ID_${cleanId}`] = key;
     localStorage.setItem('sidra_bound_license_keys', JSON.stringify(boundMap));
 
-    // Ensure it's in authorized keys list
-    const authKeys = JSON.parse(localStorage.getItem('sidra_authorized_keys') || '[]');
-    if (!authKeys.includes(key)) {
-      authKeys.unshift(key);
-      localStorage.setItem('sidra_authorized_keys', JSON.stringify(authKeys));
-    }
+
   } catch (err) {
     console.error('Failed to register bound key', err);
   }
@@ -321,7 +316,6 @@ export function generateBoundKeyForCustomer(customerId, phone) {
 /**
  * Validates whether an entered license key is valid for the current Customer ID.
  * Strict rules:
- * - Master key SM26-MASTER-ADMIN-KEY works for all.
  * - Bound keys check that customer ID matches the key's bound owner.
  * - If key belongs to another customer ID, it is STRICTLY REJECTED.
  * - Unbound keys become bound to the current customer ID on first successful activation.
@@ -341,14 +335,7 @@ export function validateLicenseKeyForCustomer(enteredKey, currentCustomerId, cur
     localStorage.setItem('sidra_license_key_valid', 'true');
   }
 
-  // 1. Master Super-Admin Key Override (Unlocks immediately for any user/device)
-  if (
-    cleanKey === 'SM26-MASTER-ADMIN-KEY' || 
-    cleanKey === 'SM26-TRY-COMMERCIAL-2026'
-  ) {
-    commitValidLicense(cleanKey, cleanCustId);
-    return { valid: true, isMaster: true, message: 'Super-Admin Commercial Key verified & unlocked.' };
-  }
+
 
   // 2. Read bound registry
   let boundMap = {};
@@ -393,37 +380,7 @@ export function validateLicenseKeyForCustomer(enteredKey, currentCustomerId, cur
     return { valid: true, message: `Key bound and activated for ${cleanCustId}.` };
   }
 
-  // 4. Check general authorized keys list
-  let authKeys = [];
-  try {
-    authKeys = JSON.parse(localStorage.getItem('sidra_authorized_keys') || '[]');
-  } catch (e) {}
 
-  const isWhitelisted = authKeys.some(k => k.toUpperCase() === cleanKey);
-  if (isWhitelisted) {
-    // Check if this key was previously bound to another customer
-    for (const [k, rec] of Object.entries(boundMap)) {
-      if (k === cleanKey && rec.customerId && rec.customerId.toUpperCase() !== cleanCustId) {
-        return {
-          valid: false,
-          error: `Access Denied: Key is already bound to ${rec.customerId}. One key per customer ID enforced.`
-        };
-      }
-    }
-
-    // Bind this key exclusively to the current customer ID
-    boundMap[cleanKey] = {
-      key: cleanKey,
-      customerId: cleanCustId,
-      phone: (currentPhone || '').replace(/[^0-9]/g, ''),
-      createdAt: new Date().toISOString()
-    };
-    boundMap[`ID_${cleanCustId}`] = cleanKey;
-    localStorage.setItem('sidra_bound_license_keys', JSON.stringify(boundMap));
-    commitValidLicense(cleanKey, cleanCustId);
-
-    return { valid: true, message: `Key bound and activated for ${cleanCustId}.` };
-  }
 
   return {
     valid: false,

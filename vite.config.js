@@ -532,4 +532,7 @@ function listingSyncPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), listingSyncPlugin()],
+  build: {
+    sourcemap: false
+  }
 })

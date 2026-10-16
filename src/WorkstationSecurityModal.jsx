@@ -102,7 +102,7 @@ export default function WorkstationSecurityModal({ currentCustomerId, onClose, o
       (error) => {
         setLocationStatus('denied');
         if (error.code === 1) {
-          setLocationError('Permission Denied: Aapne browser me location allow nahi ki. Address bar me jakar Location ko "Allow" karein.');
+          setLocationError('Permission Denied: Browser location permission was denied. Please allow location access in your browser address bar.');
         } else if (error.code === 2) {
           setLocationError('Location position unavailable. Please ensure device GPS/Location service is turned on.');
         } else {

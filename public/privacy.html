@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Seller Suite Pro</title>
+  <style>
+    :root {
+      --bg: #0c182e;
+      --surface: #13223f;
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #e2e8f0;
+      --primary: #38bdf8;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 24px;
+    }
+    h1 { color: #ffffff; font-size: 24px; margin-top: 0; }
+    h2 { color: var(--primary); font-size: 18px; margin-top: 24px; }
+    p, li { font-size: 14px; color: #cbd5e1; }
+    ul { padding-left: 20px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">Official Policy • Updated October 2026</div>
+    <h1>Privacy Policy for Seller Suite Pro</h1>
+    <p>Seller Suite Pro ("we", "our", or "the App") is developed by Sidra Motion as an e-commerce toolkit for online sellers. This policy discloses how data is collected, handled, and protected across our web application and Android app.</p>
+
+    <h2>1. Data Collection & Authentication (Supabase)</h2>
+    <div class="card">
+      <p><strong>What is collected:</strong> When you register an account, we collect your <strong>email address</strong> and generate an internal <strong>User ID</strong> via Supabase Auth.</p>
+      <p><strong>Purpose:</strong> Account authentication, cross-device sync of saved listing drafts, and license verification.</p>
+      <p><strong>Encryption:</strong> All data is encrypted in transit using TLS 1.3/HTTPS and stored in encrypted PostgreSQL database storage protected by Row Level Security (RLS) policies.</p>
+    </div>
+
+    <h2>2. Image Processing & Studio (100% On-Device)</h2>
+    <div class="card">
+      <p><strong>No photo uploads:</strong> All image whitening, centering, and compliance cropping in the Studio are executed locally on your smartphone or browser using HTML5 Canvas and WebAssembly. Your product photos are <strong>never uploaded to our servers or any third-party server</strong>.</p>
+      <p><strong>Neural Model Weights:</strong> Optional deep segmentation weights may be fetched once on-demand from static CDN endpoints (e.g. <code>staticimgly.com</code>). Only static binary weights are downloaded; zero user images or metrics are transmitted during or after this download.</p>
+    </div>
+
+    <h2>3. AI Listing Generation & Serverless Proxy</h2>
+    <div class="card">
+      <p>When you use the AI Listing Optimizer, the product name, keywords, and specifications you provide are transmitted securely to our serverless proxy (<code>/api/ai-proxy</code>) which calls enterprise AI APIs (such as Google Gemini). Zero marketplace tokens or login credentials are required or processed. Input data is processed strictly in-memory and is not retained or used for foundation model training.</p>
+    </div>
+
+    <h2>4. Calculators & Repricer Tools</h2>
+    <div class="card">
+      <p>The RTO Simulator and BuyBox Repricer operate entirely in local device memory. Product costs, courier charges, and margin thresholds are never sent to external servers.</p>
+    </div>
+
+    <h2>5. Local Storage & Cache</h2>
+    <p>The App stores preferences locally on your device (active marketplace, motion effects mode, and local drafts cache). You can permanently clear all local data at any time via the "Purge All Local Cache & Data" button inside the App settings.</p>
+
+    <h2>6. Right to Erasure & Account Deletion</h2>
+    <p>Under Google Play standards and the Digital Personal Data Protection (DPDP) Act, you have the right to delete your account and all associated data at any time. You can delete your account directly inside the App under Settings or visit our dedicated deletion portal at <a href="/data-deletion.html">https://www.sellersuitepro.online/data-deletion.html</a>.</p>
+
+    <h2>7. Contact & Grievance Officer</h2>
+    <p>For privacy queries, data requests, or compliance concerns, contact:</p>
+    <p><strong>Developer:</strong> Sidra Motion<br>
+    <strong>Website:</strong> <a href="https://www.sellersuitepro.online">https://www.sellersuitepro.online</a><br>
+    <strong>Email:</strong> sidra.motion@gmail.com</p>
+  </div>
+</body>
+</html>

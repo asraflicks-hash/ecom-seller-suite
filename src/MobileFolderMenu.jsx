@@ -200,12 +200,12 @@ export default function MobileFolderMenu({
               <span style={{ fontSize: '9px', background: '#25d366', color: '#000', padding: '1px 6px', borderRadius: '8px', fontWeight: '900' }}>0₹</span>
             </div>
             <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
-              Amazon, Flipkart & Meesho sellers ke liye all 8 tools lifetime free
+              Amazon, Flipkart & Meesho sellers ke liye all 9 tools lifetime free
             </div>
           </div>
         </div>
 
-        {/* Section 1: All 8 Suite Modules */}
+        {/* Section 1: All 9 Suite Modules */}
         <div>
           <div style={{
             display: 'flex',
@@ -216,7 +216,7 @@ export default function MobileFolderMenu({
           }}>
             <span style={{ fontSize: '11px', fontWeight: '800', color: '#00d2ff', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Sparkles size={13} />
-              <span>Select Suite Tool (All 8 Modules)</span>
+              <span>Select Suite Tool (All 9 Modules)</span>
             </span>
             <span style={{ fontSize: '10px', color: '#25d366', fontWeight: '700' }}>
               ● 100% Free
@@ -437,7 +437,7 @@ export default function MobileFolderMenu({
           ) : (
             <div>
               <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
-                Apna cloud account banayein ya login karein Supabase database ke sath:
+                Create your cloud account or sign in with your database profile:
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button
@@ -763,7 +763,7 @@ export default function MobileFolderMenu({
           <CheckCircle size={18} color="#25d366" style={{ flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: '12px', fontWeight: '800', color: '#25d366' }}>
-              🟢 100% FREE • ALL 8 MODULES UNLOCKED
+              🟢 100% FREE • ALL 9 MODULES UNLOCKED
             </div>
             <div style={{ fontSize: '10px', color: '#cbd5e1' }}>
               Zero registration barriers. Accessible across mobile and desktop.

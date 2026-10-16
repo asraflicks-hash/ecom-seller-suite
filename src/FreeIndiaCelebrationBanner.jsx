@@ -14,13 +14,15 @@ export function TopFreeIndiaTickerBanner({ viewMode = 'desktop' }) {
         zIndex: 60,
         background: 'linear-gradient(90deg, rgba(255, 153, 51, 0.24) 0%, rgba(11, 23, 44, 0.98) 25%, rgba(11, 23, 44, 0.98) 75%, rgba(19, 136, 8, 0.24) 100%)',
         borderBottom: '1.5px solid rgba(255, 153, 51, 0.45)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 153, 51, 0.2)',
-        padding: viewMode === 'mobile' ? '6px 12px' : '7px 20px',
+        boxSizing: 'border-box',
+        width: '100%',
+        maxWidth: '100%',
+        padding: '6px 14px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        gap: '10px',
+        gap: '8px',
         overflow: 'hidden'
       }}
     >
@@ -63,7 +65,7 @@ export function TopFreeIndiaTickerBanner({ viewMode = 'desktop' }) {
           whiteSpace: 'nowrap'
         }}
       >
-        Sabhi Indians Ke Liye 100% FREE
+        100% FREE FOR ALL E-COMMERCE SELLERS
       </span>
 
       {/* Right Tricolor Flag Icon */}

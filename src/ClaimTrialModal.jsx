@@ -186,7 +186,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                Pehle apni profile complete karein, fir WhatsApp agent (+91 6306348371) pe key lene ka message jayega.
+                Complete your seller profile to submit your support inquiry to our verified WhatsApp desk (+91 6306348371).
               </p>
             </div>
           </div>
@@ -398,7 +398,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
                 transition: 'all 0.2s'
               }}
             >
-              <MessageSquare size={16} /> 📲 Profile Save Karein & WhatsApp Agent (+91 6306348371) Pe Message Bhejein 🚀
+              <MessageSquare size={16} /> 📲 Save Profile & Message WhatsApp Support Desk (+91 6306348371) 🚀
             </button>
           </div>
 
@@ -412,7 +412,7 @@ export default function ClaimTrialModal({ onClose, onProfileUpdated }) {
             gap: '6px'
           }}>
             <ShieldCheck size={13} color="#25d366" />
-            Profile complete hone par official Agent (+91 6306348371) ke WhatsApp par Customer ID {customerId} ke sath message jayega.
+            Upon submission, your details and Customer ID {customerId} will be transmitted to the verified support desk.
           </div>
         </form>
       </div>
