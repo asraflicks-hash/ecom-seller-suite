@@ -15,13 +15,60 @@ import {
   ExternalLink,
   Layers,
   ArrowRight,
-  Database
+  Database,
+  FileSpreadsheet
 } from 'lucide-react';
 import { MarketplaceLogo } from './MarketplaceLogos.jsx';
 import { saveUserWork } from './supabaseClient.js';
+import { generateFlatFileAttributes } from './flatFileAttributesEngine.js';
+import AmazonFlatFileSpecModal from './AmazonFlatFileSpecModal.jsx';
 
 // Pre-configured URL sample audits for instant testing
 const URL_AUDIT_PRESETS = [
+  {
+    id: 'amazon-office-chair',
+    platform: 'amazon',
+    label: 'Office Chair (Score 39/100 🔴 • Poor Attributes & Incomplete Flat-File)',
+    url: 'https://www.amazon.in/dp/B0BXYZCHR1',
+    asin: 'B0BXYZCHR1',
+    currentListing: {
+      brand: 'Generic',
+      title: 'Office Chair for Work from Home Computer Study Chair',
+      bullets: [
+        'Comfortable chair with wheels',
+        'Good for office and home use'
+      ],
+      searchTerms: 'chair, office chair, revolving chair, study chair, cheap',
+      description: 'Comfortable mesh chair with wheels for office use.'
+    },
+    audit: {
+      score: 39,
+      status: 'CRITICAL POOR',
+      color: '#f43f5e',
+      flaws: [
+        { field: 'Product Title', issue: 'Missing brand name, back height tier, armrest mechanism, and weight capacity in title.', rule: 'Amazon A9 Algorithm suppresses titles without Brand + Model + Core Specs.' },
+        { field: 'Key Product Features', issue: 'Only 2 short bullets found (Amazon strictly mandates 5 bullets). Missing seat depth, fill material, and gas-lift class.', rule: 'Incomplete specifications cause 42% customer return rate (RTO).' },
+        { field: 'Category Attributes & Flat-File', issue: 'Missing 30+ mandatory attributes: Recommended Browse Node, HSN 94013000, Arm Style, Seat Height, Legal Metrology & Warranty.', rule: 'Missing attributes cause listing search suppression in Amazon filters.' }
+      ]
+    },
+    repaired: {
+      brand: 'ApexPro',
+      productName: 'ErgoMatrix High-Back Mesh Office Chair',
+      category: 'Furniture & Ergonomic Seating',
+      title: 'ApexPro ErgoMatrix High-Back Ergonomic Office Chair with 2D Adjustable Armrests, Breathable Korean Mesh, BIFMA Class-4 Gas Lift, Heavy-Duty Nylon Base & 3-Year Warranty (Jet Black)',
+      bullets: [
+        '[ORTHOPEDIC LUMBAR & SPINE SUPPORT]: Engineered with an S-curve backrest that dynamically cradles your lumbar spine, reducing lower back fatigue during 8+ hour work-from-home or gaming sessions.',
+        '[2D ADJUSTABLE PU PADDED ARMRESTS]: Features smooth height-adjustable armrests with soft-touch polyurethane padding, ensuring seamless alignment with standard desk heights and eliminating wrist strain.',
+        '[BREATHABLE KOREAN AIR MESH & 55D MOLDED FOAM]: High-elasticity tear-resistant mesh back promotes 360° air circulation, paired with high-density virgin molded foam seat cushion with waterfall edge design for zero thigh pressure.',
+        '[BIFMA CLASS-4 HYDRAULIC GAS LIFT (135 KG CAPACITY)]: Heavy-duty pneumatic cylinder tested for 120,000 cycles, mounted on a reinforced 5-star spider nylon base with frictionless 50mm dual-wheel nylon castors for quiet 360° glide.',
+        '[15-MIN DIY EASY ASSEMBLY & 3-YEAR WARRANTY]: Includes complete hardware toolkit, Allen wrench, and graphic instruction manual. Backed by 3-Year Brand Manufacturer Warranty with direct doorstep part replacement across India.'
+      ],
+      searchTerms: 'ergonomic office chair high back mesh computer desk chair revolving study chair lumbar support gas lift 3 year warranty',
+      description: 'Upgrade your productivity with ApexPro ErgoMatrix High-Back Office Chair. Designed for corporate executives, programmers, and gamers who spend long hours at their desks.',
+      aPlusHeading: 'Engineered For 8+ Hours Pain-Free Seating',
+      aPlusStory: 'ApexPro combines orthopedic spinal alignment with certified BIFMA Class-4 endurance, supported by comprehensive 3-year warranty service across India.'
+    }
+  },
   {
     id: 'amazon-motherboard',
     platform: 'amazon',
@@ -442,6 +489,8 @@ export default function AiListingRepairStudio({
   const [output, setOutput] = useState(null);
   const [viewStep, setViewStep] = useState('idle'); // 'idle' | 'audit' | 'repaired'
   const [cloudSavedToast, setCloudSavedToast] = useState(false);
+  const [isFlatFileModalOpen, setIsFlatFileModalOpen] = useState(false);
+  const [flatFileData, setFlatFileData] = useState(null);
 
   // Restore work listener from Cloud Work History Modal
   useEffect(() => {
@@ -635,6 +684,16 @@ export default function AiListingRepairStudio({
         color: '#25d366'
       };
       setOutput(repairedData);
+
+      const flat = generateFlatFileAttributes({
+        platform,
+        title: repairedData.title || auditData.label,
+        brand: repairedData.brand || 'Brand',
+        category: repairedData.category || '',
+        productName: repairedData.productName || auditData.label,
+        bullets: repairedData.bullets || []
+      });
+      setFlatFileData(flat);
       setViewStep('repaired');
 
       // Auto-save to cloud account
@@ -722,6 +781,16 @@ export default function AiListingRepairStudio({
       };
 
       setOutput(generatedData);
+
+      const flat = generateFlatFileAttributes({
+        platform,
+        title: genTitle,
+        brand: cleanBrand,
+        category: cleanCategory,
+        productName: cleanProd,
+        bullets: bulletTemplates
+      });
+      setFlatFileData(flat);
       setViewStep('repaired');
 
       // Auto-save to cloud account
@@ -802,6 +871,16 @@ ${output.aPlusHeading}
 
 A+ BRAND STORY:
 ${output.aPlusStory}
+
+-------------------------------------------------------------------
+[5. AMAZON PRO CATEGORY FLAT-FILE 38+ ATTRIBUTES]
+CATEGORY: ${(flatFileData?.categoryName || 'Furniture & Seating')}
+BROWSE NODE: ${(flatFileData?.browseNode || '3591748031')}
+HSN CODE: ${(flatFileData?.hsnCode || '94013000')}
+${(flatFileData?.sections || []).map(sec => `
+>> ${sec.title.toUpperCase()}
+${sec.attributes.map(a => `• ${a.key} [${a.name}]: ${a.value} (${a.note || ''})`).join('\n')}`
+).join('\n')}
 
 ===================================================================
 SUPPORT: contact@sidramotion.com | PORTAL: sellersuitepro.online
@@ -1707,6 +1786,81 @@ ${output.description}`;
               </button>
             </div>
 
+            {/* PRO CATEGORY FLAT-FILE ATTRIBUTES ENGINE BANNER (Client 38+ Attributes Feature) */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.16) 0%, rgba(168, 85, 247, 0.18) 100%)',
+              border: '1px solid rgba(0, 210, 255, 0.45)',
+              borderRadius: '14px',
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '14px',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #00d2ff 0%, #a855f7 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 16px rgba(0, 210, 255, 0.4)'
+                }}>
+                  <FileSpreadsheet size={24} color="#ffffff" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', margin: 0 }}>
+                      Amazon Pro Flat-File Category Specs (38+ Mandatory Fields)
+                    </h4>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      background: 'rgba(37, 211, 102, 0.25)',
+                      color: '#25d366',
+                      border: '1px solid rgba(37, 211, 102, 0.5)'
+                    }}>
+                      FLAT-FILE READY
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '4px 0 0 0' }}>
+                    Recommended Browse Node • HSN Code • Arm Style • Seat Dimensions • Fill Material • D×W×H • Legal Metrology • Warranty
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsFlatFileModalOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '9px 18px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)',
+                    color: '#ffffff',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(0, 210, 255, 0.35)'
+                  }}
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Open 38+ Flat-File Spec Sheet</span>
+                </button>
+              </div>
+            </div>
+
             {/* FIELD 1: PRODUCT TITLE */}
             <div className="glass-card" style={{ padding: '18px', border: '1px solid rgba(0, 210, 255, 0.35)' }}>
               {/* Where to Paste Header Banner with Details & Example */}
@@ -2074,6 +2228,22 @@ ${output.description}`;
             </div>
           </div>
         )}
+
+        {/* Amazon 38+ Category Flat-File Spec Modal */}
+        <AmazonFlatFileSpecModal
+          isOpen={isFlatFileModalOpen}
+          onClose={() => setIsFlatFileModalOpen(false)}
+          flatFileData={flatFileData || (output ? generateFlatFileAttributes({
+            platform,
+            title: output.title || productName,
+            brand: output.brand || brand,
+            category: output.category || category,
+            productName: output.productName || productName,
+            bullets: output.bullets || []
+          }) : null)}
+          copyToClipboard={copyToClipboard}
+          copiedKey={copiedKey}
+        />
       </div>
     </div>
   );
